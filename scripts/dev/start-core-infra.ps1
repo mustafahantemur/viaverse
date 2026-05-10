@@ -136,7 +136,17 @@ $composeDir = (Resolve-Path $composeDir).Path
 
 Push-Location $composeDir
 try {
-    docker compose --env-file .env.example up -d postgres valkey kafka mailpit minio
+    $rootEnvFile = Join-Path $composeDir "..\..\.env.local"
+    if (Test-Path $rootEnvFile) {
+        Write-Host "Using local environment file: $rootEnvFile"
+        $envFile = $rootEnvFile
+    }
+    else {
+        $envFile = Join-Path $composeDir ".env.example"
+        Write-Host "Using example env file: $envFile"
+    }
+
+    docker compose --env-file $envFile up -d postgres valkey kafka mailpit minio
     if ($LASTEXITCODE -ne 0) {
         Fail "Docker Compose could not start the core local infrastructure."
     }
