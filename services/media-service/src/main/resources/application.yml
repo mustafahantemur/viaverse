@@ -37,6 +37,16 @@ logging:
   level:
     app.viaverse: INFO
 
+object-storage:
+  provider: ${OBJECT_STORAGE_PROVIDER:seaweedfs}
+  endpoint: ${OBJECT_STORAGE_ENDPOINT:http://localhost:8333}
+  region: ${OBJECT_STORAGE_REGION:local}
+  access-key: ${OBJECT_STORAGE_ACCESS_KEY:viaverse}
+  secret-key: ${OBJECT_STORAGE_SECRET_KEY:viaverse-local-secret}
+  path-style-access: ${OBJECT_STORAGE_PATH_STYLE_ACCESS:true}
+  buckets:
+    media: ${OBJECT_STORAGE_BUCKET_MEDIA:viaverse-media-local}
+
 ---
 spring:
   config:

@@ -15,7 +15,7 @@ docker compose version
 ```powershell
 cd infra/docker-compose
 Copy-Item .env.example .env
-docker compose up -d postgres valkey kafka mailpit minio
+docker compose up -d postgres valkey kafka mailpit seaweedfs seaweedfs-bucket-init
 docker compose ps
 ```
 
@@ -70,4 +70,3 @@ npm run dev
 ```
 
 Android emulator/device work is intentionally deferred until the Android KMP target is activated in a focused slice.
-

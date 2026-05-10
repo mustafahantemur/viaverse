@@ -12,6 +12,14 @@ Use the Viaverse MCP endpoint before implementation work:
 
 If the MCP endpoint is unreachable, stop and report the connection issue. Do not generate files.
 
+If MCP tools are not exposed directly by the current agent runtime but the local endpoint is running, call it through:
+
+```powershell
+./scripts/dev/invoke-viaverse-mcp.ps1 -ToolName resolve_task_context -ArgumentsJson '{"task":"..."}'
+```
+
+The script uses `http://localhost:6275/mcp` with JSON-RPC over HTTP and the required `Accept: application/json, text/event-stream` header. Use the same script for `get_context_bundle` and `pre_coding_brief` before coding.
+
 Use compact mode:
 
 - at most 2 bounded contexts
@@ -46,4 +54,3 @@ Viaverse is not only a job marketplace. Preserve the future distinction between 
 ## Validation Posture
 
 Do not add detailed unit tests during the bootstrap. Document future validation commands until modules exist.
-

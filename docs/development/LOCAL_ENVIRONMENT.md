@@ -28,7 +28,7 @@ Manual Docker Compose:
 
 ```powershell
 cd infra/docker-compose
-docker compose up -d postgres valkey kafka mailpit minio
+docker compose up -d postgres valkey kafka mailpit seaweedfs seaweedfs-bucket-init
 ```
 
 Optional observability:
@@ -46,6 +46,8 @@ docker compose --profile search up -d opensearch
 OpenSearch is profile-gated because it is heavier than the default stack.
 
 Kafka uses an Apache Kafka local broker in KRaft mode to stay aligned with the target Kafka / Amazon MSK architecture. RabbitMQ, Firebase, and Redpanda are not part of the local foundation.
+
+Local object storage uses SeaweedFS through its S3-compatible API at `http://localhost:8333`. The `viaverse-media-local` bucket is created idempotently by the `seaweedfs-bucket-init` Compose service. Application code must use generic object-storage configuration and S3-compatible abstractions, not provider-specific APIs.
 
 ## Database Naming
 

@@ -31,10 +31,11 @@
 | Kafka | 9092 |
 | Mailpit SMTP | 1025 |
 | Mailpit UI | 8025 |
-| MinIO API | 9000 |
-| MinIO Console | 9001 |
+| SeaweedFS Master | 9333 |
+| SeaweedFS Volume | 8080 |
+| SeaweedFS Filer | 8888 |
+| SeaweedFS S3 API | 8333 |
 | Prometheus | 9090 |
 | OpenTelemetry gRPC | 4317 |
 | OpenTelemetry HTTP | 4318 |
 | OpenSearch optional profile | 9200 |
-

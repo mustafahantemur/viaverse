@@ -71,7 +71,7 @@ Manual commands:
 ```powershell
 cd infra/docker-compose
 docker compose config
-docker compose up -d postgres valkey kafka mailpit minio
+docker compose up -d postgres valkey kafka mailpit seaweedfs seaweedfs-bucket-init
 docker compose ps
 ```
 

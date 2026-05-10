@@ -93,6 +93,28 @@ function Wait-ContainerHealthy($containerName, $timeoutSeconds) {
     Fail "Timed out waiting for $containerName to become healthy."
 }
 
+function Wait-ContainerCompleted($containerName, $timeoutSeconds) {
+    $deadline = (Get-Date).AddSeconds($timeoutSeconds)
+    do {
+        $status = docker inspect --format="{{.State.Status}}" $containerName 2>$null
+        $exitCode = docker inspect --format="{{.State.ExitCode}}" $containerName 2>$null
+        if ($status -eq "exited" -and $exitCode -eq "0") {
+            Write-Host "$containerName completed successfully."
+            return
+        }
+
+        if ($status -eq "exited" -and $exitCode -ne "0") {
+            docker logs $containerName
+            Fail "$containerName failed with exit code $exitCode."
+        }
+
+        Write-Host "Waiting for $containerName to complete..."
+        Start-Sleep -Seconds 2
+    } while ((Get-Date) -lt $deadline)
+
+    Fail "Timed out waiting for $containerName to complete."
+}
+
 function Get-ContainerEnv($containerName, $name, $fallback) {
     $value = docker exec $containerName printenv $name 2>$null
     if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($value)) {
@@ -146,12 +168,14 @@ try {
         Write-Host "Using example env file: $envFile"
     }
 
-    docker compose --env-file $envFile up -d postgres valkey kafka mailpit minio
+    docker compose --env-file $envFile up -d postgres valkey kafka mailpit seaweedfs seaweedfs-bucket-init
     if ($LASTEXITCODE -ne 0) {
         Fail "Docker Compose could not start the core local infrastructure."
     }
 
     Wait-ContainerHealthy "viaverse-postgres" 120
+    Wait-ContainerHealthy "viaverse-seaweedfs" 120
+    Wait-ContainerCompleted "viaverse-seaweedfs-bucket-init" 120
     Ensure-PostgresDatabases
 
     Write-Host "Core local infrastructure is ready."
