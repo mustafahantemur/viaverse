@@ -44,14 +44,177 @@
     {
       "label": "backend: ready",
       "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "docker: initial setup",
+        "db: migrate local"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready identity-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free identity-service"],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready marketplace-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free marketplace-service"],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready payment-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free payment-service"],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready messaging-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free messaging-service"],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready media-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free media-service"],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready notification-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free notification-service"],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready search-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free search-service"],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready trust-gamification-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free trust-gamification-service"],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready ads-monetization-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free ads-monetization-service"],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready admin-bff",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free admin-bff"],
+      "problemMatcher": []
+    },
+    {
+      "label": "db: migrate local",
+      "type": "shell",
       "command": "powershell",
       "args": [
         "-NoProfile",
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "${workspaceFolder}/scripts/dev/start-core-infra.ps1"
+        "${workspaceFolder}/scripts/dev/migrate-local.ps1"
       ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free app ports",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free identity-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8101"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free marketplace-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8102"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free payment-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8103"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free messaging-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8104"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free media-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8105"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free notification-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8106"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free search-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8107"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free trust-gamification-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8108"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free ads-monetization-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8109"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free admin-bff",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8110"],
       "problemMatcher": []
     },
     {

@@ -16,8 +16,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "shortenCommandLine": "argfile",
-      "vmArgs": "-Dspring.profiles.active=local",
-      "preLaunchTask": "backend: ready"
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/identity-service/src/main/resources/",
+      "preLaunchTask": "backend: ready identity-service"
     },
     {
       "type": "java",
@@ -27,8 +28,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "shortenCommandLine": "argfile",
-      "vmArgs": "-Dspring.profiles.active=local",
-      "preLaunchTask": "backend: ready"
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/marketplace-service/src/main/resources/",
+      "preLaunchTask": "backend: ready marketplace-service"
     },
     {
       "type": "java",
@@ -38,8 +40,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "shortenCommandLine": "argfile",
-      "vmArgs": "-Dspring.profiles.active=local",
-      "preLaunchTask": "backend: ready"
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/payment-service/src/main/resources/",
+      "preLaunchTask": "backend: ready payment-service"
     },
     {
       "type": "java",
@@ -49,8 +52,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "shortenCommandLine": "argfile",
-      "vmArgs": "-Dspring.profiles.active=local",
-      "preLaunchTask": "backend: ready"
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/messaging-service/src/main/resources/",
+      "preLaunchTask": "backend: ready messaging-service"
     },
     {
       "type": "java",
@@ -60,8 +64,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "shortenCommandLine": "argfile",
-      "vmArgs": "-Dspring.profiles.active=local",
-      "preLaunchTask": "backend: ready"
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/media-service/src/main/resources/",
+      "preLaunchTask": "backend: ready media-service"
     },
     {
       "type": "java",
@@ -71,8 +76,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "shortenCommandLine": "argfile",
-      "vmArgs": "-Dspring.profiles.active=local",
-      "preLaunchTask": "backend: ready"
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/notification-service/src/main/resources/",
+      "preLaunchTask": "backend: ready notification-service"
     },
     {
       "type": "java",
@@ -82,8 +88,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "shortenCommandLine": "argfile",
-      "vmArgs": "-Dspring.profiles.active=local",
-      "preLaunchTask": "backend: ready"
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/search-service/src/main/resources/",
+      "preLaunchTask": "backend: ready search-service"
     },
     {
       "type": "java",
@@ -93,8 +100,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "shortenCommandLine": "argfile",
-      "vmArgs": "-Dspring.profiles.active=local",
-      "preLaunchTask": "backend: ready"
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/trust-gamification-service/src/main/resources/",
+      "preLaunchTask": "backend: ready trust-gamification-service"
     },
     {
       "type": "java",
@@ -104,8 +112,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "shortenCommandLine": "argfile",
-      "vmArgs": "-Dspring.profiles.active=local",
-      "preLaunchTask": "backend: ready"
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/ads-monetization-service/src/main/resources/",
+      "preLaunchTask": "backend: ready ads-monetization-service"
     },
     {
       "type": "java",
@@ -115,8 +124,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "shortenCommandLine": "argfile",
-      "vmArgs": "-Dspring.profiles.active=local",
-      "preLaunchTask": "backend: ready"
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/admin-bff/src/main/resources/",
+      "preLaunchTask": "backend: ready admin-bff"
     },
     {
       "type": "node-terminal",

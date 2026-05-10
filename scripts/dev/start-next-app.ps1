@@ -18,6 +18,9 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
 
 $appDir = Join-Path $PSScriptRoot "..\..\apps\$App"
 $appDir = (Resolve-Path $appDir).Path
+$port = if ($App -eq "web-next") { 3000 } else { 3001 }
+
+& "$PSScriptRoot\stop-local-app-ports.ps1" -Ports @($port)
 
 Push-Location $appDir
 try {
