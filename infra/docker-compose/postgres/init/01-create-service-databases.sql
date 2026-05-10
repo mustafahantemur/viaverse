@@ -1,0 +1,22 @@
+CREATE DATABASE viaverse_identity;
+CREATE DATABASE viaverse_marketplace;
+CREATE DATABASE viaverse_payment;
+CREATE DATABASE viaverse_messaging;
+CREATE DATABASE viaverse_media;
+CREATE DATABASE viaverse_notification;
+CREATE DATABASE viaverse_search;
+CREATE DATABASE viaverse_trust_gamification;
+CREATE DATABASE viaverse_ads_monetization;
+CREATE DATABASE viaverse_admin_bff;
+
+CREATE DATABASE viaverse_identity_test;
+CREATE DATABASE viaverse_marketplace_test;
+CREATE DATABASE viaverse_payment_test;
+CREATE DATABASE viaverse_messaging_test;
+CREATE DATABASE viaverse_media_test;
+CREATE DATABASE viaverse_notification_test;
+CREATE DATABASE viaverse_search_test;
+CREATE DATABASE viaverse_trust_gamification_test;
+CREATE DATABASE viaverse_ads_monetization_test;
+CREATE DATABASE viaverse_admin_bff_test;
+

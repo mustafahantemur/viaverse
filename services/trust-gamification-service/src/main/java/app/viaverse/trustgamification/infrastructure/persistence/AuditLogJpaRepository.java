@@ -1,0 +1,7 @@
+package app.viaverse.trustgamification.infrastructure.persistence;
+
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AuditLogJpaRepository extends JpaRepository<AuditLogJpaEntity, UUID> {
+}

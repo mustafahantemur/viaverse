@@ -1,0 +1,194 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node-terminal",
+      "name": "docker initial setup",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-core-infra.ps1\"",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "java",
+      "name": "debug identity-service",
+      "request": "launch",
+      "mainClass": "app.viaverse.identity.IdentityServiceApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "vmArgs": "-Dspring.profiles.active=local",
+      "preLaunchTask": "backend: ready"
+    },
+    {
+      "type": "java",
+      "name": "debug marketplace-service",
+      "request": "launch",
+      "mainClass": "app.viaverse.marketplace.MarketplaceServiceApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "vmArgs": "-Dspring.profiles.active=local",
+      "preLaunchTask": "backend: ready"
+    },
+    {
+      "type": "java",
+      "name": "debug payment-service",
+      "request": "launch",
+      "mainClass": "app.viaverse.payment.PaymentServiceApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "vmArgs": "-Dspring.profiles.active=local",
+      "preLaunchTask": "backend: ready"
+    },
+    {
+      "type": "java",
+      "name": "debug messaging-service",
+      "request": "launch",
+      "mainClass": "app.viaverse.messaging.MessagingServiceApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "vmArgs": "-Dspring.profiles.active=local",
+      "preLaunchTask": "backend: ready"
+    },
+    {
+      "type": "java",
+      "name": "debug media-service",
+      "request": "launch",
+      "mainClass": "app.viaverse.media.MediaServiceApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "vmArgs": "-Dspring.profiles.active=local",
+      "preLaunchTask": "backend: ready"
+    },
+    {
+      "type": "java",
+      "name": "debug notification-service",
+      "request": "launch",
+      "mainClass": "app.viaverse.notification.NotificationServiceApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "vmArgs": "-Dspring.profiles.active=local",
+      "preLaunchTask": "backend: ready"
+    },
+    {
+      "type": "java",
+      "name": "debug search-service",
+      "request": "launch",
+      "mainClass": "app.viaverse.search.SearchServiceApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "vmArgs": "-Dspring.profiles.active=local",
+      "preLaunchTask": "backend: ready"
+    },
+    {
+      "type": "java",
+      "name": "debug trust-gamification-service",
+      "request": "launch",
+      "mainClass": "app.viaverse.trustgamification.TrustGamificationServiceApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "vmArgs": "-Dspring.profiles.active=local",
+      "preLaunchTask": "backend: ready"
+    },
+    {
+      "type": "java",
+      "name": "debug ads-monetization-service",
+      "request": "launch",
+      "mainClass": "app.viaverse.adsmonetization.AdsMonetizationServiceApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "vmArgs": "-Dspring.profiles.active=local",
+      "preLaunchTask": "backend: ready"
+    },
+    {
+      "type": "java",
+      "name": "debug admin-bff",
+      "request": "launch",
+      "mainClass": "app.viaverse.adminbff.AdminBffApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "vmArgs": "-Dspring.profiles.active=local",
+      "preLaunchTask": "backend: ready"
+    },
+    {
+      "type": "node-terminal",
+      "name": "run web-next",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-next-app.ps1\" -App web-next",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node-terminal",
+      "name": "run admin-next",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-next-app.ps1\" -App admin-next",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node-terminal",
+      "name": "run mobile-kmp desktop",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-mobile-desktop.ps1\"",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node-terminal",
+      "name": "run mobile-kmp android",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-mobile-android.ps1\"",
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "debug backend: all services",
+      "configurations": [
+        "debug identity-service",
+        "debug marketplace-service",
+        "debug payment-service",
+        "debug messaging-service",
+        "debug media-service",
+        "debug notification-service",
+        "debug search-service",
+        "debug trust-gamification-service",
+        "debug ads-monetization-service",
+        "debug admin-bff"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "run web apps",
+      "configurations": [
+        "run web-next",
+        "run admin-next"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "run local stack: backend + web apps",
+      "configurations": [
+        "debug identity-service",
+        "debug marketplace-service",
+        "debug payment-service",
+        "debug messaging-service",
+        "debug media-service",
+        "debug notification-service",
+        "debug search-service",
+        "debug trust-gamification-service",
+        "debug ads-monetization-service",
+        "debug admin-bff",
+        "run web-next",
+        "run admin-next"
+      ],
+      "stopAll": true
+    }
+  ]
+}
