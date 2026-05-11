@@ -1,6 +1,5 @@
 package app.viaverse.identity.account.domain;
 
-import app.viaverse.identity.account.domain.AccountStatus;
 import java.time.Instant;
 import java.util.UUID;
 

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 public class ConsentPolicy {
     private static final Set<ConsentType> REQUIRED_CONSENTS = Set.of(
             ConsentType.TERMS_OF_SERVICE,
-            ConsentType.KVKK_CLARIFICATION
+            ConsentType.PERSONAL_DATA_PROTECTION_LAW
     );
 
     public void validateRequiredConsents(List<ConsentInput> requiredConsents) {
@@ -28,7 +28,7 @@ public class ConsentPolicy {
         if (!acceptedTypes.containsAll(REQUIRED_CONSENTS)) {
             throw IdentityErrors.requiredConsentsMissing(Map.of(
                     "requiredConsents",
-                    "must include TERMS_OF_SERVICE and KVKK_CLARIFICATION"
+                    "must include TERMS_OF_SERVICE and PERSONAL_DATA_PROTECTION_LAW"
             ));
         }
     }

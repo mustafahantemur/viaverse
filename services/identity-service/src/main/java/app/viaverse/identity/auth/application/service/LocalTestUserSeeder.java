@@ -29,7 +29,7 @@ public class LocalTestUserSeeder implements ApplicationRunner {
 
     private static final Set<ConsentType> REQUIRED_CONSENTS = Set.of(
             ConsentType.TERMS_OF_SERVICE,
-            ConsentType.KVKK_CLARIFICATION
+            ConsentType.PERSONAL_DATA_PROTECTION_LAW
     );
 
     private final AuthProperties properties;

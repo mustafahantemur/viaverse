@@ -1,6 +1,5 @@
 package app.viaverse.identity.auth.infrastructure.otp;
 
-import app.viaverse.identity.auth.infrastructure.otp.OtpDeliveryPort;
 import app.viaverse.identity.auth.domain.value.OtpDeliveryRequest;
 import app.viaverse.shared.kernel.error.TechnicalException;
 

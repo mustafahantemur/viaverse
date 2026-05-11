@@ -473,7 +473,7 @@ class IdentityAuthIntegrationTest {
                         JOIN identity_identifier ii ON ii.account_id = cr.account_id
                         WHERE ii.normalized_identifier IN (?, ?)
                           AND cr.consent_category = 'REQUIRED_LEGAL'
-                          AND cr.consent_type IN ('TERMS_OF_SERVICE', 'KVKK_CLARIFICATION')
+                          AND cr.consent_type IN ('TERMS_OF_SERVICE', 'PERSONAL_DATA_PROTECTION_LAW')
                           AND cr.accepted = true
                         """,
                 Integer.class,
@@ -533,7 +533,7 @@ class IdentityAuthIntegrationTest {
         request.put("lastName", "Lovelace");
         request.put("requiredConsents", List.of(
                 Map.of("type", "TERMS_OF_SERVICE", "version", "v1"),
-                Map.of("type", "KVKK_CLARIFICATION", "version", "v1")
+                Map.of("type", "PERSONAL_DATA_PROTECTION_LAW", "version", "v1")
         ));
         request.put("marketingConsentAccepted", false);
         return request;
