@@ -1,4 +1,4 @@
-package app.viaverse.identity.auth.application;
+package app.viaverse.identity.auth.application.usecase;
 
 import app.viaverse.identity.account.infrastructure.persistence.entity.IdentityAccountJpaEntity;
 import app.viaverse.identity.auth.api.dto.AuthResponse;
@@ -9,17 +9,15 @@ import app.viaverse.identity.auth.infrastructure.persistence.entity.AuthSessionJ
 import app.viaverse.identity.shared.audit.IdentityAuditEvent;
 import app.viaverse.identity.shared.audit.IdentityAuditEvents;
 import app.viaverse.identity.shared.error.IdentityException;
+import app.viaverse.identity.shared.logging.ActionLogContext;
+import app.viaverse.identity.shared.logging.ObservedAction;
 import app.viaverse.observability.audit.AuditLogger;
 import java.time.Instant;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RefreshTokenUseCase {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RefreshTokenUseCase.class);
-
     private final RefreshTokenRotationService rotationService;
     private final AuthSessionIssuer sessionIssuer;
     private final AuditLogger auditLogger;
@@ -34,20 +32,17 @@ public class RefreshTokenUseCase {
         this.auditLogger = auditLogger;
     }
 
+    @ObservedAction("token.refresh")
     @Transactional(noRollbackFor = IdentityException.class)
     public AuthResponse refresh(String refreshToken, String userAgent) {
         Instant now = Instant.now();
         Rotation rotation = rotationService.rotate(refreshToken, now);
         AuthSessionJpaEntity session = sessionIssuer.activeSession(rotation.sessionId(), now);
+        ActionLogContext.put("auth.session_id", session.getId());
         session.touch(now);
         IdentityAccountJpaEntity account = sessionIssuer.activeAccount(session.getAccountId());
-        IdentityAuditEvents.recordAccountSecurityEvent(auditLogger, account.getId(), IdentityAuditEvent.REFRESH);
-        LOGGER.atInfo()
-                .addKeyValue("event.action", "token.refresh")
-                .addKeyValue("event.outcome", "success")
-                .addKeyValue("auth.session_id", session.getId())
-                .addKeyValue("user.id", account.getId())
-                .log("token.refresh succeeded");
+        IdentityAuditEvents.recordAccountSecurityEvent(auditLogger, account.getId(), IdentityAuditEvent.REFRESH_TOKEN_ROTATED);
+        ActionLogContext.put("user.id", account.getId());
         return sessionIssuer.issueForExistingSession(account, session, rotation.refreshToken(), now);
     }
 }

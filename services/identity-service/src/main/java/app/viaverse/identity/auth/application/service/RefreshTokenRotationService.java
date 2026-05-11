@@ -8,7 +8,10 @@ import app.viaverse.identity.auth.infrastructure.persistence.repository.AuthSess
 import app.viaverse.identity.auth.infrastructure.security.SecureTokenGenerator;
 import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
 import app.viaverse.identity.config.AuthProperties;
+import app.viaverse.identity.shared.audit.IdentityAuditEvent;
+import app.viaverse.identity.shared.audit.IdentityAuditEvents;
 import app.viaverse.identity.shared.error.IdentityErrors;
+import app.viaverse.observability.audit.AuditLogger;
 import java.time.Instant;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -24,19 +27,22 @@ public class RefreshTokenRotationService {
     private final SecureTokenGenerator tokenGenerator;
     private final AuthSessionJpaRepository sessionRepository;
     private final AuthRefreshTokenJpaRepository refreshTokenRepository;
+    private final AuditLogger auditLogger;
 
     public RefreshTokenRotationService(
             AuthProperties properties,
             TokenHasher tokenHasher,
             SecureTokenGenerator tokenGenerator,
             AuthSessionJpaRepository sessionRepository,
-            AuthRefreshTokenJpaRepository refreshTokenRepository
+            AuthRefreshTokenJpaRepository refreshTokenRepository,
+            AuditLogger auditLogger
     ) {
         this.properties = properties;
         this.tokenHasher = tokenHasher;
         this.tokenGenerator = tokenGenerator;
         this.sessionRepository = sessionRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.auditLogger = auditLogger;
     }
 
     public Rotation rotate(String refreshToken, Instant now) {
@@ -81,7 +87,14 @@ public class RefreshTokenRotationService {
                     .addKeyValue("event.outcome", "reuse_detected")
                     .addKeyValue("auth.session_id", token.getSessionId())
                     .log("token.refresh reuse_detected");
-            sessionRepository.findById(token.getSessionId()).ifPresent(session -> revokeSessionTokens(session, now));
+            sessionRepository.findById(token.getSessionId()).ifPresent(session -> {
+                IdentityAuditEvents.recordAccountSecurityEvent(
+                        auditLogger,
+                        session.getAccountId(),
+                        IdentityAuditEvent.REFRESH_TOKEN_REUSED
+                );
+                revokeSessionTokens(session, now);
+            });
         }
         throw IdentityErrors.invalidRefreshToken();
     }

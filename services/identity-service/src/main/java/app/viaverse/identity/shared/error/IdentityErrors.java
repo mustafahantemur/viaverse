@@ -1,6 +1,8 @@
 package app.viaverse.identity.shared.error;
 
 import app.viaverse.shared.kernel.error.AppErrorCode;
+import app.viaverse.shared.kernel.error.TechnicalException;
+import app.viaverse.shared.kernel.error.ValidationException;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 
@@ -94,6 +96,65 @@ public final class IdentityErrors {
 
     public static IdentityException accountNotActive() {
         return unauthorized(AppErrorCode.AUTH_ACCOUNT_NOT_ACTIVE, "Account is not active");
+    }
+
+    public static ValidationException identifierRequired() {
+        return new ValidationException("Identifier is required", Map.of("identifier", "must not be blank"));
+    }
+
+    public static ValidationException invalidEmailIdentifier() {
+        return new ValidationException("Invalid identifier", Map.of("identifier", "must be a valid email"));
+    }
+
+    public static ValidationException invalidIdentifier() {
+        return new ValidationException("Invalid identifier", Map.of("identifier", "must be a valid email or phone"));
+    }
+
+    public static TechnicalException jwtSecretRequired() {
+        return technicalConfiguration("Identity JWT secret must be configured");
+    }
+
+    public static TechnicalException jwtSecretTooWeak() {
+        return technicalConfiguration("Identity JWT secret must be at least 32 bytes");
+    }
+
+    public static TechnicalException debugOtpProfileInvalid() {
+        return technicalConfiguration("Debug OTP can only be enabled in local or test profiles");
+    }
+
+    public static TechnicalException debugSeedUsersProfileInvalid() {
+        return technicalConfiguration("Debug seed users can only be enabled in local or test profiles");
+    }
+
+    public static TechnicalException debugOtpFixedValueRequired() {
+        return technicalConfiguration("Debug OTP is enabled but no fixed OTP is configured");
+    }
+
+    public static TechnicalException smsProviderDisabled() {
+        return new TechnicalException(
+                AppErrorCode.AUTH_PROVIDER_DISABLED,
+                "SMS OTP delivery is not implemented yet"
+        );
+    }
+
+    public static TechnicalException tokenHashFailed(Throwable cause) {
+        return new TechnicalException(
+                AppErrorCode.TECHNICAL_TOKEN_HASH_FAILED,
+                "Unable to hash token",
+                cause
+        );
+    }
+
+    public static TechnicalException jwtEncodingFailed(Throwable cause) {
+        return new TechnicalException(
+                AppErrorCode.TECHNICAL_JWT_ENCODING_FAILED,
+                "Unable to encode access token",
+                cause
+        );
+    }
+
+    private static TechnicalException technicalConfiguration(String message) {
+        return new TechnicalException(AppErrorCode.AUTH_PROVIDER_CONFIGURATION_INVALID, message);
     }
 
     private static IdentityException unauthorized(AppErrorCode code, String message) {

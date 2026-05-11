@@ -7,16 +7,19 @@ import app.viaverse.identity.auth.api.dto.StartAuthRequest;
 import app.viaverse.identity.auth.api.dto.AuthResponse;
 import app.viaverse.identity.auth.api.dto.VerifyOtpRequest;
 import app.viaverse.identity.auth.api.dto.VerifyOtpResponse;
-import app.viaverse.identity.auth.application.CompleteRegistrationUseCase;
-import app.viaverse.identity.auth.application.LogoutUseCase;
-import app.viaverse.identity.auth.application.RefreshTokenUseCase;
-import app.viaverse.identity.auth.application.StartAuthUseCase;
-import app.viaverse.identity.auth.application.VerifyOtpUseCase;
+import app.viaverse.identity.auth.application.usecase.CompleteRegistrationUseCase;
+import app.viaverse.identity.auth.application.usecase.LogoutUseCase;
+import app.viaverse.identity.auth.application.usecase.RefreshTokenUseCase;
+import app.viaverse.identity.auth.application.usecase.StartAuthUseCase;
+import app.viaverse.identity.auth.application.usecase.VerifyOtpUseCase;
+import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
 import app.viaverse.identity.consent.domain.ConsentInput;
 import app.viaverse.identity.auth.api.dto.StartAuthResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -31,19 +34,22 @@ public class AuthController {
     private final CompleteRegistrationUseCase completeRegistrationUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final LogoutUseCase logoutUseCase;
+    private final JwtPrincipalResolver jwtPrincipalResolver;
 
     public AuthController(
             StartAuthUseCase startAuthUseCase,
             VerifyOtpUseCase verifyOtpUseCase,
             CompleteRegistrationUseCase completeRegistrationUseCase,
             RefreshTokenUseCase refreshTokenUseCase,
-            LogoutUseCase logoutUseCase
+            LogoutUseCase logoutUseCase,
+            JwtPrincipalResolver jwtPrincipalResolver
     ) {
         this.startAuthUseCase = startAuthUseCase;
         this.verifyOtpUseCase = verifyOtpUseCase;
         this.completeRegistrationUseCase = completeRegistrationUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
         this.logoutUseCase = logoutUseCase;
+        this.jwtPrincipalResolver = jwtPrincipalResolver;
     }
 
     @PostMapping("/start")
@@ -92,10 +98,13 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestBody(required = false) LogoutRequest request
     ) {
-        logoutUseCase.logout(authorization, request == null ? null : request.refreshToken());
+        logoutUseCase.logout(
+                jwt == null ? null : jwtPrincipalResolver.resolve(jwt),
+                request == null ? null : request.refreshToken()
+        );
         return ResponseEntity.noContent().build();
     }
 
