@@ -2,8 +2,7 @@ package app.viaverse.identity.shared.normalization;
 
 import app.viaverse.identity.auth.domain.enums.IdentifierType;
 import app.viaverse.identity.auth.domain.value.NormalizedIdentifier;
-import app.viaverse.shared.kernel.error.ValidationException;
-import java.util.Map;
+import app.viaverse.identity.shared.error.IdentityErrors;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 
@@ -14,14 +13,14 @@ public class IdentifierNormalizer {
 
     public NormalizedIdentifier normalize(String rawIdentifier) {
         if (rawIdentifier == null || rawIdentifier.isBlank()) {
-            throw new ValidationException("Identifier is required", Map.of("identifier", "must not be blank"));
+            throw IdentityErrors.identifierRequired();
         }
 
         String candidate = rawIdentifier.trim();
         if (candidate.contains("@")) {
             String email = candidate.toLowerCase();
             if (!EMAIL_PATTERN.matcher(email).matches()) {
-                throw new ValidationException("Invalid identifier", Map.of("identifier", "must be a valid email"));
+                throw IdentityErrors.invalidEmailIdentifier();
             }
             return new NormalizedIdentifier(IdentifierType.EMAIL, email);
         }
@@ -31,7 +30,7 @@ public class IdentifierNormalizer {
             phone = "+" + phone.substring(2);
         }
         if (!PHONE_PATTERN.matcher(phone).matches()) {
-            throw new ValidationException("Invalid identifier", Map.of("identifier", "must be a valid email or phone"));
+            throw IdentityErrors.invalidIdentifier();
         }
         return new NormalizedIdentifier(IdentifierType.PHONE, phone);
     }

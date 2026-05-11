@@ -13,7 +13,6 @@ import app.viaverse.identity.auth.infrastructure.persistence.entity.AuthSessionJ
 import app.viaverse.identity.auth.infrastructure.persistence.repository.AuthRefreshTokenJpaRepository;
 import app.viaverse.identity.auth.infrastructure.persistence.repository.AuthSessionJpaRepository;
 import app.viaverse.identity.auth.infrastructure.security.JwtAccessTokenService;
-import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.SecureTokenGenerator;
 import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
 import app.viaverse.identity.config.AuthProperties;
@@ -88,13 +87,6 @@ public class AuthSessionIssuer {
                 jwtAccessTokenService.expiresInSeconds(),
                 accountView(account)
         );
-    }
-
-    public JwtPrincipal authenticate(String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw IdentityErrors.bearerTokenRequired();
-        }
-        return jwtAccessTokenService.verify(authorizationHeader.substring("Bearer ".length()), Instant.now());
     }
 
     public AuthSessionJpaEntity activeSession(UUID sessionId, Instant now) {

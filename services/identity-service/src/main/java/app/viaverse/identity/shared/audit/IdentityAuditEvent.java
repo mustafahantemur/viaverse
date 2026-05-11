@@ -1,18 +1,13 @@
 package app.viaverse.identity.shared.audit;
 
 public enum IdentityAuditEvent {
-    LOGIN("identity-login"),
-    REGISTER("identity-register"),
-    REFRESH("identity-refresh"),
-    LOGOUT("identity-logout");
-
-    private final String source;
-
-    IdentityAuditEvent(String source) {
-        this.source = source;
-    }
-
-    public String source() {
-        return source;
-    }
+    ACCOUNT_CREATED,
+    LOGIN_SUCCEEDED,
+    LOGIN_FAILED,
+    OTP_VERIFIED,
+    OTP_FAILED,
+    REFRESH_TOKEN_ROTATED,
+    REFRESH_TOKEN_REUSED,
+    SESSION_REVOKED,
+    CONSENT_ACCEPTED
 }

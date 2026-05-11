@@ -1,4 +1,4 @@
-package app.viaverse.identity.auth.application;
+package app.viaverse.identity.auth.application.usecase;
 
 import app.viaverse.identity.account.domain.AccountStatus;
 import app.viaverse.identity.account.infrastructure.persistence.entity.IdentityAccountJpaEntity;
@@ -18,21 +18,18 @@ import app.viaverse.identity.consent.infrastructure.persistence.entity.ConsentRe
 import app.viaverse.identity.consent.infrastructure.persistence.repository.ConsentRecordJpaRepository;
 import app.viaverse.identity.shared.audit.IdentityAuditEvent;
 import app.viaverse.identity.shared.audit.IdentityAuditEvents;
-import app.viaverse.identity.shared.error.IdentityException;
+import app.viaverse.identity.shared.logging.ActionLogContext;
+import app.viaverse.identity.shared.logging.ObservedAction;
 import app.viaverse.observability.audit.AuditLogger;
 import app.viaverse.observability.logging.SafeLogFields;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CompleteRegistrationUseCase {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CompleteRegistrationUseCase.class);
-
     private final RegistrationPolicy registrationPolicy;
     private final ConsentPolicy consentPolicy;
     private final RegistrationTokenService registrationTokenService;
@@ -62,6 +59,7 @@ public class CompleteRegistrationUseCase {
         this.auditLogger = auditLogger;
     }
 
+    @ObservedAction("auth.register")
     @Transactional
     public AuthResponse complete(
             String registrationToken,
@@ -73,19 +71,12 @@ public class CompleteRegistrationUseCase {
             String userAgent
     ) {
         Instant now = Instant.now();
-        AuthLoginFlowJpaEntity flow;
-        try {
-            registrationPolicy.validateProfile(displayName);
-            consentPolicy.validateRequiredConsents(requiredConsents);
-            flow = registrationTokenService.consumeRegistrationToken(registrationToken, now);
-        } catch (IdentityException exception) {
-            LOGGER.atWarn()
-                    .addKeyValue("event.action", "auth.register")
-                    .addKeyValue("event.outcome", "failure")
-                    .addKeyValue("error.code", exception.errorCode())
-                    .log("auth.register failed");
-            throw exception;
-        }
+        registrationPolicy.validateProfile(displayName);
+        consentPolicy.validateRequiredConsents(requiredConsents);
+        AuthLoginFlowJpaEntity flow = registrationTokenService.consumeRegistrationToken(registrationToken, now);
+        ActionLogContext.put("auth.flow_id", flow.getId());
+        ActionLogContext.put("auth.identifier_type", flow.getIdentifierType());
+        ActionLogContext.put("auth.identifier_masked", SafeLogFields.maskIdentifier(flow.getNormalizedIdentifier()));
 
         UUID accountId = UUID.randomUUID();
         IdentityAccountJpaEntity account = accountRepository.save(new IdentityAccountJpaEntity(
@@ -130,15 +121,8 @@ public class CompleteRegistrationUseCase {
                 "registration"
         ));
         flow.complete(accountId, now);
-        IdentityAuditEvents.recordAccountSecurityEvent(auditLogger, accountId, IdentityAuditEvent.REGISTER);
-        LOGGER.atInfo()
-                .addKeyValue("event.action", "auth.register")
-                .addKeyValue("event.outcome", "success")
-                .addKeyValue("auth.flow_id", flow.getId())
-                .addKeyValue("auth.identifier_type", flow.getIdentifierType())
-                .addKeyValue("auth.identifier_masked", SafeLogFields.maskIdentifier(flow.getNormalizedIdentifier()))
-                .addKeyValue("user.id", accountId)
-                .log("auth.register succeeded");
+        IdentityAuditEvents.recordAccountSecurityEvent(auditLogger, accountId, IdentityAuditEvent.ACCOUNT_CREATED);
+        ActionLogContext.put("user.id", accountId);
         return sessionIssuer.issue(account, userAgent, now);
     }
 

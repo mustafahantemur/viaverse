@@ -5,8 +5,15 @@ public final class TechnicalException extends AppException {
         super(AppErrorCode.TECHNICAL_ERROR, message);
     }
 
+    public TechnicalException(AppErrorCode errorCode, String message) {
+        super(errorCode, message);
+    }
+
     public TechnicalException(String message, Throwable cause) {
         super(AppErrorCode.TECHNICAL_ERROR, message, cause);
     }
-}
 
+    public TechnicalException(AppErrorCode errorCode, String message, Throwable cause) {
+        super(errorCode, message, cause);
+    }
+}

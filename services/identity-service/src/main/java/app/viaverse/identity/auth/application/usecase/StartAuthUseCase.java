@@ -1,4 +1,4 @@
-package app.viaverse.identity.auth.application;
+package app.viaverse.identity.auth.application.usecase;
 
 import app.viaverse.identity.auth.api.dto.StartAuthResponse;
 import app.viaverse.identity.auth.application.service.AuthAbuseProtectionService;
@@ -12,19 +12,17 @@ import app.viaverse.identity.auth.infrastructure.persistence.repository.AuthLogi
 import app.viaverse.identity.auth.infrastructure.persistence.repository.IdentityIdentifierJpaRepository;
 import app.viaverse.identity.config.AuthProperties;
 import app.viaverse.identity.shared.error.RateLimitExceededException;
+import app.viaverse.identity.shared.logging.ActionLogContext;
+import app.viaverse.identity.shared.logging.ObservedAction;
 import app.viaverse.identity.shared.normalization.IdentifierNormalizer;
 import app.viaverse.observability.logging.SafeLogFields;
 import java.time.Instant;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class StartAuthUseCase {
-    private static final Logger LOGGER = LoggerFactory.getLogger(StartAuthUseCase.class);
-
     private final AuthProperties properties;
     private final IdentifierNormalizer identifierNormalizer;
     private final AuthAbuseProtectionService abuseProtectionService;
@@ -48,28 +46,14 @@ public class StartAuthUseCase {
         this.flowRepository = flowRepository;
     }
 
+    @ObservedAction("auth.start")
     @Transactional(noRollbackFor = RateLimitExceededException.class)
     public StartAuthResponse start(String identifier, String clientIp, String clientFingerprint) {
         Instant now = Instant.now();
         NormalizedIdentifier normalized = identifierNormalizer.normalize(identifier);
-        LOGGER.atInfo()
-                .addKeyValue("event.action", "auth.start")
-                .addKeyValue("event.outcome", "requested")
-                .addKeyValue("auth.identifier_type", normalized.type())
-                .addKeyValue("auth.identifier_masked", SafeLogFields.maskIdentifier(normalized.value()))
-                .log("auth.start requested");
-        try {
-            abuseProtectionService.enforceStart(normalized, clientIp, clientFingerprint, now);
-        } catch (RateLimitExceededException exception) {
-            LOGGER.atWarn()
-                    .addKeyValue("event.action", "auth.start")
-                    .addKeyValue("event.outcome", "rate_limited")
-                    .addKeyValue("auth.identifier_type", normalized.type())
-                    .addKeyValue("auth.identifier_masked", SafeLogFields.maskIdentifier(normalized.value()))
-                    .addKeyValue("retry_after_seconds", exception.retryAfterSeconds())
-                    .log("auth.start rate_limited");
-            throw exception;
-        }
+        ActionLogContext.put("auth.identifier_type", normalized.type());
+        ActionLogContext.put("auth.identifier_masked", SafeLogFields.maskIdentifier(normalized.value()));
+        abuseProtectionService.enforceStart(normalized, clientIp, clientFingerprint, now);
 
         UUID accountId = identifierRepository.findByIdentifierTypeAndNormalizedIdentifier(
                         normalized.type(),
@@ -89,12 +73,7 @@ public class StartAuthUseCase {
                 now
         ));
         String debugOtp = otpChallengeService.issue(flow.getId(), normalized, expiresAt, now);
-        LOGGER.atInfo()
-                .addKeyValue("event.action", "auth.start")
-                .addKeyValue("event.outcome", "success")
-                .addKeyValue("auth.flow_id", flow.getId())
-                .addKeyValue("auth.identifier_type", normalized.type())
-                .log("auth.start succeeded");
+        ActionLogContext.put("auth.flow_id", flow.getId());
         return new StartAuthResponse(
                 flow.getId(),
                 normalized.type(),

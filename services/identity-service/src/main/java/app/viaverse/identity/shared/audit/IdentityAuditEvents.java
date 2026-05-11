@@ -25,7 +25,7 @@ public final class IdentityAuditEvents {
                 AuditAction.TECHNICAL_ACCESS,
                 "identity",
                 accountId.toString(),
-                new AuditContext(null, null, event.source()),
+                new AuditContext(null, null, event.name()),
                 Map.of()
         ));
     }
