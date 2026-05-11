@@ -1,7 +1,7 @@
 package app.viaverse.identity.config;
 
-import app.viaverse.identity.domain.auth.OtpDeliveryProvider;
-import app.viaverse.identity.domain.auth.SmsProvider;
+import app.viaverse.identity.auth.domain.enums.OtpDeliveryProvider;
+import app.viaverse.identity.auth.domain.enums.SmsProvider;
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

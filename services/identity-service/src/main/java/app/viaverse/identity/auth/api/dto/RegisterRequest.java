@@ -1,0 +1,20 @@
+package app.viaverse.identity.auth.api.dto;
+
+import app.viaverse.identity.consent.domain.ConsentType;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import java.util.List;
+
+public record RegisterRequest(
+        @NotBlank String registrationToken,
+        @NotBlank String displayName,
+        String firstName,
+        String lastName,
+        @NotEmpty List<@Valid ConsentRequest> requiredConsents,
+        boolean marketingConsentAccepted
+) {
+    public record ConsentRequest(@NotNull ConsentType type, @NotBlank String version) {
+    }
+}

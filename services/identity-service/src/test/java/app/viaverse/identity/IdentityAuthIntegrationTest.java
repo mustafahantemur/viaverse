@@ -3,11 +3,11 @@ package app.viaverse.identity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import app.viaverse.identity.application.auth.LocalTestUserSeeder;
+import app.viaverse.identity.auth.application.service.LocalTestUserSeeder;
 import app.viaverse.identity.config.AuthConfiguration;
 import app.viaverse.identity.config.AuthProperties;
-import app.viaverse.identity.domain.auth.OtpDeliveryProvider;
-import app.viaverse.identity.domain.auth.SmsProvider;
+import app.viaverse.identity.auth.domain.enums.OtpDeliveryProvider;
+import app.viaverse.identity.auth.domain.enums.SmsProvider;
 import app.viaverse.shared.kernel.error.TechnicalException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

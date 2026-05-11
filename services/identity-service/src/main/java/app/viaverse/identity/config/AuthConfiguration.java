@@ -1,8 +1,8 @@
 package app.viaverse.identity.config;
 
-import app.viaverse.identity.infrastructure.security.JwtTokenService;
-import app.viaverse.identity.infrastructure.security.TokenHasher;
-import app.viaverse.identity.domain.auth.OtpDeliveryProvider;
+import app.viaverse.identity.auth.infrastructure.security.JwtAccessTokenService;
+import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
+import app.viaverse.identity.auth.domain.enums.OtpDeliveryProvider;
 import app.viaverse.shared.kernel.error.TechnicalException;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -26,8 +26,8 @@ public class AuthConfiguration {
     }
 
     @Bean
-    JwtTokenService jwtTokenService(AuthProperties properties) {
-        return new JwtTokenService(properties.getJwt().getSecret(), properties.getJwt().getAccessTokenTtl());
+    JwtAccessTokenService jwtAccessTokenService(AuthProperties properties) {
+        return new JwtAccessTokenService(properties.getJwt().getSecret(), properties.getJwt().getAccessTokenTtl());
     }
 
     @Bean
