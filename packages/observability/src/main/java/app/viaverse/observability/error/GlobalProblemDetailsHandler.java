@@ -89,7 +89,10 @@ public abstract class GlobalProblemDetailsHandler {
         if (correlationId != null && !correlationId.isBlank()) {
             problem.setProperty(CorrelationIds.PROBLEM_PROPERTY, correlationId);
         }
+        String requestId = correlationIdProvider.currentRequestId();
+        if (requestId != null && !requestId.isBlank()) {
+            problem.setProperty(CorrelationIds.REQUEST_PROBLEM_PROPERTY, requestId);
+        }
         return problem;
     }
 }
-

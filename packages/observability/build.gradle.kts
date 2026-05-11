@@ -11,4 +11,7 @@ dependencies {
     api("org.slf4j:slf4j-api")
     api("org.springframework:spring-context")
     api("org.springframework:spring-web")
+    testImplementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.6"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

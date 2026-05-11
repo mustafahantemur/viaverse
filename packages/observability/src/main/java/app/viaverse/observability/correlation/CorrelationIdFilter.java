@@ -22,14 +22,20 @@ public final class CorrelationIdFilter extends OncePerRequestFilter {
         if (correlationId == null || correlationId.isBlank()) {
             correlationId = UUID.randomUUID().toString();
         }
+        String requestId = request.getHeader(CorrelationIds.REQUEST_HEADER);
+        if (requestId == null || requestId.isBlank()) {
+            requestId = UUID.randomUUID().toString();
+        }
 
         MDC.put(CorrelationIds.MDC_KEY, correlationId);
+        MDC.put(CorrelationIds.REQUEST_MDC_KEY, requestId);
         response.setHeader(CorrelationIds.HEADER, correlationId);
+        response.setHeader(CorrelationIds.REQUEST_HEADER, requestId);
         try {
             filterChain.doFilter(request, response);
         } finally {
+            MDC.remove(CorrelationIds.REQUEST_MDC_KEY);
             MDC.remove(CorrelationIds.MDC_KEY);
         }
     }
 }
-

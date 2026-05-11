@@ -5,22 +5,75 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+  filelog/docker:
+    include:
+      - /var/lib/docker/containers/*/*.log
+    start_at: end
+    include_file_path: true
+    operators:
+      - type: json_parser
+        id: parse_docker_json_log
+        parse_from: body
+        parse_to: attributes
+        on_error: drop
+        timestamp:
+          parse_from: attributes.time
+          layout_type: gotime
+          layout: "2006-01-02T15:04:05.999999999Z07:00"
+      - type: move
+        id: docker_log_to_body
+        from: attributes.log
+        to: body
+        on_error: drop
+      - type: move
+        id: docker_stream_to_iostream
+        from: attributes.stream
+        to: attributes["log.iostream"]
+        on_error: drop
+      - type: move
+        id: docker_time_to_attribute
+        from: attributes.time
+        to: attributes["docker.time"]
+        on_error: drop
+      - type: json_parser
+        id: parse_ecs_json_body
+        if: 'body matches "^\\{"'
+        parse_from: body
+        parse_to: attributes
+        on_error: send
 
 processors:
   batch:
+  resource/viaverse_local:
+    attributes:
+      - key: deployment.environment
+        value: ${env:VIAVERSE_ENV}
+        action: upsert
+      - key: service.namespace
+        value: viaverse
+        action: upsert
 
 exporters:
   debug:
     verbosity: basic
+  opensearch/viaverse:
+    http:
+      endpoint: http://opensearch:9200
+    logs_index: viaverse-logs-local
+    mapping:
+      mode: ecs
 
 service:
   pipelines:
+    logs:
+      receivers: [otlp, filelog/docker]
+      processors: [resource/viaverse_local, batch]
+      exporters: [opensearch/viaverse, debug]
     traces:
       receivers: [otlp]
-      processors: [batch]
+      processors: [resource/viaverse_local, batch]
       exporters: [debug]
     metrics:
       receivers: [otlp]
-      processors: [batch]
+      processors: [resource/viaverse_local, batch]
       exporters: [debug]
-

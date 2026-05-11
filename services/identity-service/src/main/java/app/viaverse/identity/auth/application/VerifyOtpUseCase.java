@@ -16,14 +16,19 @@ import app.viaverse.identity.shared.error.IdentityErrors;
 import app.viaverse.identity.shared.error.IdentityException;
 import app.viaverse.identity.shared.error.RateLimitExceededException;
 import app.viaverse.observability.audit.AuditLogger;
+import app.viaverse.observability.logging.SafeLogFields;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class VerifyOtpUseCase {
+    private static final Logger LOGGER = LoggerFactory.getLogger(VerifyOtpUseCase.class);
+
     private final AuthLoginFlowJpaRepository flowRepository;
     private final AuthAbuseProtectionService abuseProtectionService;
     private final OtpChallengeService otpChallengeService;
@@ -54,24 +59,56 @@ public class VerifyOtpUseCase {
                 .orElseThrow(() -> IdentityErrors.invalidAuthFlow(Map.of("flowId", "is invalid")));
         AuthOtpChallengeJpaEntity challenge = otpChallengeService.latestChallenge(flowId);
 
-        abuseProtectionService.enforceOtpAttempt(flow, clientIp);
+        try {
+            abuseProtectionService.enforceOtpAttempt(flow, clientIp);
+        } catch (RateLimitExceededException exception) {
+            LOGGER.atWarn()
+                    .addKeyValue("event.action", "otp.verify")
+                    .addKeyValue("event.outcome", "rate_limited")
+                    .addKeyValue("auth.flow_id", flow.getId())
+                    .addKeyValue("auth.identifier_type", flow.getIdentifierType())
+                    .addKeyValue("auth.identifier_masked", SafeLogFields.maskIdentifier(flow.getNormalizedIdentifier()))
+                    .addKeyValue("retry_after_seconds", exception.retryAfterSeconds())
+                    .log("otp.verify rate_limited");
+            throw exception;
+        }
         otpChallengeService.validateWaitingForOtp(flow, challenge, now);
         if (!otpChallengeService.matches(challenge, otp)) {
             if (otpChallengeService.recordFailure(challenge)) {
                 flow.fail(LoginFlowStatus.FAILED, now);
                 abuseProtectionService.softLockOtp(flow);
             }
+            LOGGER.atWarn()
+                    .addKeyValue("event.action", "otp.verify")
+                    .addKeyValue("event.outcome", "failure")
+                    .addKeyValue("auth.flow_id", flow.getId())
+                    .addKeyValue("auth.identifier_type", flow.getIdentifierType())
+                    .addKeyValue("auth.identifier_masked", SafeLogFields.maskIdentifier(flow.getNormalizedIdentifier()))
+                    .log("otp.verify failed");
             throw IdentityErrors.invalidOtp();
         }
 
         otpChallengeService.verify(challenge, now);
         flow.markOtpVerified(now);
         if (flow.getAccountId() == null) {
+            LOGGER.atInfo()
+                    .addKeyValue("event.action", "otp.verify")
+                    .addKeyValue("event.outcome", "success")
+                    .addKeyValue("auth.next_step", "registration_required")
+                    .addKeyValue("auth.flow_id", flow.getId())
+                    .log("otp.verify succeeded");
             return registrationTokenService.requireRegistration(flow, now);
         }
 
         IdentityAccountJpaEntity account = sessionIssuer.activeAccount(flow.getAccountId());
         IdentityAuditEvents.recordAccountSecurityEvent(auditLogger, account.getId(), IdentityAuditEvent.LOGIN);
+        LOGGER.atInfo()
+                .addKeyValue("event.action", "otp.verify")
+                .addKeyValue("event.outcome", "success")
+                .addKeyValue("auth.next_step", "authenticated")
+                .addKeyValue("auth.flow_id", flow.getId())
+                .addKeyValue("user.id", account.getId())
+                .log("otp.verify succeeded");
         return sessionIssuer.issue(account, userAgent, now);
     }
 }

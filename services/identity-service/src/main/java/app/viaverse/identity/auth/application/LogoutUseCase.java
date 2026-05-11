@@ -11,11 +11,15 @@ import app.viaverse.identity.shared.error.IdentityErrors;
 import app.viaverse.observability.audit.AuditLogger;
 import java.time.Instant;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class LogoutUseCase {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogoutUseCase.class);
+
     private final AuthSessionIssuer sessionIssuer;
     private final RefreshTokenRotationService rotationService;
     private final AuthSessionJpaRepository sessionRepository;
@@ -49,5 +53,11 @@ public class LogoutUseCase {
                 .orElseThrow(IdentityErrors::invalidSession);
         sessionIssuer.revokeSession(session, now);
         IdentityAuditEvents.recordAccountSecurityEvent(auditLogger, session.getAccountId(), IdentityAuditEvent.LOGOUT);
+        LOGGER.atInfo()
+                .addKeyValue("event.action", "auth.logout")
+                .addKeyValue("event.outcome", "success")
+                .addKeyValue("auth.session_id", session.getId())
+                .addKeyValue("user.id", session.getAccountId())
+                .log("auth.logout succeeded");
     }
 }

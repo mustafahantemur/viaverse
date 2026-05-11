@@ -55,7 +55,7 @@ public class JwtAccessTokenService {
 
     public JwtPrincipal verify(String token, Instant now) {
         Jwt jwt = decode(token);
-        if (!ISSUER.equals(jwt.getIssuer() == null ? null : jwt.getIssuer().toString())) {
+        if (!ISSUER.equals(jwt.getClaimAsString("iss"))) {
             throw IdentityErrors.invalidAccessToken();
         }
         if (jwt.getExpiresAt() == null || jwt.getExpiresAt().isBefore(now)) {

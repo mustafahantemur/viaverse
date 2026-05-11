@@ -34,6 +34,10 @@ logging:
   structured:
     format:
       console: ecs
+    ecs:
+      service:
+        name: ${spring.application.name}
+        environment: ${VIAVERSE_ENV:local}
   level:
     app.viaverse: INFO
 

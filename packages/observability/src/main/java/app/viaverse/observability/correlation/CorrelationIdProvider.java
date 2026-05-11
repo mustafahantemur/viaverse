@@ -6,5 +6,8 @@ public final class CorrelationIdProvider {
     public String currentCorrelationId() {
         return MDC.get(CorrelationIds.MDC_KEY);
     }
-}
 
+    public String currentRequestId() {
+        return MDC.get(CorrelationIds.REQUEST_MDC_KEY);
+    }
+}

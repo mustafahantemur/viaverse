@@ -11,10 +11,14 @@ import app.viaverse.identity.config.AuthProperties;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import java.time.Instant;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RefreshTokenRotationService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RefreshTokenRotationService.class);
+
     private final AuthProperties properties;
     private final TokenHasher tokenHasher;
     private final SecureTokenGenerator tokenGenerator;
@@ -72,6 +76,11 @@ public class RefreshTokenRotationService {
         AuthRefreshTokenJpaEntity token = refreshTokenRepository.findByTokenHash(tokenHasher.hash(refreshToken))
                 .orElseThrow(IdentityErrors::invalidRefreshToken);
         if (token.getStatus() == RefreshTokenStatus.ROTATED || token.getStatus() == RefreshTokenStatus.REVOKED) {
+            LOGGER.atWarn()
+                    .addKeyValue("event.action", "token.refresh")
+                    .addKeyValue("event.outcome", "reuse_detected")
+                    .addKeyValue("auth.session_id", token.getSessionId())
+                    .log("token.refresh reuse_detected");
             sessionRepository.findById(token.getSessionId()).ifPresent(session -> revokeSessionTokens(session, now));
         }
         throw IdentityErrors.invalidRefreshToken();

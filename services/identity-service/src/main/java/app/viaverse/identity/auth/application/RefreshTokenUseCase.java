@@ -11,11 +11,15 @@ import app.viaverse.identity.shared.audit.IdentityAuditEvents;
 import app.viaverse.identity.shared.error.IdentityException;
 import app.viaverse.observability.audit.AuditLogger;
 import java.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RefreshTokenUseCase {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RefreshTokenUseCase.class);
+
     private final RefreshTokenRotationService rotationService;
     private final AuthSessionIssuer sessionIssuer;
     private final AuditLogger auditLogger;
@@ -38,6 +42,12 @@ public class RefreshTokenUseCase {
         session.touch(now);
         IdentityAccountJpaEntity account = sessionIssuer.activeAccount(session.getAccountId());
         IdentityAuditEvents.recordAccountSecurityEvent(auditLogger, account.getId(), IdentityAuditEvent.REFRESH);
+        LOGGER.atInfo()
+                .addKeyValue("event.action", "token.refresh")
+                .addKeyValue("event.outcome", "success")
+                .addKeyValue("auth.session_id", session.getId())
+                .addKeyValue("user.id", account.getId())
+                .log("token.refresh succeeded");
         return sessionIssuer.issueForExistingSession(account, session, rotation.refreshToken(), now);
     }
 }
