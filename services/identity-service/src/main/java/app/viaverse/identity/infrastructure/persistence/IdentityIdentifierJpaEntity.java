@@ -1,0 +1,57 @@
+package app.viaverse.identity.infrastructure.persistence;
+
+import app.viaverse.identity.domain.auth.IdentifierType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "identity_identifier")
+public class IdentityIdentifierJpaEntity {
+    @Id
+    private UUID id;
+
+    @Column(name = "account_id", nullable = false)
+    private UUID accountId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "identifier_type", nullable = false, length = 16)
+    private IdentifierType identifierType;
+
+    @Column(name = "normalized_identifier", nullable = false, length = 320)
+    private String normalizedIdentifier;
+
+    @Column(name = "verified_at", nullable = false)
+    private Instant verifiedAt;
+
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    protected IdentityIdentifierJpaEntity() {
+    }
+
+    public IdentityIdentifierJpaEntity(
+            UUID id,
+            UUID accountId,
+            IdentifierType identifierType,
+            String normalizedIdentifier,
+            Instant verifiedAt,
+            Instant createdAt
+    ) {
+        this.id = id;
+        this.accountId = accountId;
+        this.identifierType = identifierType;
+        this.normalizedIdentifier = normalizedIdentifier;
+        this.verifiedAt = verifiedAt;
+        this.createdAt = createdAt;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
+    }
+}

@@ -37,6 +37,54 @@ logging:
   level:
     app.viaverse: INFO
 
+viaverse:
+  auth:
+    jwt:
+      secret: ${IDENTITY_JWT_SECRET:}
+      access-token-ttl: ${IDENTITY_JWT_ACCESS_TOKEN_TTL:PT15M}
+    refresh-token-ttl: ${IDENTITY_REFRESH_TOKEN_TTL:P30D}
+    otp:
+      ttl: ${IDENTITY_OTP_TTL:PT5M}
+      max-attempts: ${IDENTITY_OTP_MAX_ATTEMPTS:5}
+      delivery:
+        provider: ${VIAVERSE_OTP_DELIVERY_PROVIDER:debug}
+    sms:
+      provider: ${VIAVERSE_SMS_PROVIDER:none}
+      netgsm:
+        username: ${NETGSM_USERNAME:}
+        password: ${NETGSM_PASSWORD:}
+        header: ${NETGSM_HEADER:}
+    social:
+      google:
+        enabled: ${VIAVERSE_SOCIAL_GOOGLE_ENABLED:false}
+        client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
+      apple:
+        enabled: ${VIAVERSE_SOCIAL_APPLE_ENABLED:false}
+        client-id: ${APPLE_CLIENT_ID:}
+      instagram:
+        enabled: ${VIAVERSE_SOCIAL_INSTAGRAM_ENABLED:false}
+        client-id: ${INSTAGRAM_CLIENT_ID:}
+    debug:
+      enabled: ${VIAVERSE_AUTH_DEBUG_ENABLED:false}
+      fixed-otp: ${VIAVERSE_AUTH_DEBUG_FIXED_OTP:}
+      seed-test-users: ${VIAVERSE_AUTH_DEBUG_SEED_USERS:false}
+    rate-limit:
+      enabled: ${VIAVERSE_AUTH_RATE_LIMIT_ENABLED:true}
+      auth-start:
+        identifier-window-seconds: ${VIAVERSE_AUTH_START_IDENTIFIER_WINDOW_SECONDS:300}
+        identifier-max-attempts: ${VIAVERSE_AUTH_START_IDENTIFIER_MAX_ATTEMPTS:3}
+        ip-window-seconds: ${VIAVERSE_AUTH_START_IP_WINDOW_SECONDS:60}
+        ip-max-attempts: ${VIAVERSE_AUTH_START_IP_MAX_ATTEMPTS:20}
+      otp-verify:
+        flow-window-seconds: ${VIAVERSE_AUTH_OTP_FLOW_WINDOW_SECONDS:300}
+        flow-max-attempts: ${VIAVERSE_AUTH_OTP_FLOW_MAX_ATTEMPTS:5}
+        ip-window-seconds: ${VIAVERSE_AUTH_OTP_IP_WINDOW_SECONDS:60}
+        ip-max-attempts: ${VIAVERSE_AUTH_OTP_IP_MAX_ATTEMPTS:30}
+      resend:
+        cooldown-seconds: ${VIAVERSE_AUTH_OTP_RESEND_COOLDOWN_SECONDS:60}
+      lockout:
+        duration-seconds: ${VIAVERSE_AUTH_LOCKOUT_DURATION_SECONDS:900}
+
 ---
 spring:
   config:
@@ -45,6 +93,14 @@ spring:
 logging:
   level:
     app.viaverse: DEBUG
+viaverse:
+  auth:
+    jwt:
+      secret: ${IDENTITY_JWT_SECRET:local-dev-identity-jwt-secret-change-me}
+    debug:
+      enabled: ${VIAVERSE_AUTH_DEBUG_ENABLED:true}
+      fixed-otp: ${VIAVERSE_AUTH_DEBUG_FIXED_OTP:111111}
+      seed-test-users: ${VIAVERSE_AUTH_DEBUG_SEED_USERS:true}
 
 ---
 server:
@@ -55,3 +111,26 @@ spring:
       on-profile: test
   datasource:
     url: ${IDENTITY_SERVICE_TEST_DB_URL:jdbc:postgresql://localhost:5432/viaverse_identity_test}
+viaverse:
+  auth:
+    jwt:
+      secret: ${IDENTITY_JWT_SECRET:test-identity-jwt-secret-change-me}
+    debug:
+      enabled: true
+      fixed-otp: "111111"
+      seed-test-users: true
+    rate-limit:
+      auth-start:
+        identifier-window-seconds: 300
+        identifier-max-attempts: 3
+        ip-window-seconds: 60
+        ip-max-attempts: 20
+      otp-verify:
+        flow-window-seconds: 300
+        flow-max-attempts: 5
+        ip-window-seconds: 60
+        ip-max-attempts: 30
+      resend:
+        cooldown-seconds: 60
+      lockout:
+        duration-seconds: 900
