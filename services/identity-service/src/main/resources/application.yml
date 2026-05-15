@@ -8,6 +8,11 @@ spring:
     url: ${IDENTITY_SERVICE_DB_URL:jdbc:postgresql://localhost:5432/viaverse_identity}
     username: ${IDENTITY_SERVICE_DB_USERNAME:viaverse}
     password: ${IDENTITY_SERVICE_DB_PASSWORD:viaverse}
+  data:
+    redis:
+      host: ${IDENTITY_VALKEY_HOST:localhost}
+      port: ${IDENTITY_VALKEY_PORT:6379}
+      database: ${IDENTITY_VALKEY_DB:0}
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -88,6 +93,8 @@ viaverse:
         cooldown-seconds: ${VIAVERSE_AUTH_OTP_RESEND_COOLDOWN_SECONDS:60}
       lockout:
         duration-seconds: ${VIAVERSE_AUTH_LOCKOUT_DURATION_SECONDS:900}
+    consent:
+      marketing-version: ${VIAVERSE_AUTH_CONSENT_MARKETING_VERSION:v1}
 
 ---
 spring:

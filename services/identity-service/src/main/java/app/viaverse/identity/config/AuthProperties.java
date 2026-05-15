@@ -14,6 +14,7 @@ public class AuthProperties {
     private final Social social = new Social();
     private final Debug debug = new Debug();
     private final RateLimit rateLimit = new RateLimit();
+    private final Consent consent = new Consent();
 
     public Jwt getJwt() {
         return jwt;
@@ -45,6 +46,34 @@ public class AuthProperties {
 
     public RateLimit getRateLimit() {
         return rateLimit;
+    }
+
+    public Consent getConsent() {
+        return consent;
+    }
+
+    /**
+     * Consent-related configuration.
+     *
+     * <p>TODO (Phase 3A): The {@code CompleteRegistration} use case currently
+     * hardcodes the marketing consent version as {@code "v1"} when persisting
+     * a {@code ConsentRecord} of type {@code MARKETING_COMMUNICATION}. The
+     * use-case rewrite in Phase 3A should inject {@link AuthProperties} (or
+     * just this {@link Consent} block) and read
+     * {@link Consent#getMarketingVersion()} instead of using a string literal,
+     * so the active version is centrally configurable via
+     * {@code viaverse.auth.consent.marketing-version}.
+     */
+    public static class Consent {
+        private String marketingVersion = "v1";
+
+        public String getMarketingVersion() {
+            return marketingVersion;
+        }
+
+        public void setMarketingVersion(String marketingVersion) {
+            this.marketingVersion = marketingVersion;
+        }
     }
 
     public static class Jwt {
