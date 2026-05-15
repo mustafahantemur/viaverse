@@ -44,45 +44,35 @@ public class AuthRefreshTokenJpaEntity {
     protected AuthRefreshTokenJpaEntity() {
     }
 
-    public AuthRefreshTokenJpaEntity(UUID id, UUID sessionId, String tokenHash, Instant now, Instant expiresAt) {
+    public AuthRefreshTokenJpaEntity(
+            UUID id,
+            UUID sessionId,
+            String tokenHash,
+            RefreshTokenStatus status,
+            Instant issuedAt,
+            Instant expiresAt,
+            Instant revokedAt,
+            UUID replacedByTokenId,
+            Instant createdAt
+    ) {
         this.id = id;
         this.sessionId = sessionId;
         this.tokenHash = tokenHash;
-        this.status = RefreshTokenStatus.ACTIVE;
-        this.issuedAt = now;
+        this.status = status;
+        this.issuedAt = issuedAt;
         this.expiresAt = expiresAt;
-        this.createdAt = now;
+        this.revokedAt = revokedAt;
+        this.replacedByTokenId = replacedByTokenId;
+        this.createdAt = createdAt;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public UUID getSessionId() {
-        return sessionId;
-    }
-
-    public RefreshTokenStatus getStatus() {
-        return status;
-    }
-
-    public Instant getExpiresAt() {
-        return expiresAt;
-    }
-
-    public void rotate(UUID replacementTokenId, Instant now) {
-        this.status = RefreshTokenStatus.ROTATED;
-        this.replacedByTokenId = replacementTokenId;
-        this.revokedAt = now;
-    }
-
-    public void revoke(Instant now) {
-        this.status = RefreshTokenStatus.REVOKED;
-        this.revokedAt = now;
-    }
-
-    public void expire(Instant now) {
-        this.status = RefreshTokenStatus.EXPIRED;
-        this.revokedAt = now;
-    }
+    public UUID getId() { return id; }
+    public UUID getSessionId() { return sessionId; }
+    public String getTokenHash() { return tokenHash; }
+    public RefreshTokenStatus getStatus() { return status; }
+    public Instant getIssuedAt() { return issuedAt; }
+    public Instant getExpiresAt() { return expiresAt; }
+    public Instant getRevokedAt() { return revokedAt; }
+    public UUID getReplacedByTokenId() { return replacedByTokenId; }
+    public Instant getCreatedAt() { return createdAt; }
 }

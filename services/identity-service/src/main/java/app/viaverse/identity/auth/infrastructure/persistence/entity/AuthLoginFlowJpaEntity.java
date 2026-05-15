@@ -58,72 +58,35 @@ public class AuthLoginFlowJpaEntity {
             String normalizedIdentifier,
             UUID accountId,
             LoginFlowStatus status,
+            String registrationTokenHash,
+            Instant registrationExpiresAt,
             Instant expiresAt,
-            Instant now
+            Instant completedAt,
+            Instant createdAt,
+            Instant updatedAt
     ) {
         this.id = id;
         this.identifierType = identifierType;
         this.normalizedIdentifier = normalizedIdentifier;
         this.accountId = accountId;
         this.status = status;
-        this.expiresAt = expiresAt;
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public IdentifierType getIdentifierType() {
-        return identifierType;
-    }
-
-    public String getNormalizedIdentifier() {
-        return normalizedIdentifier;
-    }
-
-    public UUID getAccountId() {
-        return accountId;
-    }
-
-    public LoginFlowStatus getStatus() {
-        return status;
-    }
-
-    public String getRegistrationTokenHash() {
-        return registrationTokenHash;
-    }
-
-    public Instant getRegistrationExpiresAt() {
-        return registrationExpiresAt;
-    }
-
-    public Instant getExpiresAt() {
-        return expiresAt;
-    }
-
-    public void markOtpVerified(Instant now) {
-        this.status = LoginFlowStatus.OTP_VERIFIED;
-        this.updatedAt = now;
-    }
-
-    public void requireRegistration(String registrationTokenHash, Instant registrationExpiresAt, Instant now) {
-        this.status = LoginFlowStatus.REGISTRATION_REQUIRED;
         this.registrationTokenHash = registrationTokenHash;
         this.registrationExpiresAt = registrationExpiresAt;
-        this.updatedAt = now;
+        this.expiresAt = expiresAt;
+        this.completedAt = completedAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    public void complete(UUID accountId, Instant now) {
-        this.status = LoginFlowStatus.COMPLETED;
-        this.accountId = accountId;
-        this.completedAt = now;
-        this.updatedAt = now;
-    }
-
-    public void fail(LoginFlowStatus status, Instant now) {
-        this.status = status;
-        this.updatedAt = now;
-    }
+    public UUID getId() { return id; }
+    public IdentifierType getIdentifierType() { return identifierType; }
+    public String getNormalizedIdentifier() { return normalizedIdentifier; }
+    public UUID getAccountId() { return accountId; }
+    public LoginFlowStatus getStatus() { return status; }
+    public String getRegistrationTokenHash() { return registrationTokenHash; }
+    public Instant getRegistrationExpiresAt() { return registrationExpiresAt; }
+    public Instant getExpiresAt() { return expiresAt; }
+    public Instant getCompletedAt() { return completedAt; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
 }

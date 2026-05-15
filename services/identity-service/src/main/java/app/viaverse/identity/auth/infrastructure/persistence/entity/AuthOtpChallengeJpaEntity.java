@@ -48,57 +48,31 @@ public class AuthOtpChallengeJpaEntity {
             UUID id,
             UUID flowId,
             String otpHash,
+            int attempts,
             int maxAttempts,
+            OtpChallengeStatus status,
             Instant expiresAt,
-            Instant now
+            Instant verifiedAt,
+            Instant createdAt
     ) {
         this.id = id;
         this.flowId = flowId;
         this.otpHash = otpHash;
-        this.attempts = 0;
+        this.attempts = attempts;
         this.maxAttempts = maxAttempts;
-        this.status = OtpChallengeStatus.ACTIVE;
+        this.status = status;
         this.expiresAt = expiresAt;
-        this.createdAt = now;
+        this.verifiedAt = verifiedAt;
+        this.createdAt = createdAt;
     }
 
-    public String getOtpHash() {
-        return otpHash;
-    }
-
-    public int getAttempts() {
-        return attempts;
-    }
-
-    public int getMaxAttempts() {
-        return maxAttempts;
-    }
-
-    public OtpChallengeStatus getStatus() {
-        return status;
-    }
-
-    public Instant getExpiresAt() {
-        return expiresAt;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void recordFailure() {
-        this.attempts++;
-        if (attempts >= maxAttempts) {
-            this.status = OtpChallengeStatus.LOCKED;
-        }
-    }
-
-    public void expire() {
-        this.status = OtpChallengeStatus.EXPIRED;
-    }
-
-    public void verify(Instant now) {
-        this.status = OtpChallengeStatus.VERIFIED;
-        this.verifiedAt = now;
-    }
+    public UUID getId() { return id; }
+    public UUID getFlowId() { return flowId; }
+    public String getOtpHash() { return otpHash; }
+    public int getAttempts() { return attempts; }
+    public int getMaxAttempts() { return maxAttempts; }
+    public OtpChallengeStatus getStatus() { return status; }
+    public Instant getExpiresAt() { return expiresAt; }
+    public Instant getVerifiedAt() { return verifiedAt; }
+    public Instant getCreatedAt() { return createdAt; }
 }

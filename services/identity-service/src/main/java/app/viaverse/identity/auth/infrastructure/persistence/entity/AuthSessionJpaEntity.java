@@ -38,6 +38,18 @@ public class AuthSessionJpaEntity {
     @Column(name = "user_agent", length = 512)
     private String userAgent;
 
+    @Column(name = "device_id", length = 255)
+    private String deviceId;
+
+    @Column(name = "device_name", length = 100)
+    private String deviceName;
+
+    @Column(name = "platform", length = 20)
+    private String platform;
+
+    @Column(name = "last_ip", length = 45)
+    private String lastIp;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -47,47 +59,50 @@ public class AuthSessionJpaEntity {
     protected AuthSessionJpaEntity() {
     }
 
-    public AuthSessionJpaEntity(UUID id, UUID accountId, Instant now, Instant expiresAt, String userAgent) {
+    public AuthSessionJpaEntity(
+            UUID id,
+            UUID accountId,
+            SessionStatus status,
+            Instant issuedAt,
+            Instant expiresAt,
+            Instant lastSeenAt,
+            Instant revokedAt,
+            String userAgent,
+            String deviceId,
+            String deviceName,
+            String platform,
+            String lastIp,
+            Instant createdAt,
+            Instant updatedAt
+    ) {
         this.id = id;
         this.accountId = accountId;
-        this.status = SessionStatus.ACTIVE;
-        this.issuedAt = now;
+        this.status = status;
+        this.issuedAt = issuedAt;
         this.expiresAt = expiresAt;
-        this.lastSeenAt = now;
+        this.lastSeenAt = lastSeenAt;
+        this.revokedAt = revokedAt;
         this.userAgent = userAgent;
-        this.createdAt = now;
-        this.updatedAt = now;
+        this.deviceId = deviceId;
+        this.deviceName = deviceName;
+        this.platform = platform;
+        this.lastIp = lastIp;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public UUID getAccountId() {
-        return accountId;
-    }
-
-    public SessionStatus getStatus() {
-        return status;
-    }
-
-    public Instant getExpiresAt() {
-        return expiresAt;
-    }
-
-    public void touch(Instant now) {
-        this.lastSeenAt = now;
-        this.updatedAt = now;
-    }
-
-    public void revoke(Instant now) {
-        this.status = SessionStatus.REVOKED;
-        this.revokedAt = now;
-        this.updatedAt = now;
-    }
-
-    public void expire(Instant now) {
-        this.status = SessionStatus.EXPIRED;
-        this.updatedAt = now;
-    }
+    public UUID getId() { return id; }
+    public UUID getAccountId() { return accountId; }
+    public SessionStatus getStatus() { return status; }
+    public Instant getIssuedAt() { return issuedAt; }
+    public Instant getExpiresAt() { return expiresAt; }
+    public Instant getLastSeenAt() { return lastSeenAt; }
+    public Instant getRevokedAt() { return revokedAt; }
+    public String getUserAgent() { return userAgent; }
+    public String getDeviceId() { return deviceId; }
+    public String getDeviceName() { return deviceName; }
+    public String getPlatform() { return platform; }
+    public String getLastIp() { return lastIp; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
 }
