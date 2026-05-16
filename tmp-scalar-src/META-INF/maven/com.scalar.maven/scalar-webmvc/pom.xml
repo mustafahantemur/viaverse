@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.scalar.maven</groupId>
+  <artifactId>scalar-webmvc</artifactId>
+  <version>0.5.55</version>
+  <name>Scalar API Reference Spring Boot WebMVC</name>
+  <description>Spring Boot WebMVC integration for Scalar API Reference</description>
+  <url>https://github.com/scalar/scalar/scalar-webmvc</url>
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>scalar</id>
+      <name>Scalar</name>
+      <email>support@scalar.com</email>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:https://github.com/scalar/scalar.git/scalar-webmvc</connection>
+    <developerConnection>scm:git:git@github.com/scalar/scalar.git/scalar-webmvc</developerConnection>
+    <url>https://github.com/scalar/scalar/scalar-webmvc</url>
+  </scm>
+  <distributionManagement>
+    <repository>
+      <id>central</id>
+      <name>Maven Central Release Repository</name>
+      <url>https://central.sonatype.com/api/v1/publish</url>
+    </repository>
+  </distributionManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.scalar.maven</groupId>
+      <artifactId>scalar-core</artifactId>
+      <version>0.5.55</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <version>3.5.7</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+      <version>3.5.7</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-configuration-processor</artifactId>
+      <version>3.5.7</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+      <version>3.5.7</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <version>0.10.0</version>
+        <extensions>true</extensions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

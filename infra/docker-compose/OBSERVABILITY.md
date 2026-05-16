@@ -20,11 +20,15 @@ not write directly to OpenSearch.
 
 ```powershell
 ./scripts/dev/start-core-infra.ps1
-./scripts/dev/start-observability-local.ps1
 ```
 
-The observability script starts OpenSearch, OpenSearch Dashboards, Fluent Bit,
-and the collector, then applies the shared log index template and retention policy.
+The main local infra script starts the full developer stack: PostgreSQL, Valkey,
+Kafka, Mailpit, SeaweedFS, OpenSearch, OpenSearch Dashboards, Fluent Bit,
+OpenTelemetry Collector, Prometheus, Jaeger, and Kafka UI. It also applies the
+shared log index template and retention policy.
+
+`./scripts/dev/start-observability-local.ps1` remains available when only the
+observability layer needs to be started or refreshed independently.
 
 ## Environment promotion
 

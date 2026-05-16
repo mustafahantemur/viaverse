@@ -7,6 +7,7 @@ import app.viaverse.identity.account.domain.model.Account;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
 import app.viaverse.identity.shared.api.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/me")
+@SecurityRequirement(name = "bearerAuth")
 public class MeController {
 
     private final GetCurrentAccountUseCase getCurrentAccountUseCase;

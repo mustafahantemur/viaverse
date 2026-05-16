@@ -89,6 +89,13 @@ logging:
   level:
     app.viaverse: INFO
 
+springdoc:
+  api-docs:
+    enabled: false
+scalar:
+  enabled: false
+  telemetry: false
+
 viaverse:
   http:
     trusted-proxies: ${VIAVERSE_HTTP_TRUSTED_PROXIES:}
@@ -159,6 +166,12 @@ spring:
   config:
     activate:
       on-profile: local
+springdoc:
+  api-docs:
+    enabled: true
+scalar:
+  enabled: true
+  telemetry: false
 logging:
   level:
     app.viaverse: DEBUG

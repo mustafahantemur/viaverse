@@ -8,6 +8,7 @@ import app.viaverse.identity.auth.domain.model.AuthSession;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
 import app.viaverse.identity.shared.api.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/me/sessions")
+@SecurityRequirement(name = "bearerAuth")
 public class SessionController {
 
     private final ListSessionsUseCase listUseCase;

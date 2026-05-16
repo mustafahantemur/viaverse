@@ -17,3 +17,12 @@ dependencies {
     implementation("org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:2.3.21")
     implementation("org.jetbrains.compose:compose-gradle-plugin:1.9.3")
 }
+
+// Gradle 9.4 can otherwise schedule the Kotlin compile before all generated
+// convention-plugin sources are materialized on a cold or partially cleaned build.
+tasks.named("compileKotlin") {
+    dependsOn(
+        "generateScriptPluginAdapters",
+        "generatePrecompiledScriptPluginAccessors",
+    )
+}

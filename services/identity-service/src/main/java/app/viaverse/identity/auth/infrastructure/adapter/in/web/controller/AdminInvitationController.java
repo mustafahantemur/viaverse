@@ -5,6 +5,7 @@ import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.Adm
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
 import app.viaverse.identity.shared.api.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/admin")
+@SecurityRequirement(name = "bearerAuth")
 public class AdminInvitationController {
     private final IssueAdminInvitationUseCase issueAdminInvitationUseCase;
     private final JwtPrincipalResolver jwtPrincipalResolver;

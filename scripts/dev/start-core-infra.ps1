@@ -115,6 +115,25 @@ function Wait-ContainerCompleted($containerName, $timeoutSeconds) {
     Fail "Timed out waiting for $containerName to complete."
 }
 
+function Wait-HttpOk($name, $url, $timeoutSeconds) {
+    $deadline = (Get-Date).AddSeconds($timeoutSeconds)
+    do {
+        try {
+            $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 5
+            if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
+                Write-Host "$name is reachable at $url."
+                return
+            }
+        }
+        catch {
+            Write-Host "Waiting for $name..."
+            Start-Sleep -Seconds 3
+        }
+    } while ((Get-Date) -lt $deadline)
+
+    Fail "Timed out waiting for $name at $url."
+}
+
 function Get-ContainerEnv($containerName, $name, $fallback) {
     $value = docker exec $containerName printenv $name 2>$null
     if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($value)) {
@@ -122,6 +141,37 @@ function Get-ContainerEnv($containerName, $name, $fallback) {
     }
 
     return $fallback
+}
+
+function Read-EnvValue($path, $name, $fallback) {
+    if (-not (Test-Path $path)) {
+        return $fallback
+    }
+
+    $line = Get-Content -LiteralPath $path |
+        Where-Object { $_ -match "^\s*$([regex]::Escape($name))=" } |
+        Select-Object -First 1
+    if ($line) {
+        return ($line -replace "^\s*$([regex]::Escape($name))=", "").Trim()
+    }
+
+    return $fallback
+}
+
+function Invoke-OpenSearchJson($method, $url, $bodyPath, [switch] $AllowConflict) {
+    $body = Get-Content -LiteralPath $bodyPath -Raw
+    try {
+        Invoke-RestMethod -Method $method -Uri $url -ContentType "application/json" -Body $body | Out-Null
+    }
+    catch {
+        $response = $_.Exception.Response
+        if ($AllowConflict -and $null -ne $response -and [int]$response.StatusCode -eq 409) {
+            Write-Host "OpenSearch resource already exists at $url; keeping existing definition."
+            return
+        }
+
+        throw
+    }
 }
 
 function Ensure-PostgresDatabases {
@@ -168,7 +218,20 @@ try {
         Write-Host "Using example env file: $envFile"
     }
 
-    docker compose --env-file $envFile up -d postgres valkey kafka mailpit seaweedfs seaweedfs-bucket-init
+    docker compose --env-file $envFile --profile observability up -d `
+        postgres `
+        valkey `
+        kafka `
+        mailpit `
+        seaweedfs `
+        seaweedfs-bucket-init `
+        opensearch `
+        opensearch-dashboards `
+        fluent-bit `
+        otel-collector `
+        prometheus `
+        jaeger `
+        kafka-ui
     if ($LASTEXITCODE -ne 0) {
         Fail "Docker Compose could not start the core local infrastructure."
     }
@@ -178,7 +241,27 @@ try {
     Wait-ContainerCompleted "viaverse-seaweedfs-bucket-init" 120
     Ensure-PostgresDatabases
 
-    Write-Host "Core local infrastructure is ready."
+    $opensearchPort = Read-EnvValue $envFile "OPENSEARCH_PORT" "9200"
+    $dashboardsPort = Read-EnvValue $envFile "OPENSEARCH_DASHBOARDS_PORT" "5601"
+    Wait-HttpOk "OpenSearch" "http://localhost:$opensearchPort" 120
+    Wait-HttpOk "OpenSearch Dashboards" "http://localhost:$dashboardsPort" 180
+
+    $opensearchConfigDir = Join-Path $composeDir "opensearch"
+    Invoke-OpenSearchJson `
+        "PUT" `
+        "http://localhost:$opensearchPort/_plugins/_ism/policies/viaverse-logs-retention" `
+        (Join-Path $opensearchConfigDir "viaverse-logs-retention-policy.json") `
+        -AllowConflict
+    Invoke-OpenSearchJson `
+        "PUT" `
+        "http://localhost:$opensearchPort/_index_template/viaverse-logs" `
+        (Join-Path $opensearchConfigDir "viaverse-logs-template.json")
+
+    Write-Host "Local infrastructure is ready."
+    Write-Host "OpenSearch: http://localhost:$opensearchPort"
+    Write-Host "OpenSearch Dashboards: http://localhost:$dashboardsPort"
+    Write-Host "OTLP gRPC: localhost:4317"
+    Write-Host "OTLP HTTP: http://localhost:4318"
 }
 finally {
     Pop-Location

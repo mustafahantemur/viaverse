@@ -29,7 +29,7 @@
       "problemMatcher": ["$javac"]
     },
     {
-      "label": "docker: initial setup",
+      "label": "docker: local infra",
       "type": "shell",
       "command": "powershell",
       "args": [
@@ -46,7 +46,7 @@
       "type": "shell",
       "dependsOrder": "sequence",
       "dependsOn": [
-        "docker: initial setup",
+        "docker: local infra",
         "db: migrate local"
       ],
       "problemMatcher": []
@@ -57,6 +57,35 @@
       "dependsOrder": "sequence",
       "dependsOn": ["backend: ready", "ports: free identity-service"],
       "problemMatcher": []
+    },
+    {
+      "label": "debug: start identity-service target",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready identity-service"],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/start-identity-debug.ps1"
+      ],
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "identity-debug",
+          "pattern": {
+            "regexp": "^(.*)$",
+            "message": 1
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".*",
+            "endsPattern": "Listening for transport dt_socket at address: 5005"
+          }
+        }
+      ]
     },
     {
       "label": "backend: ready marketplace-service",
@@ -151,7 +180,7 @@
       "label": "ports: free identity-service",
       "type": "shell",
       "command": "powershell",
-      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8101"],
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8101,5005"],
       "problemMatcher": []
     },
     {

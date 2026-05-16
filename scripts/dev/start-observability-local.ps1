@@ -88,9 +88,20 @@ function Read-EnvValue($path, $name, $fallback) {
     return $fallback
 }
 
-function Invoke-OpenSearchJson($method, $url, $bodyPath) {
+function Invoke-OpenSearchJson($method, $url, $bodyPath, [switch] $AllowConflict) {
     $body = Get-Content -LiteralPath $bodyPath -Raw
-    Invoke-RestMethod -Method $method -Uri $url -ContentType "application/json" -Body $body | Out-Null
+    try {
+        Invoke-RestMethod -Method $method -Uri $url -ContentType "application/json" -Body $body | Out-Null
+    }
+    catch {
+        $response = $_.Exception.Response
+        if ($AllowConflict -and $null -ne $response -and [int]$response.StatusCode -eq 409) {
+            Write-Host "OpenSearch resource already exists at $url; keeping existing definition."
+            return
+        }
+
+        throw
+    }
 }
 
 Ensure-Command "docker" "Install Docker Desktop with Compose v2."
@@ -125,7 +136,8 @@ try {
     Invoke-OpenSearchJson `
         "PUT" `
         "http://localhost:$opensearchPort/_plugins/_ism/policies/viaverse-logs-retention" `
-        (Join-Path $opensearchConfigDir "viaverse-logs-retention-policy.json")
+        (Join-Path $opensearchConfigDir "viaverse-logs-retention-policy.json") `
+        -AllowConflict
     Invoke-OpenSearchJson `
         "PUT" `
         "http://localhost:$opensearchPort/_index_template/viaverse-logs" `

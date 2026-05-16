@@ -1,3 +1,7 @@
+import org.gradle.kotlin.dsl.configure
+import org.jetbrains.compose.ComposeExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -5,15 +9,17 @@ plugins {
     id("viaverse.code-quality")
 }
 
-kotlin {
+val composeDependencies = extensions.getByType(ComposeExtension::class.java).dependencies
+
+extensions.configure<KotlinMultiplatformExtension> {
     jvm("desktop")
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(compose.runtime)
-                implementation(compose.foundation)
-                implementation(compose.material3)
+                implementation(composeDependencies.runtime)
+                implementation(composeDependencies.foundation)
+                implementation(composeDependencies.material3)
                 implementation("io.ktor:ktor-client-core:3.4.3")
                 implementation("io.ktor:ktor-client-content-negotiation:3.4.3")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.3")
@@ -25,7 +31,7 @@ kotlin {
 
         val desktopMain by getting {
             dependencies {
-                implementation(compose.desktop.currentOs)
+                implementation(composeDependencies.desktop.currentOs)
             }
         }
 

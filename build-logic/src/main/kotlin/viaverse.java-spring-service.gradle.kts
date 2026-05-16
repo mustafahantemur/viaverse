@@ -1,15 +1,18 @@
+import org.flywaydb.gradle.FlywayExtension
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.kotlin.dsl.configure
 import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
-    java
+    id("java")
     id("org.springframework.boot")
     id("io.spring.dependency-management")
     id("org.flywaydb.flyway")
     id("viaverse.code-quality")
 }
 
-java {
+extensions.configure<JavaPluginExtension> {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(25))
     }
@@ -44,20 +47,20 @@ val defaultDbUsername = "viaverse"
 val defaultDbPassword = "viaverse"
 
 dependencies {
-    implementation(project(":packages:observability"))
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.flywaydb:flyway-core")
-    implementation("org.flywaydb:flyway-database-postgresql")
-    implementation("io.micrometer:micrometer-core")
-    implementation("io.micrometer:micrometer-registry-prometheus")
-    runtimeOnly("org.postgresql:postgresql")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    add("implementation", project(":packages:observability"))
+    add("implementation", "org.springframework.boot:spring-boot-starter-web")
+    add("implementation", "org.springframework.boot:spring-boot-starter-actuator")
+    add("implementation", "org.springframework.boot:spring-boot-starter-validation")
+    add("implementation", "org.springframework.boot:spring-boot-starter-data-jpa")
+    add("implementation", "org.flywaydb:flyway-core")
+    add("implementation", "org.flywaydb:flyway-database-postgresql")
+    add("implementation", "io.micrometer:micrometer-core")
+    add("implementation", "io.micrometer:micrometer-registry-prometheus")
+    add("runtimeOnly", "org.postgresql:postgresql")
+    add("testImplementation", "org.springframework.boot:spring-boot-starter-test")
 }
 
-flyway {
+extensions.configure<FlywayExtension> {
     url = providers.environmentVariable("${envPrefix}_DB_URL").orElse(defaultDbUrl).get()
     user = providers.environmentVariable("${envPrefix}_DB_USERNAME").orElse(defaultDbUsername).get()
     password = providers.environmentVariable("${envPrefix}_DB_PASSWORD").orElse(defaultDbPassword).get()
@@ -77,7 +80,7 @@ tasks.register<BootRun>("bootRunDebug") {
 
     val bootRun = tasks.named<BootRun>("bootRun")
     classpath = bootRun.get().classpath
-    mainClass.set(providers.provider { bootRun.get().mainClass.get() })
+    mainClass.set(bootRun.flatMap { it.mainClass })
 
     systemProperty(
         "spring.profiles.active",
