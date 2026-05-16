@@ -306,6 +306,8 @@ public class AuthProperties {
         private int identifierMaxAttempts = 3;
         private long ipWindowSeconds = 60;
         private int ipMaxAttempts = 20;
+        private long deviceWindowSeconds = 60;
+        private int deviceMaxAttempts = 20;
 
         public long getIdentifierWindowSeconds() {
             return identifierWindowSeconds;
@@ -337,6 +339,22 @@ public class AuthProperties {
 
         public void setIpMaxAttempts(int ipMaxAttempts) {
             this.ipMaxAttempts = ipMaxAttempts;
+        }
+
+        public long getDeviceWindowSeconds() {
+            return deviceWindowSeconds;
+        }
+
+        public void setDeviceWindowSeconds(long deviceWindowSeconds) {
+            this.deviceWindowSeconds = deviceWindowSeconds;
+        }
+
+        public int getDeviceMaxAttempts() {
+            return deviceMaxAttempts;
+        }
+
+        public void setDeviceMaxAttempts(int deviceMaxAttempts) {
+            this.deviceMaxAttempts = deviceMaxAttempts;
         }
     }
 

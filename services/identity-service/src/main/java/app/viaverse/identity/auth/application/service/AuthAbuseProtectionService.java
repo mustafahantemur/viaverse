@@ -27,7 +27,7 @@ public class AuthAbuseProtectionService {
         check(RateLimitScopeEnum.AUTH_START_IP, clientIp,
                 authStart.getIpMaxAttempts(), Duration.ofSeconds(authStart.getIpWindowSeconds()));
         check(RateLimitScopeEnum.AUTH_START_DEVICE, clientFingerprint,
-                authStart.getIpMaxAttempts(), Duration.ofSeconds(authStart.getIpWindowSeconds()));
+                authStart.getDeviceMaxAttempts(), Duration.ofSeconds(authStart.getDeviceWindowSeconds()));
         enforceResendCooldown(normalized);
     }
 
@@ -38,7 +38,7 @@ public class AuthAbuseProtectionService {
         check(RateLimitScopeEnum.AUTH_START_IP, clientIp,
                 authStart.getIpMaxAttempts(), Duration.ofSeconds(authStart.getIpWindowSeconds()));
         check(RateLimitScopeEnum.AUTH_START_DEVICE, clientFingerprint,
-                authStart.getIpMaxAttempts(), Duration.ofSeconds(authStart.getIpWindowSeconds()));
+                authStart.getDeviceMaxAttempts(), Duration.ofSeconds(authStart.getDeviceWindowSeconds()));
     }
 
     public void enforceOtpAttempt(AuthLoginFlow flow, String clientIp) {

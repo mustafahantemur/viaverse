@@ -121,8 +121,8 @@ Notable revisions from the original checklist:
 | Logout with null JWT + null refresh token silently succeeds (204) | **fixed** (`refreshTokenRequired()` 400) |
 | `normalizeOptional()` duplicated in two classes | **fixed** (centralised in `IdentifierNormalizer`) |
 | Marketing consent version hardcoded `"v1"` | **fixed** (`AuthProperties.Consent.marketingVersion`) |
-| `AppRunner` config validation runs too late (post-startup) | **open** — `AuthConfiguration.validate` is still wired via `ApplicationRunner`; move to `@PostConstruct` on the config class (or an `EnvironmentPostProcessor`) so misconfiguration aborts startup before any bean is exposed. |
-| Pre-existing: device-fingerprint rate-limit bucket reuses `getIpMaxAttempts()` instead of a dedicated `deviceMaxAttempts` knob | **open** — track during step 6 (production-readiness gate). |
+| `AppRunner` config validation runs too late (post-startup) | **fixed** — `AuthConfiguration` now validates in `@PostConstruct`, before the service starts accepting traffic. |
+| Pre-existing: device-fingerprint rate-limit bucket reuses `getIpMaxAttempts()` instead of a dedicated `deviceMaxAttempts` knob | **fixed** — `auth-start.device-window-seconds` and `auth-start.device-max-attempts` now configure the device bucket independently. |
 | JWT signing secret has no rotation strategy — single `viaverse.auth.jwt.secret` used indefinitely | **open** — needs `JwtDecoder` that accepts a list of secrets (current + previous N) so the secret can be rotated without invalidating every active session. Treat as a separate phase after step 8. |
 
 ---

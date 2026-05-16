@@ -137,6 +137,8 @@ viaverse:
         identifier-max-attempts: ${VIAVERSE_AUTH_START_IDENTIFIER_MAX_ATTEMPTS:3}
         ip-window-seconds: ${VIAVERSE_AUTH_START_IP_WINDOW_SECONDS:60}
         ip-max-attempts: ${VIAVERSE_AUTH_START_IP_MAX_ATTEMPTS:20}
+        device-window-seconds: ${VIAVERSE_AUTH_START_DEVICE_WINDOW_SECONDS:60}
+        device-max-attempts: ${VIAVERSE_AUTH_START_DEVICE_MAX_ATTEMPTS:20}
       otp-verify:
         flow-window-seconds: ${VIAVERSE_AUTH_OTP_FLOW_WINDOW_SECONDS:300}
         flow-max-attempts: ${VIAVERSE_AUTH_OTP_FLOW_MAX_ATTEMPTS:5}
@@ -193,6 +195,8 @@ viaverse:
         identifier-max-attempts: 3
         ip-window-seconds: 60
         ip-max-attempts: 20
+        device-window-seconds: 60
+        device-max-attempts: 20
       otp-verify:
         flow-window-seconds: 300
         flow-max-attempts: 5
