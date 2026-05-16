@@ -1,16 +1,16 @@
 package app.viaverse.identity.auth.application.service;
 
 import app.viaverse.identity.account.domain.AccountStatus;
-import app.viaverse.identity.account.infrastructure.persistence.entity.IdentityAccountJpaEntity;
-import app.viaverse.identity.account.infrastructure.persistence.repository.IdentityAccountJpaRepository;
+import app.viaverse.identity.account.infrastructure.adapter.out.persistence.entity.IdentityAccountJpaEntity;
+import app.viaverse.identity.account.infrastructure.adapter.out.persistence.repository.IdentityAccountJpaRepository;
 import app.viaverse.identity.auth.domain.value.NormalizedIdentifier;
-import app.viaverse.identity.auth.infrastructure.persistence.entity.IdentityIdentifierJpaEntity;
-import app.viaverse.identity.auth.infrastructure.persistence.repository.IdentityIdentifierJpaRepository;
+import app.viaverse.identity.auth.infrastructure.adapter.out.persistence.entity.IdentityIdentifierJpaEntity;
+import app.viaverse.identity.auth.infrastructure.adapter.out.persistence.repository.IdentityIdentifierJpaRepository;
 import app.viaverse.identity.config.AuthProperties;
 import app.viaverse.identity.consent.domain.ConsentCategory;
 import app.viaverse.identity.consent.domain.ConsentType;
-import app.viaverse.identity.consent.infrastructure.persistence.entity.ConsentRecordJpaEntity;
-import app.viaverse.identity.consent.infrastructure.persistence.repository.ConsentRecordJpaRepository;
+import app.viaverse.identity.consent.infrastructure.adapter.out.persistence.entity.ConsentRecordJpaEntity;
+import app.viaverse.identity.consent.infrastructure.adapter.out.persistence.repository.ConsentRecordJpaRepository;
 import app.viaverse.identity.shared.normalization.IdentifierNormalizer;
 import java.time.Instant;
 import java.util.Arrays;

@@ -18,12 +18,15 @@
 
 ## Layer Rules
 
+Strict hexagonal layering. Web/REST is a driving (inbound) adapter; persistence/cache/messaging/OTP are driven (outbound) adapters. There is **no top-level `api/` slice** — controllers live under `infrastructure/adapter/in/web/`.
+
 | Layer | Package | Allowed imports | Forbidden |
 |---|---|---|---|
 | Domain | `*.domain.*` | JDK only | Spring, JPA, anything external |
 | Application | `*.application.*` | Domain + own ports | `*JpaEntity`, `*JpaRepository`, any adapter |
-| Infrastructure | `*.infrastructure.*` | Domain + Application ports | Cross-module infra |
-| API | `*.api.*` | Application ports + DTOs | Domain models (use mappers) |
+| Inbound adapter | `*.infrastructure.adapter.in.*` | Application ports (`port.in`) + DTOs + Spring web | Domain models in DTOs (use mappers), outbound adapter internals |
+| Outbound adapter | `*.infrastructure.adapter.out.*` | Application ports (`port.out`) + Domain models | Other outbound adapters, controllers |
+| Infrastructure (tech) | `*.infrastructure.security.*` etc. | Cross-cutting tech primitives only | Business logic |
 
 ---
 
@@ -39,14 +42,19 @@ app.viaverse.identity/
       port/out/     AccountRepository.java, AccountEventPublisher.java
       usecase/      GetCurrentAccountUseCaseImpl.java
     infrastructure/
-      persistence/
-        entity/     IdentityAccountJpaEntity.java  (extends BaseJpaEntity)
-        mapper/     AccountJpaMapper.java
-        adapter/    AccountJpaAdapter.java
-        repository/ IdentityAccountJpaRepository.java
-      messaging/
-        adapter/    AccountKafkaPublisher.java
-        event/      AccountCreatedV1KafkaEvent.java, AccountStatusChangedV1KafkaEvent.java
+      adapter/
+        in/web/
+          controller/   MeController.java
+          mapper/       AccountDtoMapper.java
+        out/
+          persistence/
+            entity/     IdentityAccountJpaEntity.java  (extends BaseJpaEntity)
+            mapper/     AccountJpaMapper.java
+            adapter/    AccountJpaAdapter.java
+            repository/ IdentityAccountJpaRepository.java
+          messaging/
+            adapter/    AccountKafkaPublisher.java
+            event/      AccountCreatedV1KafkaEvent.java, AccountStatusChangedV1KafkaEvent.java
 
   auth/
     domain/
@@ -70,39 +78,39 @@ app.viaverse.identity/
                     RegistrationTokenService.java, RefreshTokenRotationService.java,
                     AuthAbuseProtectionService.java
     infrastructure/
-      persistence/
-        entity/     AuthLoginFlowJpaEntity.java, AuthSessionJpaEntity.java,
-                    AuthRefreshTokenJpaEntity.java, IdentityIdentifierJpaEntity.java
-        mapper/     (MapStruct — one per entity)
-        adapter/    (one per outbound port)
-        repository/ (Spring Data — not exposed outside infrastructure)
-      cache/
-        adapter/    OtpValkeyAdapter.java, RegistrationTokenValkeyAdapter.java,
-                    RateLimitValkeyAdapter.java, SessionCacheValkeyAdapter.java
-        ValkeyKeyScheme.java
-      otp/adapter/  DebugOtpDeliveryAdapter.java, NetgsmSmsOtpDeliveryAdapter.java,
-                    SmtpEmailOtpDeliveryAdapter.java
-      social/
-        port/       SocialAuthPort.java
-        adapter/    GoogleOidcAdapter.java, AppleOidcAdapter.java
-      security/     JwtAccessTokenService.java, TokenHasher.java, SecureTokenGenerator.java,
-                    JwtPrincipal.java, JwtPrincipalResolver.java, IdentityJwtValidator.java,
-                    IdentityAuthenticationEntryPoint.java
-      messaging/
-        adapter/    SessionKafkaPublisher.java
-        event/      SessionRevokedV1KafkaEvent.java
-    api/
-      controller/   AuthController.java, MeController.java, SessionController.java
-      dto/request/  (one per endpoint)
-      dto/response/ (one per endpoint)
-      mapper/       AuthDtoMapper.java, SessionDtoMapper.java
+      adapter/
+        in/web/
+          controller/   AuthController.java, SessionController.java
+          dto/request/  (one per endpoint)
+          dto/response/ (one per endpoint; sealed VerifyOtpResponse, SessionView, …)
+          mapper/       AuthDtoMapper.java, SessionDtoMapper.java
+        out/
+          persistence/
+            entity/     AuthLoginFlowJpaEntity.java, AuthSessionJpaEntity.java,
+                        AuthRefreshTokenJpaEntity.java, IdentityIdentifierJpaEntity.java
+            mapper/     (MapStruct — one per entity)
+            adapter/    (one per outbound port)
+            repository/ (Spring Data — not exposed outside infrastructure)
+          cache/        OtpValkeyAdapter.java, RegistrationTokenValkeyAdapter.java,
+                        RateLimitValkeyAdapter.java, SessionCacheValkeyAdapter.java,
+                        ValkeyKeyScheme.java
+          otp/          DebugOtpDeliveryAdapter.java, NetgsmSmsOtpDeliveryAdapter.java,
+                        SmtpEmailOtpDeliveryAdapter.java, SmsOtpDeliveryAdapter.java
+          social/       GoogleOidcAdapter.java, AppleOidcAdapter.java  (SocialAuthPort lives in application/port/out)
+          messaging/
+            adapter/    SessionKafkaPublisher.java
+            event/      SessionRevokedV1KafkaEvent.java
+      security/         JwtAccessTokenService.java, TokenHasher.java, SecureTokenGenerator.java,
+                        JwtPrincipal.java, JwtPrincipalResolver.java, IdentityJwtValidator.java,
+                        IdentityAuthenticationEntryPoint.java
+                        (cross-cutting tech primitives — not adapters)
 
   consent/
     domain/         ConsentTypeEnum.java, ConsentCategoryEnum.java, ConsentInput.java
     application/
       port/out/     ConsentRecordRepository.java
       ConsentPolicy.java
-    infrastructure/persistence/ (entity, mapper, adapter, repository)
+    infrastructure/adapter/out/persistence/ (entity, mapper, adapter, repository)
 
   shared/
     audit/          IdentityAuditEventEnum.java, AuditLogJpaEntity.java,
