@@ -12,9 +12,9 @@
 | Inbound port | `UseCase` (interface) | `StartAuthUseCase` |
 | Use case impl | `UseCaseImpl` | `StartAuthUseCaseImpl` |
 | Outbound port | `Repository` / `Port` / `Store` | `OtpDeliveryPort`, `RateLimitPort` |
-| **Enum** | **`XxxEnum`** | `AccountStatusEnum`, `IdentityErrorEnum` |
-| Request DTO | `RequestDto` | `StartAuthRequestDto` |
-| Response DTO | `ResponseDto` | `AuthResponseDto` |
+| **Enum** | **`XxxEnum`** | `AccountStatusEnum`, `LoginFlowStatusEnum` |
+| Request DTO | `Request` | `StartAuthRequest`, `SocialSignInRequest` |
+| Response DTO | `Response` | `AuthResponse`, `AuthCompletionResponse` |
 | MapStruct mapper | `Mapper` | `AccountJpaMapper`, `AuthDtoMapper` |
 | Spring config | `Configuration` | `ValkeyConfiguration` |
 | Properties | `Properties` | `AuthProperties` |

@@ -37,7 +37,7 @@ public class RegistrationTokenService {
 
     public Issued requireRegistration(AuthLoginFlow flow, Instant now) {
         String registrationToken = tokenGenerator.generateUrlToken();
-        Duration ttl = properties.getOtp().getTtl();
+        Duration ttl = properties.getRegistrationToken().getTtl();
         Instant registrationExpiresAt = now.plus(ttl);
         String hashed = tokenHasher.hash(registrationToken);
         flow.requireRegistration(hashed, registrationExpiresAt, now);

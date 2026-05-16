@@ -11,6 +11,8 @@ import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
 import app.viaverse.identity.auth.domain.enums.LoginFlowStatusEnum;
 import app.viaverse.identity.auth.domain.model.AuthLoginFlow;
 import app.viaverse.identity.auth.domain.model.OtpChallenge;
+import app.viaverse.identity.shared.audit.AuditEvent;
+import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import app.viaverse.identity.shared.logging.ObservedAction;
 import java.time.Clock;
@@ -46,6 +48,7 @@ public class VerifyOtpUseCaseImpl implements VerifyOtpUseCase {
 
     @Override
     @ObservedAction("otp.verify")
+    @AuditEvent(IdentityAuditEventEnum.OTP_VERIFIED)
     public Result execute(Command command) {
         Instant now = clock.instant();
         AuthLoginFlow flow = flowRepository.findById(command.flowId())

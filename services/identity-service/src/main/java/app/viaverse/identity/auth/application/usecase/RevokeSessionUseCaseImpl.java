@@ -4,6 +4,8 @@ import app.viaverse.identity.auth.application.port.in.RevokeSessionUseCase;
 import app.viaverse.identity.auth.application.port.out.AuthSessionRepository;
 import app.viaverse.identity.auth.application.service.AuthSessionIssuer;
 import app.viaverse.identity.auth.domain.model.AuthSession;
+import app.viaverse.identity.shared.audit.AuditEvent;
+import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import app.viaverse.identity.shared.logging.ObservedAction;
 import java.time.Clock;
@@ -29,6 +31,7 @@ public class RevokeSessionUseCaseImpl implements RevokeSessionUseCase {
 
     @Override
     @ObservedAction("sessions.revoke")
+    @AuditEvent(IdentityAuditEventEnum.SESSION_REVOKED)
     public void execute(Command command) {
         Instant now = clock.instant();
         if (command.revokeAllExceptCurrent()) {

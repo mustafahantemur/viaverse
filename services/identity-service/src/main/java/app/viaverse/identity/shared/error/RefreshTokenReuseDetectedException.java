@@ -1,4 +1,4 @@
-package app.viaverse.identity.shared.aspect;
+package app.viaverse.identity.shared.error;
 
 import java.util.UUID;
 

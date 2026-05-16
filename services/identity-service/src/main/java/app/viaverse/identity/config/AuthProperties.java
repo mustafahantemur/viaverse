@@ -10,6 +10,7 @@ public class AuthProperties {
     private final Jwt jwt = new Jwt();
     private Duration refreshTokenTtl = Duration.ofDays(30);
     private final Otp otp = new Otp();
+    private final RegistrationToken registrationToken = new RegistrationToken();
     private final Sms sms = new Sms();
     private final Social social = new Social();
     private final Debug debug = new Debug();
@@ -30,6 +31,10 @@ public class AuthProperties {
 
     public Otp getOtp() {
         return otp;
+    }
+
+    public RegistrationToken getRegistrationToken() {
+        return registrationToken;
     }
 
     public Sms getSms() {
@@ -108,6 +113,18 @@ public class AuthProperties {
 
         public Delivery getDelivery() {
             return delivery;
+        }
+    }
+
+    public static class RegistrationToken {
+        private Duration ttl = Duration.ofMinutes(30);
+
+        public Duration getTtl() {
+            return ttl;
+        }
+
+        public void setTtl(Duration ttl) {
+            this.ttl = ttl;
         }
     }
 

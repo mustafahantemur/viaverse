@@ -9,11 +9,26 @@ spring:
       bindings:
         identityAccountEvents-out-0:
           destination: viaverse.identity.account-events
+          producer:
+            useNativeEncoding: true
         identitySessionEvents-out-0:
           destination: viaverse.identity.session-events
+          producer:
+            useNativeEncoding: true
       kafka:
         binder:
           brokers: ${IDENTITY_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+          # At-least-once delivery: wait for all in-sync replicas. The outbox
+          # guarantees the event row exists; this guarantees the broker accepted
+          # it before we mark the row SENT.
+          required-acks: all
+          producer-properties:
+            enable.idempotence: true
+            compression.type: lz4
+            linger.ms: 5
+            max.in.flight.requests.per.connection: 5
+            key.serializer: org.apache.kafka.common.serialization.StringSerializer
+            value.serializer: org.springframework.kafka.support.serializer.JsonSerializer
   datasource:
     url: ${IDENTITY_SERVICE_DB_URL:jdbc:postgresql://localhost:5432/viaverse_identity}
     username: ${IDENTITY_SERVICE_DB_USERNAME:viaverse}
@@ -23,6 +38,10 @@ spring:
       host: ${IDENTITY_VALKEY_HOST:localhost}
       port: ${IDENTITY_VALKEY_PORT:6379}
       database: ${IDENTITY_VALKEY_DB:0}
+      # Fail fast under contention; the rate-limit adapter fails closed if
+      # commands time out, so we'd rather error than hang requests.
+      timeout: ${IDENTITY_VALKEY_COMMAND_TIMEOUT:1s}
+      connect-timeout: ${IDENTITY_VALKEY_CONNECT_TIMEOUT:2s}
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -68,6 +87,13 @@ logging:
 viaverse:
   http:
     trusted-proxies: ${VIAVERSE_HTTP_TRUSTED_PROXIES:}
+    cors:
+      allowed-origins: ${VIAVERSE_HTTP_CORS_ALLOWED_ORIGINS:}
+  identity:
+    outbox:
+      poll-interval-ms: ${VIAVERSE_IDENTITY_OUTBOX_POLL_INTERVAL_MS:2000}
+      batch-size: ${VIAVERSE_IDENTITY_OUTBOX_BATCH_SIZE:100}
+      max-attempts: ${VIAVERSE_IDENTITY_OUTBOX_MAX_ATTEMPTS:8}
   auth:
     jwt:
       secret: ${IDENTITY_JWT_SECRET:}
@@ -78,6 +104,8 @@ viaverse:
       max-attempts: ${IDENTITY_OTP_MAX_ATTEMPTS:5}
       delivery:
         provider: ${VIAVERSE_OTP_DELIVERY_PROVIDER:debug}
+    registration-token:
+      ttl: ${IDENTITY_REGISTRATION_TOKEN_TTL:PT30M}
     sms:
       provider: ${VIAVERSE_SMS_PROVIDER:none}
       netgsm:
@@ -93,9 +121,6 @@ viaverse:
       apple:
         enabled: ${VIAVERSE_SOCIAL_APPLE_ENABLED:false}
         client-id: ${APPLE_CLIENT_ID:}
-      instagram:
-        enabled: ${VIAVERSE_SOCIAL_INSTAGRAM_ENABLED:false}
-        client-id: ${INSTAGRAM_CLIENT_ID:}
     debug:
       enabled: ${VIAVERSE_AUTH_DEBUG_ENABLED:false}
       fixed-otp: ${VIAVERSE_AUTH_DEBUG_FIXED_OTP:}

@@ -7,6 +7,7 @@ import app.viaverse.observability.audit.AuditAction;
 import app.viaverse.observability.audit.AuditActor;
 import app.viaverse.observability.audit.AuditContext;
 import app.viaverse.observability.audit.AuditLogger;
+import app.viaverse.observability.correlation.CorrelationIds;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.time.Instant;
@@ -18,13 +19,22 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 /**
- * Emits an identity audit event when a method annotated with
- * {@link AuditEvent} returns successfully. The account id is resolved from
- * the returned {@link AuditableResult} or, as a fallback, from a parameter
- * annotated with {@code @LogParam("user.id")}.
+ * Emits an identity audit event when a method annotated with {@link AuditEvent}
+ * returns successfully.
+ *
+ * <p>Account-id resolution order:
+ * <ol>
+ *   <li>{@link AuditableResult#accountId()} on the return value</li>
+ *   <li>{@link AuditableCommand#accountId()} on any argument</li>
+ *   <li>A {@code @LogParam("user.id") UUID} method parameter</li>
+ * </ol>
+ *
+ * <p>Context (correlation id, request id, client IP, User-Agent) is read from
+ * MDC — populated by {@code ClientContextFilter} for HTTP requests.
  */
 @Aspect
 @Component
@@ -32,6 +42,8 @@ public final class AuditEventAspect {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditEventAspect.class);
     private static final String USER_ID_PARAM_KEY = "user.id";
+    public static final String MDC_CLIENT_IP = "client.ip";
+    public static final String MDC_CLIENT_USER_AGENT = "client.user_agent";
 
     private final AuditLogger auditLogger;
 
@@ -61,8 +73,14 @@ public final class AuditEventAspect {
                 AuditAction.TECHNICAL_ACCESS,
                 "identity",
                 accountId.toString(),
-                new AuditContext(null, null, event.name()),
-                Map.of()
+                new AuditContext(
+                        MDC.get(CorrelationIds.MDC_KEY),
+                        MDC.get(CorrelationIds.REQUEST_MDC_KEY),
+                        "identity",
+                        MDC.get(MDC_CLIENT_IP),
+                        MDC.get(MDC_CLIENT_USER_AGENT)
+                ),
+                Map.of("event", event.name())
         ));
     }
 
@@ -70,12 +88,17 @@ public final class AuditEventAspect {
         if (result instanceof AuditableResult auditable && auditable.accountId() != null) {
             return auditable.accountId();
         }
+        Object[] args = joinPoint.getArgs();
+        for (Object arg : args) {
+            if (arg instanceof AuditableCommand command && command.accountId() != null) {
+                return command.accountId();
+            }
+        }
         if (!(joinPoint.getSignature() instanceof MethodSignature methodSignature)) {
             return null;
         }
         Method method = methodSignature.getMethod();
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-        Object[] args = joinPoint.getArgs();
         for (int i = 0; i < parameterAnnotations.length; i++) {
             for (Annotation annotation : parameterAnnotations[i]) {
                 if (annotation instanceof LogParam logParam

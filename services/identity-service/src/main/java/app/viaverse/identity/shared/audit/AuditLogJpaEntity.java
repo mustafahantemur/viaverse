@@ -46,6 +46,12 @@ public class AuditLogJpaEntity {
     @Column(name = "source", length = 160)
     private String source;
 
+    @Column(name = "source_ip", length = 45)
+    private String sourceIp;
+
+    @Column(name = "user_agent", length = 255)
+    private String userAgent;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata_json", nullable = false, columnDefinition = "jsonb")
     private String metadataJson;
@@ -67,6 +73,8 @@ public class AuditLogJpaEntity {
             String correlationId,
             String requestId,
             String source,
+            String sourceIp,
+            String userAgent,
             String metadataJson,
             Instant createdAt
     ) {
@@ -80,6 +88,8 @@ public class AuditLogJpaEntity {
         this.correlationId = correlationId;
         this.requestId = requestId;
         this.source = source;
+        this.sourceIp = sourceIp;
+        this.userAgent = userAgent;
         this.metadataJson = metadataJson;
         this.createdAt = createdAt;
     }

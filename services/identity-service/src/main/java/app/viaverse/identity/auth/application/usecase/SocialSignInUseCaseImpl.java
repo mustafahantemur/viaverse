@@ -16,6 +16,8 @@ import app.viaverse.identity.auth.domain.model.IdentityIdentifier;
 import app.viaverse.identity.auth.domain.value.NormalizedIdentifier;
 import app.viaverse.identity.auth.domain.value.SocialIdentity;
 import app.viaverse.identity.config.AuthProperties;
+import app.viaverse.identity.shared.audit.AuditEvent;
+import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import app.viaverse.identity.shared.logging.ObservedAction;
 import app.viaverse.identity.shared.normalization.IdentifierNormalizer;
@@ -62,6 +64,7 @@ public class SocialSignInUseCaseImpl implements SocialSignInUseCase {
 
     @Override
     @ObservedAction("auth.social.sign_in")
+    @AuditEvent(IdentityAuditEventEnum.SOCIAL_SIGN_IN_SUCCEEDED)
     public Result execute(Command command) {
         Instant now = clock.instant();
         assertProviderEnabled(command.provider());

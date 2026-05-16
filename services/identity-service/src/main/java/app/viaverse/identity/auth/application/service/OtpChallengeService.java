@@ -13,6 +13,7 @@ import app.viaverse.identity.config.AuthProperties;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -28,20 +29,20 @@ public class OtpChallengeService {
 
     private final AuthProperties properties;
     private final OtpChallengeStore challengeStore;
-    private final OtpDeliveryPort deliveryPort;
+    private final List<OtpDeliveryPort> deliveryPorts;
     private final TokenHasher tokenHasher;
     private final SecureRandom secureRandom;
 
     public OtpChallengeService(
             AuthProperties properties,
             OtpChallengeStore challengeStore,
-            OtpDeliveryPort deliveryPort,
+            List<OtpDeliveryPort> deliveryPorts,
             TokenHasher tokenHasher,
             SecureRandom secureRandom
     ) {
         this.properties = properties;
         this.challengeStore = challengeStore;
-        this.deliveryPort = deliveryPort;
+        this.deliveryPorts = List.copyOf(deliveryPorts);
         this.tokenHasher = tokenHasher;
         this.secureRandom = secureRandom;
     }
@@ -61,7 +62,12 @@ public class OtpChallengeService {
                 now
         );
         challengeStore.save(challenge);
-        deliveryPort.deliver(new OtpDeliveryRequest(flowId, normalized, otp, expiresAt));
+        OtpDeliveryRequest deliveryRequest = new OtpDeliveryRequest(flowId, normalized, otp, expiresAt);
+        deliveryPorts.stream()
+                .filter(port -> port.supports(normalized.type()))
+                .findFirst()
+                .orElseThrow(IdentityErrors::smsProviderDisabled)
+                .deliver(deliveryRequest);
         return debugOtp(otp);
     }
 

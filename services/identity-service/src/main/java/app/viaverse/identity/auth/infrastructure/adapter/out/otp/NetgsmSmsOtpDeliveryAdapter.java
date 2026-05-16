@@ -10,6 +10,20 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+/**
+ * NetGSM HTTP API adapter for SMS OTP delivery.
+ *
+ * <p><b>Security note:</b> NetGSM's {@code sms/send/get} endpoint accepts
+ * credentials, recipient number, and message body as query-string parameters.
+ * The supplied {@link RestClient} MUST NOT be the Spring Boot
+ * auto-instrumented client — otherwise credentials and the OTP code would be
+ * captured in HTTP span attributes (and any downstream OTLP/OpenSearch sink).
+ * Use the dedicated NetGSM client built in {@code OtpDeliveryConfiguration}.
+ *
+ * <p>TODO (step 8): switch to NetGSM's POST endpoint once we have staging
+ * credentials to validate the alternate response shape, then re-attach
+ * observation with a URI-sanitising convention.
+ */
 public class NetgsmSmsOtpDeliveryAdapter implements OtpDeliveryPort {
 
     private final AuthProperties.Netgsm properties;
@@ -21,9 +35,17 @@ public class NetgsmSmsOtpDeliveryAdapter implements OtpDeliveryPort {
     }
 
     @Override
+    public boolean supports(IdentifierTypeEnum identifierType) {
+        return identifierType == IdentifierTypeEnum.PHONE;
+    }
+
+    @Override
     public void deliver(OtpDeliveryRequest request) {
-        if (request.identifier().type() != IdentifierTypeEnum.PHONE) {
-            throw IdentityErrors.smsProviderDisabled();
+        if (!supports(request.identifier().type())) {
+            throw new IllegalStateException(
+                    "NetgsmSmsOtpDeliveryAdapter received unsupported identifier type "
+                            + request.identifier().type()
+                            + " — dispatcher routed to the wrong adapter");
         }
 
         URI uri = UriComponentsBuilder.fromUriString(properties.getEndpoint())
@@ -32,7 +54,8 @@ public class NetgsmSmsOtpDeliveryAdapter implements OtpDeliveryPort {
                 .queryParam("gsmno", normalizePhone(request.identifier().value()))
                 .queryParam("message", properties.getMessageTemplate().formatted(request.otp()))
                 .queryParam("msgheader", properties.getHeader())
-                .build(true)
+                .encode()
+                .build()
                 .toUri();
         try {
             String response = restClient.get()
