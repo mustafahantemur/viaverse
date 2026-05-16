@@ -9,7 +9,6 @@ public record StartAuthResponse(
         UUID flowId,
         IdentifierTypeEnum identifierType,
         AuthNextStepEnum nextStep,
-        Instant expiresAt,
-        String debugOtp
+        Instant expiresAt
 ) {
 }

@@ -1,6 +1,6 @@
 package app.viaverse.identity.config;
 
-import app.viaverse.identity.auth.domain.enums.OtpDeliveryProviderEnum;
+import app.viaverse.identity.auth.domain.enums.EmailProviderEnum;
 import app.viaverse.identity.auth.domain.enums.SmsProviderEnum;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -15,10 +15,15 @@ public class AuthProperties {
     private final RegistrationToken registrationToken = new RegistrationToken();
     private final AdminInvitation adminInvitation = new AdminInvitation();
     private final Sms sms = new Sms();
+    private final Email email = new Email();
     private final Social social = new Social();
     private final Debug debug = new Debug();
     private final RateLimit rateLimit = new RateLimit();
     private final Consent consent = new Consent();
+
+    public Email getEmail() {
+        return email;
+    }
 
     public Jwt getJwt() {
         return jwt;
@@ -64,8 +69,36 @@ public class AuthProperties {
         return consent;
     }
 
+    /**
+     * Required-consent document registry. The server owns versions — clients only
+     * acknowledge by {@code type}; the current {@code version} is resolved here
+     * and persisted on the {@code consent_record} row. To roll a document
+     * (e.g. new ToS), bump the version here so any prior acceptance is treated
+     * as stale and the user is re-prompted on next sensitive action.
+     */
     public static class Consent {
+        private String termsOfServiceVersion = "v1";
+        private String personalDataProtectionLawVersion = "v1";
         private String marketingVersion = "v1";
+        private String termsOfServiceUrl = "https://viaverse.app/legal/terms";
+        private String personalDataProtectionLawUrl = "https://viaverse.app/legal/kvkk";
+        private String marketingUrl = "https://viaverse.app/legal/marketing";
+
+        public String getTermsOfServiceVersion() {
+            return termsOfServiceVersion;
+        }
+
+        public void setTermsOfServiceVersion(String termsOfServiceVersion) {
+            this.termsOfServiceVersion = termsOfServiceVersion;
+        }
+
+        public String getPersonalDataProtectionLawVersion() {
+            return personalDataProtectionLawVersion;
+        }
+
+        public void setPersonalDataProtectionLawVersion(String personalDataProtectionLawVersion) {
+            this.personalDataProtectionLawVersion = personalDataProtectionLawVersion;
+        }
 
         public String getMarketingVersion() {
             return marketingVersion;
@@ -73,6 +106,30 @@ public class AuthProperties {
 
         public void setMarketingVersion(String marketingVersion) {
             this.marketingVersion = marketingVersion;
+        }
+
+        public String getTermsOfServiceUrl() {
+            return termsOfServiceUrl;
+        }
+
+        public void setTermsOfServiceUrl(String termsOfServiceUrl) {
+            this.termsOfServiceUrl = termsOfServiceUrl;
+        }
+
+        public String getPersonalDataProtectionLawUrl() {
+            return personalDataProtectionLawUrl;
+        }
+
+        public void setPersonalDataProtectionLawUrl(String personalDataProtectionLawUrl) {
+            this.personalDataProtectionLawUrl = personalDataProtectionLawUrl;
+        }
+
+        public String getMarketingUrl() {
+            return marketingUrl;
+        }
+
+        public void setMarketingUrl(String marketingUrl) {
+            this.marketingUrl = marketingUrl;
         }
     }
 
@@ -109,7 +166,6 @@ public class AuthProperties {
     public static class Otp {
         private Duration ttl = Duration.ofMinutes(5);
         private int maxAttempts = 5;
-        private final Delivery delivery = new Delivery();
 
         public Duration getTtl() {
             return ttl;
@@ -125,10 +181,6 @@ public class AuthProperties {
 
         public void setMaxAttempts(int maxAttempts) {
             this.maxAttempts = maxAttempts;
-        }
-
-        public Delivery getDelivery() {
-            return delivery;
         }
     }
 
@@ -156,16 +208,64 @@ public class AuthProperties {
         }
     }
 
-    public static class Delivery {
-        private OtpDeliveryProviderEnum provider = OtpDeliveryProviderEnum.DEBUG;
+    public static class Email {
+        private EmailProviderEnum provider = EmailProviderEnum.NONE;
+        private final Smtp smtp = new Smtp();
 
-        public OtpDeliveryProviderEnum getProvider() {
+        public EmailProviderEnum getProvider() {
             return provider;
         }
 
-        public void setProvider(OtpDeliveryProviderEnum provider) {
+        public void setProvider(EmailProviderEnum provider) {
             this.provider = provider;
         }
+
+        public Smtp getSmtp() {
+            return smtp;
+        }
+    }
+
+    public static class Smtp {
+        private String host = "localhost";
+        private int port = 1025;
+        private String username = "";
+        private String password = "";
+        private String fromAddress = "noreply@viaverse.app";
+        private String fromName = "Viaverse";
+        private String subjectTemplate = "Viaverse verification code: %s";
+        private String bodyTemplate = "Your Viaverse verification code is %s. It expires in 5 minutes.";
+        private boolean startTlsEnabled = false;
+        private boolean startTlsRequired = false;
+        private boolean authEnabled = false;
+        private Duration connectionTimeout = Duration.ofSeconds(5);
+        private Duration writeTimeout = Duration.ofSeconds(5);
+
+        public String getHost() { return host; }
+        public void setHost(String host) { this.host = host; }
+        public int getPort() { return port; }
+        public void setPort(int port) { this.port = port; }
+        public String getUsername() { return username; }
+        public void setUsername(String username) { this.username = username; }
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+        public String getFromAddress() { return fromAddress; }
+        public void setFromAddress(String fromAddress) { this.fromAddress = fromAddress; }
+        public String getFromName() { return fromName; }
+        public void setFromName(String fromName) { this.fromName = fromName; }
+        public String getSubjectTemplate() { return subjectTemplate; }
+        public void setSubjectTemplate(String subjectTemplate) { this.subjectTemplate = subjectTemplate; }
+        public String getBodyTemplate() { return bodyTemplate; }
+        public void setBodyTemplate(String bodyTemplate) { this.bodyTemplate = bodyTemplate; }
+        public boolean isStartTlsEnabled() { return startTlsEnabled; }
+        public void setStartTlsEnabled(boolean startTlsEnabled) { this.startTlsEnabled = startTlsEnabled; }
+        public boolean isStartTlsRequired() { return startTlsRequired; }
+        public void setStartTlsRequired(boolean startTlsRequired) { this.startTlsRequired = startTlsRequired; }
+        public boolean isAuthEnabled() { return authEnabled; }
+        public void setAuthEnabled(boolean authEnabled) { this.authEnabled = authEnabled; }
+        public Duration getConnectionTimeout() { return connectionTimeout; }
+        public void setConnectionTimeout(Duration connectionTimeout) { this.connectionTimeout = connectionTimeout; }
+        public Duration getWriteTimeout() { return writeTimeout; }
+        public void setWriteTimeout(Duration writeTimeout) { this.writeTimeout = writeTimeout; }
     }
 
     public static class Sms {

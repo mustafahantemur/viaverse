@@ -11,7 +11,6 @@ import app.viaverse.identity.account.infrastructure.adapter.out.persistence.enti
 import app.viaverse.identity.account.infrastructure.adapter.out.persistence.repository.IdentityAccountJpaRepository;
 import app.viaverse.identity.config.AuthConfiguration;
 import app.viaverse.identity.config.AuthProperties;
-import app.viaverse.identity.auth.domain.enums.OtpDeliveryProviderEnum;
 import app.viaverse.identity.auth.domain.enums.SmsProviderEnum;
 import app.viaverse.identity.support.IdentityTestcontainers;
 import app.viaverse.shared.kernel.error.TechnicalException;
@@ -121,7 +120,7 @@ class IdentityAuthIntegrationTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).containsEntry("identifierType", "EMAIL");
         assertThat(response.getBody()).containsEntry("nextStep", "OTP_REQUIRED");
-        assertThat(response.getBody()).containsEntry("debugOtp", DEBUG_OTP);
+        assertThat(response.getBody()).doesNotContainKey("debugOtp");
         assertThat(response.getBody()).containsKey("flowId");
         assertThat(response.getBody()).containsKey("expiresAt");
     }
@@ -134,12 +133,12 @@ class IdentityAuthIntegrationTest {
     }
 
     @Test
-    void debugOtpDeliveryProviderIsActiveForLocalTestFlow() {
+    void debugAdapterIsActiveForLocalTestFlowButDoesNotLeakOtpToApi() {
         ResponseEntity<Map> response = startAuth(newEmail());
 
-        assertThat(authProperties.getOtp().getDelivery().getProvider()).isEqualTo(OtpDeliveryProviderEnum.DEBUG);
+        assertThat(authProperties.getDebug().isEnabled()).isTrue();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).containsEntry("debugOtp", DEBUG_OTP);
+        assertThat(response.getBody()).doesNotContainKey("debugOtp");
     }
 
     @Test
@@ -368,13 +367,11 @@ class IdentityAuthIntegrationTest {
 
     @Test
     void debugOtpOnlyWorksInLocalOrTestProfiles() {
-        ResponseEntity<Map> response = startAuth(newEmail());
         AuthProperties properties = new AuthProperties();
         properties.getJwt().setSecret("test-identity-jwt-secret-change-me");
         properties.getDebug().setEnabled(true);
         properties.getDebug().setFixedOtp(DEBUG_OTP);
 
-        assertThat(response.getBody()).containsEntry("debugOtp", DEBUG_OTP);
         assertThatThrownBy(() -> AuthConfiguration.validate(properties, new String[] {"prod"}))
                 .isInstanceOf(TechnicalException.class)
                 .hasMessageContaining("Debug OTP can only be enabled");
@@ -404,13 +401,7 @@ class IdentityAuthIntegrationTest {
         AuthProperties properties = new AuthProperties();
         properties.getJwt().setSecret("test-identity-jwt-secret-change-me");
 
-        assertThat(properties.getOtp().getDelivery().getProvider()).isEqualTo(OtpDeliveryProviderEnum.DEBUG);
         assertThat(properties.getSms().getProvider()).isEqualTo(SmsProviderEnum.NONE);
-
-        properties.getOtp().getDelivery().setProvider(OtpDeliveryProviderEnum.SMS);
-        assertThatThrownBy(() -> AuthConfiguration.validate(properties, new String[] {"local"}))
-                .isInstanceOf(TechnicalException.class)
-                .hasMessageContaining("SMS OTP provider is disabled");
 
         properties.getSms().setProvider(SmsProviderEnum.NETGSM);
         assertThatThrownBy(() -> AuthConfiguration.validate(properties, new String[] {"local"}))
@@ -531,12 +522,29 @@ class IdentityAuthIntegrationTest {
     void missingRequiredConsentFailsRegistration() {
         Map<String, Object> verified = verifyNewUser(newEmail());
         Map<String, Object> request = registrationRequest((String) verified.get("registrationToken"));
-        request.put("requiredConsents", List.of(Map.of("type", "TERMS_OF_SERVICE", "version", "v1")));
+        request.put("acceptedRequiredConsents", List.of("TERMS_OF_SERVICE"));
 
         ResponseEntity<Map> response = post("/api/v1/auth/register", request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).containsEntry("code", "VALIDATION_FAILED");
+    }
+
+    @Test
+    void requiredConsentsEndpointPublishesServerOwnedVersions() {
+        ResponseEntity<Map> response = get("/api/v1/auth/required-consents", null);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<Map<String, Object>> required = (List<Map<String, Object>>) response.getBody().get("required");
+        assertThat(required).extracting(item -> item.get("type"))
+                .containsExactlyInAnyOrder("TERMS_OF_SERVICE", "PERSONAL_DATA_PROTECTION_LAW");
+        assertThat(required).allSatisfy(item -> {
+            assertThat(item.get("version")).isNotNull();
+            assertThat(item.get("url")).isNotNull();
+        });
+        Map<String, Object> marketing = (Map<String, Object>) response.getBody().get("marketing");
+        assertThat(marketing).containsEntry("type", "MARKETING_COMMUNICATION");
+        assertThat(marketing).containsKey("version");
     }
 
     @Test
@@ -602,10 +610,7 @@ class IdentityAuthIntegrationTest {
         request.put("displayName", "Ada Lovelace");
         request.put("firstName", "Ada");
         request.put("lastName", "Lovelace");
-        request.put("requiredConsents", List.of(
-                Map.of("type", "TERMS_OF_SERVICE", "version", "v1"),
-                Map.of("type", "PERSONAL_DATA_PROTECTION_LAW", "version", "v1")
-        ));
+        request.put("acceptedRequiredConsents", List.of("TERMS_OF_SERVICE", "PERSONAL_DATA_PROTECTION_LAW"));
         request.put("marketingConsentAccepted", false);
         return request;
     }

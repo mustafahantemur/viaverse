@@ -15,7 +15,6 @@ public interface StartAuthUseCase {
             UUID flowId,
             IdentifierTypeEnum identifierType,
             AuthNextStepEnum nextStep,
-            Instant expiresAt,
-            String debugOtp
+            Instant expiresAt
     ) {}
 }

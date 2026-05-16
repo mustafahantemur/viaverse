@@ -3,23 +3,32 @@ package app.viaverse.identity.config;
 import app.viaverse.identity.auth.application.port.out.OtpDeliveryPort;
 import app.viaverse.identity.auth.infrastructure.adapter.out.otp.DebugOtpDeliveryAdapter;
 import app.viaverse.identity.auth.infrastructure.adapter.out.otp.NetgsmSmsOtpDeliveryAdapter;
+import app.viaverse.identity.auth.infrastructure.adapter.out.otp.SmtpEmailOtpDeliveryAdapter;
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.Properties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.web.client.RestClient;
 
 /**
  * Declares the configured {@link OtpDeliveryPort} beans. Multiple adapters may
- * coexist — {@code OtpChallengeService} dispatches by {@link OtpDeliveryPort#supports}.
+ * coexist — {@code OtpChallengeService} dispatches by
+ * {@link OtpDeliveryPort#supports} and picks the first match. Real adapters
+ * (NetGSM, SMTP) are ordered before the Debug adapter so they win for their
+ * channel; Debug only fires for an identifier type when no real adapter claims
+ * it (e.g. SOCIAL flows, or local where SMS/email are not configured).
  *
  * <p>The NetGSM client is built with the static {@link RestClient#builder()}
  * (not the auto-instrumented {@code RestClient.Builder} bean) so that
  * credentials carried in the request URL are never captured into HTTP span
  * attributes or metrics. See {@link NetgsmSmsOtpDeliveryAdapter} for the
- * security rationale and the step-8 follow-up.
+ * security rationale.
  */
 @Configuration
 public class OtpDeliveryConfiguration {
@@ -28,15 +37,50 @@ public class OtpDeliveryConfiguration {
     private static final Duration NETGSM_READ_TIMEOUT = Duration.ofSeconds(5);
 
     @Bean
-    @ConditionalOnExpression("'${viaverse.auth.otp.delivery.provider:debug}'.equalsIgnoreCase('debug')")
-    DebugOtpDeliveryAdapter debugOtpDeliveryAdapter() {
-        return new DebugOtpDeliveryAdapter();
-    }
-
-    @Bean
+    @Order(1)
     @ConditionalOnExpression("'${viaverse.auth.sms.provider:none}'.equalsIgnoreCase('netgsm')")
     NetgsmSmsOtpDeliveryAdapter netgsmSmsOtpDeliveryAdapter(AuthProperties properties) {
         return new NetgsmSmsOtpDeliveryAdapter(properties.getSms().getNetgsm(), netgsmRestClient());
+    }
+
+    @Bean
+    @Order(1)
+    @ConditionalOnExpression("'${viaverse.auth.email.provider:none}'.equalsIgnoreCase('smtp')")
+    SmtpEmailOtpDeliveryAdapter smtpEmailOtpDeliveryAdapter(
+            AuthProperties properties,
+            JavaMailSender javaMailSender
+    ) {
+        return new SmtpEmailOtpDeliveryAdapter(properties.getEmail().getSmtp(), javaMailSender);
+    }
+
+    @Bean
+    @ConditionalOnExpression("'${viaverse.auth.email.provider:none}'.equalsIgnoreCase('smtp')")
+    JavaMailSender javaMailSender(AuthProperties properties) {
+        AuthProperties.Smtp smtp = properties.getEmail().getSmtp();
+        JavaMailSenderImpl sender = new JavaMailSenderImpl();
+        sender.setHost(smtp.getHost());
+        sender.setPort(smtp.getPort());
+        if (smtp.isAuthEnabled()) {
+            sender.setUsername(smtp.getUsername());
+            sender.setPassword(smtp.getPassword());
+        }
+        Properties mailProperties = new Properties();
+        mailProperties.put("mail.transport.protocol", "smtp");
+        mailProperties.put("mail.smtp.auth", String.valueOf(smtp.isAuthEnabled()));
+        mailProperties.put("mail.smtp.starttls.enable", String.valueOf(smtp.isStartTlsEnabled()));
+        mailProperties.put("mail.smtp.starttls.required", String.valueOf(smtp.isStartTlsRequired()));
+        mailProperties.put("mail.smtp.connectiontimeout", String.valueOf(smtp.getConnectionTimeout().toMillis()));
+        mailProperties.put("mail.smtp.timeout", String.valueOf(smtp.getWriteTimeout().toMillis()));
+        mailProperties.put("mail.smtp.writetimeout", String.valueOf(smtp.getWriteTimeout().toMillis()));
+        sender.setJavaMailProperties(mailProperties);
+        return sender;
+    }
+
+    @Bean
+    @Order(100)
+    @ConditionalOnExpression("'${viaverse.auth.debug.enabled:false}'.equalsIgnoreCase('true')")
+    DebugOtpDeliveryAdapter debugOtpDeliveryAdapter() {
+        return new DebugOtpDeliveryAdapter();
     }
 
     private static RestClient netgsmRestClient() {

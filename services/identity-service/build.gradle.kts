@@ -17,9 +17,11 @@ dependencies {
     implementation("org.springframework.security:spring-security-oauth2-jose")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-scalar:3.0.3")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation(libs.spring.cloud.stream)
     implementation(libs.spring.cloud.stream.binder.kafka)
+    implementation(libs.libphonenumber)
     implementation("org.mapstruct:mapstruct:1.6.3")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 

@@ -4,7 +4,7 @@ import app.viaverse.identity.auth.infrastructure.security.JwtAccessTokenService;
 import app.viaverse.identity.auth.infrastructure.security.IdentityJwtValidator;
 import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
 import app.viaverse.identity.auth.infrastructure.security.RotatingJwtDecoder;
-import app.viaverse.identity.auth.domain.enums.OtpDeliveryProviderEnum;
+import app.viaverse.identity.auth.domain.enums.EmailProviderEnum;
 import app.viaverse.identity.auth.domain.enums.SmsProviderEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
@@ -144,10 +144,7 @@ public class AuthConfiguration {
                 && (properties.getDebug().getFixedOtp() == null || properties.getDebug().getFixedOtp().isBlank())) {
             throw IdentityErrors.debugOtpFixedValueRequired();
         }
-        if (properties.getOtp().getDelivery().getProvider() == OtpDeliveryProviderEnum.SMS) {
-            if (properties.getSms().getProvider() != SmsProviderEnum.NETGSM) {
-                throw IdentityErrors.smsProviderDisabled();
-            }
+        if (properties.getSms().getProvider() == SmsProviderEnum.NETGSM) {
             AuthProperties.Netgsm netgsm = properties.getSms().getNetgsm();
             if (isBlank(netgsm.getEndpoint())
                     || isBlank(netgsm.getUsername())
@@ -158,6 +155,25 @@ public class AuthConfiguration {
             }
             if (countOccurrences(netgsm.getMessageTemplate(), "%s") != 1) {
                 throw IdentityErrors.netgsmConfigurationInvalid();
+            }
+        }
+        if (properties.getEmail().getProvider() == EmailProviderEnum.SMTP) {
+            AuthProperties.Smtp smtp = properties.getEmail().getSmtp();
+            if (isBlank(smtp.getHost())
+                    || smtp.getPort() <= 0
+                    || isBlank(smtp.getFromAddress())
+                    || isBlank(smtp.getSubjectTemplate())
+                    || isBlank(smtp.getBodyTemplate())) {
+                throw IdentityErrors.smtpConfigurationInvalid();
+            }
+            if (countOccurrences(smtp.getSubjectTemplate(), "%s") != 1) {
+                throw IdentityErrors.smtpConfigurationInvalid();
+            }
+            if (countOccurrences(smtp.getBodyTemplate(), "%s") != 1) {
+                throw IdentityErrors.smtpConfigurationInvalid();
+            }
+            if (smtp.isAuthEnabled() && (isBlank(smtp.getUsername()) || isBlank(smtp.getPassword()))) {
+                throw IdentityErrors.smtpConfigurationInvalid();
             }
         }
         if (properties.getSocial().getGoogle().isEnabled()

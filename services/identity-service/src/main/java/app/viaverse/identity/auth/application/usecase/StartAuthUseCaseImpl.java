@@ -66,13 +66,12 @@ public class StartAuthUseCaseImpl implements StartAuthUseCase {
                 expiresAt,
                 now
         ));
-        String debugOtp = otpChallengeService.issue(flow.getId(), normalized, expiresAt, now);
+        otpChallengeService.issue(flow.getId(), normalized, expiresAt, now);
         return new Result(
                 flow.getId(),
                 normalized.type(),
                 AuthNextStepEnum.OTP_REQUIRED,
-                expiresAt,
-                debugOtp
+                expiresAt
         );
     }
 }

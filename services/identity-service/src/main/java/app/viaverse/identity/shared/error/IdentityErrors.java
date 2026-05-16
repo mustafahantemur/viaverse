@@ -157,6 +157,25 @@ public final class IdentityErrors {
         );
     }
 
+    public static TechnicalException otpDeliveryProviderMissing(String identifierType) {
+        return new TechnicalException(
+                AppErrorCode.AUTH_PROVIDER_DISABLED,
+                "No OTP delivery provider configured for identifier type " + identifierType
+        );
+    }
+
+    public static TechnicalException smtpConfigurationInvalid() {
+        return technicalConfiguration("SMTP OTP configuration is incomplete");
+    }
+
+    public static TechnicalException smtpDeliveryFailed(Throwable cause) {
+        return new TechnicalException(
+                AppErrorCode.TECHNICAL_EMAIL_DELIVERY_FAILED,
+                "Unable to deliver email OTP",
+                cause
+        );
+    }
+
     public static TechnicalException netgsmConfigurationInvalid() {
         return technicalConfiguration("NetGSM SMS configuration is incomplete");
     }

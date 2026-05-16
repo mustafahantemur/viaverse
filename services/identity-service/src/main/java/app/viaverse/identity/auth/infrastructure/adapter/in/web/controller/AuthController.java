@@ -22,9 +22,10 @@ import app.viaverse.identity.auth.application.port.in.StartAuthUseCase;
 import app.viaverse.identity.auth.application.port.in.VerifyOtpUseCase;
 import app.viaverse.identity.auth.application.service.AuthAbuseProtectionService;
 import app.viaverse.identity.auth.domain.enums.SocialAuthProviderEnum;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.RequiredConsentsResponse;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
-import app.viaverse.identity.consent.domain.ConsentInput;
+import app.viaverse.identity.consent.application.ConsentPolicy;
 import app.viaverse.identity.shared.api.ApiResponse;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import app.viaverse.identity.shared.security.ClientIpResolver;
@@ -32,6 +33,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,6 +41,31 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Bootstrap authentication endpoints. The intended client flow is:
+ *
+ * <ol>
+ *   <li><b>First-ever sign-in on a device</b>: {@code POST /start} → out-of-band
+ *       OTP → {@code POST /verify-otp}. New identifier → {@code POST /register}
+ *       (after fetching {@code GET /required-consents}); existing identifier →
+ *       session tokens come back directly from {@code verify-otp}.</li>
+ *   <li><b>Subsequent app opens / page loads</b>: the client persists the
+ *       refresh token (30-day default TTL) from the previous step and calls
+ *       {@code POST /refresh} on launch. This is the rotation point — the
+ *       server returns a new access + refresh token pair and the client
+ *       <em>never</em> goes through OTP again until the refresh token expires
+ *       or is revoked. Mobile clients that prompt for OTP on every cold start
+ *       are buggy clients, not a missing server feature.</li>
+ *   <li><b>Social sign-in</b>: {@code POST /social/{provider}} replaces both
+ *       {@code start} and {@code verify-otp} when the user authenticates via
+ *       Google / Apple — same downstream behaviour (register if new, else
+ *       session tokens).</li>
+ * </ol>
+ *
+ * <p>2FA (TOTP / WebAuthn) is intentionally not implemented yet; when it lands
+ * it slots in between {@code verify-otp}/{@code social} and session issuance
+ * for accounts that opt in. Today every account is single-factor passwordless.
+ */
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -56,6 +83,7 @@ public class AuthController {
     private final AuthDtoMapper authDtoMapper;
     private final AuthAbuseProtectionService abuseProtectionService;
     private final ClientIpResolver clientIpResolver;
+    private final ConsentPolicy consentPolicy;
 
     public AuthController(
             StartAuthUseCase startAuthUseCase,
@@ -70,7 +98,8 @@ public class AuthController {
             AccountDtoMapper accountDtoMapper,
             AuthDtoMapper authDtoMapper,
             AuthAbuseProtectionService abuseProtectionService,
-            ClientIpResolver clientIpResolver
+            ClientIpResolver clientIpResolver,
+            ConsentPolicy consentPolicy
     ) {
         this.startAuthUseCase = startAuthUseCase;
         this.socialSignInUseCase = socialSignInUseCase;
@@ -85,6 +114,23 @@ public class AuthController {
         this.authDtoMapper = authDtoMapper;
         this.abuseProtectionService = abuseProtectionService;
         this.clientIpResolver = clientIpResolver;
+        this.consentPolicy = consentPolicy;
+    }
+
+    /**
+     * Server-published consent registry. Clients hit this on first registration
+     * (or whenever they need to re-prompt) to discover which documents are
+     * required and what version to display. They then echo back the accepted
+     * {@code type}s in {@code POST /auth/register} — versions are server-owned
+     * and stamped at acceptance time, so this is the only place the version
+     * is ever wire-visible.
+     */
+    @GetMapping("/required-consents")
+    public ApiResponse<RequiredConsentsResponse> requiredConsents() {
+        return ApiResponse.ok(new RequiredConsentsResponse(
+                consentPolicy.requiredDocuments(),
+                consentPolicy.marketingDocument()
+        ));
     }
 
     @PostMapping("/register-admin")
@@ -100,9 +146,7 @@ public class AuthController {
                         request.displayName(),
                         request.firstName(),
                         request.lastName(),
-                        request.requiredConsents().stream()
-                                .map(consent -> new ConsentInput(consent.type(), consent.version()))
-                                .toList(),
+                        request.acceptedRequiredConsents(),
                         request.marketingConsentAccepted(),
                         userAgent,
                         clientIpResolver.resolve(httpRequest)
@@ -186,9 +230,7 @@ public class AuthController {
                         request.displayName(),
                         request.firstName(),
                         request.lastName(),
-                        request.requiredConsents().stream()
-                                .map(consent -> new ConsentInput(consent.type(), consent.version()))
-                                .toList(),
+                        request.acceptedRequiredConsents(),
                         request.marketingConsentAccepted(),
                         userAgent,
                         clientIpResolver.resolve(httpRequest)

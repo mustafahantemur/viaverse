@@ -86,6 +86,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/social/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/required-consents").permitAll()
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**", "/scalar", "/scalar/**", "/favicon.svg")
                         .permitAll()
                         .requestMatchers("/api/v1/me", "/api/v1/me/**").authenticated()

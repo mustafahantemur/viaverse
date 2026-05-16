@@ -49,10 +49,11 @@ public class OtpChallengeService {
     }
 
     /**
-     * Issue a new OTP challenge for the given flow. Returns the OTP value when debug
-     * mode is enabled, otherwise {@code null} (the OTP is only delivered out-of-band).
+     * Issue a new OTP challenge for the given flow. The OTP value is delivered
+     * out-of-band via the matching {@link OtpDeliveryPort} (SMS, email, debug log)
+     * and is never returned to the API caller.
      */
-    public String issue(UUID flowId, NormalizedIdentifier normalized, Instant expiresAt, Instant now) {
+    public void issue(UUID flowId, NormalizedIdentifier normalized, Instant expiresAt, Instant now) {
         String otp = generateOtp();
         OtpChallenge challenge = OtpChallenge.issue(
                 UUID.randomUUID(),
@@ -67,9 +68,8 @@ public class OtpChallengeService {
         deliveryPorts.stream()
                 .filter(port -> port.supports(normalized.type()))
                 .findFirst()
-                .orElseThrow(IdentityErrors::smsProviderDisabled)
+                .orElseThrow(() -> IdentityErrors.otpDeliveryProviderMissing(normalized.type().name()))
                 .deliver(deliveryRequest);
-        return debugOtp(otp);
     }
 
     public OtpChallenge latestChallenge(UUID flowId) {
@@ -121,9 +121,4 @@ public class OtpChallengeService {
         }
         return String.format("%06d", secureRandom.nextInt(1_000_000));
     }
-
-    private String debugOtp(String otp) {
-        return properties.getDebug().isEnabled() ? otp : null;
-    }
-
 }

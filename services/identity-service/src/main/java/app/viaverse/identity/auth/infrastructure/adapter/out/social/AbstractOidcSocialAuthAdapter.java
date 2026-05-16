@@ -10,6 +10,26 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 
+/**
+ * Base validator for OIDC providers (Google, Apple) that return ID tokens
+ * signed with the provider's published JWKS. Verifies, in order:
+ *
+ * <ol>
+ *   <li>JWS signature against the provider's JWKS (delegated to {@link JwtDecoder}).</li>
+ *   <li>{@code iss} matches one of {@link #acceptedIssuers}.</li>
+ *   <li>{@code aud} contains our configured client id.</li>
+ *   <li>{@code nonce} matches the value the client just generated and pinned
+ *       into its request. The nonce binds the ID token to this exact sign-in
+ *       attempt; the server treats it as opaque and trusts the client to
+ *       generate it freshly. Replay protection comes from the short
+ *       {@code AuthLoginFlow} TTL — a stolen ID token cannot be replayed
+ *       after that window expires.</li>
+ *   <li>{@code sub} is present (the canonical provider user id).</li>
+ * </ol>
+ *
+ * <p>{@code iat} / {@code exp} / {@code nbf} are validated upstream by the
+ * {@link JwtDecoder}'s default validator (configured in the concrete subclass).
+ */
 abstract class AbstractOidcSocialAuthAdapter implements SocialAuthPort {
 
     private final SocialAuthProviderEnum provider;
@@ -72,7 +92,7 @@ abstract class AbstractOidcSocialAuthAdapter implements SocialAuthPort {
             throw IdentityErrors.invalidSocialToken();
         }
         String actualNonce = jwt.getClaimAsString("nonce");
-        if (!expectedNonce.equals(actualNonce)) {
+        if (actualNonce == null || !constantTimeEquals(expectedNonce, actualNonce)) {
             throw IdentityErrors.invalidSocialToken();
         }
     }
@@ -92,5 +112,16 @@ abstract class AbstractOidcSocialAuthAdapter implements SocialAuthPort {
             return Boolean.parseBoolean(text);
         }
         return false;
+    }
+
+    private static boolean constantTimeEquals(String a, String b) {
+        if (a.length() != b.length()) {
+            return false;
+        }
+        int result = 0;
+        for (int i = 0; i < a.length(); i++) {
+            result |= a.charAt(i) ^ b.charAt(i);
+        }
+        return result == 0;
     }
 }

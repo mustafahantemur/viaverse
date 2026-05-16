@@ -122,8 +122,6 @@ viaverse:
     otp:
       ttl: ${IDENTITY_OTP_TTL:PT5M}
       max-attempts: ${IDENTITY_OTP_MAX_ATTEMPTS:5}
-      delivery:
-        provider: ${VIAVERSE_OTP_DELIVERY_PROVIDER:debug}
     registration-token:
       ttl: ${IDENTITY_REGISTRATION_TOKEN_TTL:PT30M}
     admin-invitation:
@@ -136,6 +134,22 @@ viaverse:
         password: ${NETGSM_PASSWORD:}
         header: ${NETGSM_HEADER:}
         message-template: "${NETGSM_MESSAGE_TEMPLATE:Viaverse verification code: %s}"
+    email:
+      provider: ${VIAVERSE_EMAIL_PROVIDER:none}
+      smtp:
+        host: ${SMTP_HOST:localhost}
+        port: ${SMTP_PORT:1025}
+        username: ${SMTP_USERNAME:}
+        password: ${SMTP_PASSWORD:}
+        from-address: ${SMTP_FROM_ADDRESS:noreply@viaverse.app}
+        from-name: ${SMTP_FROM_NAME:Viaverse}
+        subject-template: "${SMTP_SUBJECT_TEMPLATE:Viaverse verification code: %s}"
+        body-template: "${SMTP_BODY_TEMPLATE:Your Viaverse verification code is %s. It expires in 5 minutes.}"
+        auth-enabled: ${SMTP_AUTH_ENABLED:false}
+        start-tls-enabled: ${SMTP_STARTTLS_ENABLED:false}
+        start-tls-required: ${SMTP_STARTTLS_REQUIRED:false}
+        connection-timeout: ${SMTP_CONNECTION_TIMEOUT:PT5S}
+        write-timeout: ${SMTP_WRITE_TIMEOUT:PT5S}
     social:
       google:
         enabled: ${VIAVERSE_SOCIAL_GOOGLE_ENABLED:false}
@@ -166,7 +180,12 @@ viaverse:
       lockout:
         duration-seconds: ${VIAVERSE_AUTH_LOCKOUT_DURATION_SECONDS:900}
     consent:
+      terms-of-service-version: ${VIAVERSE_AUTH_CONSENT_TOS_VERSION:v1}
+      personal-data-protection-law-version: ${VIAVERSE_AUTH_CONSENT_PDP_VERSION:v1}
       marketing-version: ${VIAVERSE_AUTH_CONSENT_MARKETING_VERSION:v1}
+      terms-of-service-url: ${VIAVERSE_AUTH_CONSENT_TOS_URL:https://viaverse.app/legal/terms}
+      personal-data-protection-law-url: ${VIAVERSE_AUTH_CONSENT_PDP_URL:https://viaverse.app/legal/kvkk}
+      marketing-url: ${VIAVERSE_AUTH_CONSENT_MARKETING_URL:https://viaverse.app/legal/marketing}
 
 ---
 spring:
@@ -188,6 +207,16 @@ viaverse:
   auth:
     jwt:
       secret: ${IDENTITY_JWT_SECRET:local-dev-identity-jwt-secret-change-me}
+    email:
+      # Local profile routes email OTP to Mailpit (http://localhost:8025 UI).
+      # Debug adapter also runs (logs OTP to console) for any non-EMAIL flow.
+      provider: ${VIAVERSE_EMAIL_PROVIDER:smtp}
+      smtp:
+        host: ${SMTP_HOST:localhost}
+        port: ${SMTP_PORT:1025}
+        from-address: ${SMTP_FROM_ADDRESS:noreply@viaverse.local}
+        auth-enabled: false
+        start-tls-enabled: false
     debug:
       enabled: ${VIAVERSE_AUTH_DEBUG_ENABLED:true}
       fixed-otp: ${VIAVERSE_AUTH_DEBUG_FIXED_OTP:111111}

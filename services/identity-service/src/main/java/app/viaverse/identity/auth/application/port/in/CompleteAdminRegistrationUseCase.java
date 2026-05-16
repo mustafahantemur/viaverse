@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.application.port.in;
 
-import app.viaverse.identity.consent.domain.ConsentInput;
+import app.viaverse.identity.consent.domain.ConsentTypeEnum;
 import app.viaverse.identity.shared.aspect.AuditableResult;
 import java.time.Instant;
 import java.util.List;
@@ -15,7 +15,7 @@ public interface CompleteAdminRegistrationUseCase {
             String displayName,
             String firstName,
             String lastName,
-            List<ConsentInput> requiredConsents,
+            List<ConsentTypeEnum> acceptedRequiredConsents,
             boolean marketingConsentAccepted,
             String userAgent,
             String clientIp
