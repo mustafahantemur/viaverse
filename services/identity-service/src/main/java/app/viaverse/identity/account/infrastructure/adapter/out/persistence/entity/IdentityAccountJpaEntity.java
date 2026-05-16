@@ -1,13 +1,18 @@
 package app.viaverse.identity.account.infrastructure.adapter.out.persistence.entity;
 
 import app.viaverse.identity.account.domain.AccountStatusEnum;
+import app.viaverse.identity.account.domain.AccountRoleEnum;
 import jakarta.persistence.Column;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.JoinColumn;
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -19,6 +24,12 @@ public class IdentityAccountJpaEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 32)
     private AccountStatusEnum status;
+
+    @ElementCollection(targetClass = AccountRoleEnum.class)
+    @CollectionTable(name = "identity_account_role", joinColumns = @JoinColumn(name = "account_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 32)
+    private Set<AccountRoleEnum> roles;
 
     @Column(name = "display_name", nullable = false, length = 120)
     private String displayName;
@@ -44,6 +55,7 @@ public class IdentityAccountJpaEntity {
     public IdentityAccountJpaEntity(
             UUID id,
             AccountStatusEnum status,
+            Set<AccountRoleEnum> roles,
             String displayName,
             String firstName,
             String lastName,
@@ -53,6 +65,7 @@ public class IdentityAccountJpaEntity {
     ) {
         this.id = id;
         this.status = status;
+        this.roles = roles;
         this.displayName = displayName;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -63,6 +76,7 @@ public class IdentityAccountJpaEntity {
 
     public UUID getId() { return id; }
     public AccountStatusEnum getStatus() { return status; }
+    public Set<AccountRoleEnum> getRoles() { return roles; }
     public String getDisplayName() { return displayName; }
     public String getFirstName() { return firstName; }
     public String getLastName() { return lastName; }

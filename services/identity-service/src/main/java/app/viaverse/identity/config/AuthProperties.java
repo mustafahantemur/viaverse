@@ -3,6 +3,8 @@ package app.viaverse.identity.config;
 import app.viaverse.identity.auth.domain.enums.OtpDeliveryProviderEnum;
 import app.viaverse.identity.auth.domain.enums.SmsProviderEnum;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "viaverse.auth")
@@ -11,6 +13,7 @@ public class AuthProperties {
     private Duration refreshTokenTtl = Duration.ofDays(30);
     private final Otp otp = new Otp();
     private final RegistrationToken registrationToken = new RegistrationToken();
+    private final AdminInvitation adminInvitation = new AdminInvitation();
     private final Sms sms = new Sms();
     private final Social social = new Social();
     private final Debug debug = new Debug();
@@ -35,6 +38,10 @@ public class AuthProperties {
 
     public RegistrationToken getRegistrationToken() {
         return registrationToken;
+    }
+
+    public AdminInvitation getAdminInvitation() {
+        return adminInvitation;
     }
 
     public Sms getSms() {
@@ -71,6 +78,7 @@ public class AuthProperties {
 
     public static class Jwt {
         private String secret = "";
+        private List<String> previousSecrets = new ArrayList<>();
         private Duration accessTokenTtl = Duration.ofMinutes(15);
 
         public String getSecret() {
@@ -79,6 +87,14 @@ public class AuthProperties {
 
         public void setSecret(String secret) {
             this.secret = secret;
+        }
+
+        public List<String> getPreviousSecrets() {
+            return previousSecrets;
+        }
+
+        public void setPreviousSecrets(List<String> previousSecrets) {
+            this.previousSecrets = previousSecrets;
         }
 
         public Duration getAccessTokenTtl() {
@@ -118,6 +134,18 @@ public class AuthProperties {
 
     public static class RegistrationToken {
         private Duration ttl = Duration.ofMinutes(30);
+
+        public Duration getTtl() {
+            return ttl;
+        }
+
+        public void setTtl(Duration ttl) {
+            this.ttl = ttl;
+        }
+    }
+
+    public static class AdminInvitation {
+        private Duration ttl = Duration.ofDays(7);
 
         public Duration getTtl() {
             return ttl;
@@ -306,6 +334,8 @@ public class AuthProperties {
         private int identifierMaxAttempts = 3;
         private long ipWindowSeconds = 60;
         private int ipMaxAttempts = 20;
+        private long deviceWindowSeconds = 60;
+        private int deviceMaxAttempts = 20;
 
         public long getIdentifierWindowSeconds() {
             return identifierWindowSeconds;
@@ -337,6 +367,22 @@ public class AuthProperties {
 
         public void setIpMaxAttempts(int ipMaxAttempts) {
             this.ipMaxAttempts = ipMaxAttempts;
+        }
+
+        public long getDeviceWindowSeconds() {
+            return deviceWindowSeconds;
+        }
+
+        public void setDeviceWindowSeconds(long deviceWindowSeconds) {
+            this.deviceWindowSeconds = deviceWindowSeconds;
+        }
+
+        public int getDeviceMaxAttempts() {
+            return deviceMaxAttempts;
+        }
+
+        public void setDeviceMaxAttempts(int deviceMaxAttempts) {
+            this.deviceMaxAttempts = deviceMaxAttempts;
         }
     }
 

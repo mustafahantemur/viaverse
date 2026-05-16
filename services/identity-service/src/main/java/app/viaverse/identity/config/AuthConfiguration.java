@@ -3,19 +3,22 @@ package app.viaverse.identity.config;
 import app.viaverse.identity.auth.infrastructure.security.JwtAccessTokenService;
 import app.viaverse.identity.auth.infrastructure.security.IdentityJwtValidator;
 import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
+import app.viaverse.identity.auth.infrastructure.security.RotatingJwtDecoder;
 import app.viaverse.identity.auth.domain.enums.OtpDeliveryProviderEnum;
 import app.viaverse.identity.auth.domain.enums.SmsProviderEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +37,25 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 @EnableConfigurationProperties(AuthProperties.class)
 public class AuthConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthConfiguration.class);
+    private final AuthProperties properties;
+    private final HttpProperties httpProperties;
+    private final Environment environment;
+
+    public AuthConfiguration(
+            AuthProperties properties,
+            HttpProperties httpProperties,
+            Environment environment
+    ) {
+        this.properties = properties;
+        this.httpProperties = httpProperties;
+        this.environment = environment;
+    }
+
+    @PostConstruct
+    void validateConfiguration() {
+        validate(properties, environment.getActiveProfiles());
+        warnIfTrustedProxiesEmptyInNonLocalProfile(httpProperties, environment.getActiveProfiles());
+    }
 
     @Bean
     SecureRandom secureRandom() {
@@ -56,9 +78,21 @@ public class AuthConfiguration {
     }
 
     @Bean
-    JwtDecoder jwtDecoder(SecretKey identityJwtSecretKey) {
+    JwtDecoder jwtDecoder(AuthProperties properties) {
+        List<JwtDecoder> decoders = new ArrayList<>();
+        decoders.add(buildDecoder(properties.getJwt().getSecret()));
+        for (String previousSecret : properties.getJwt().getPreviousSecrets()) {
+            if (!isBlank(previousSecret)) {
+                decoders.add(buildDecoder(previousSecret));
+            }
+        }
+        return new RotatingJwtDecoder(decoders);
+    }
+
+    private JwtDecoder buildDecoder(String secret) {
         Duration clockSkew = Duration.ofSeconds(60);
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(identityJwtSecretKey)
+        SecretKey secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(secretKey)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
@@ -72,18 +106,6 @@ public class AuthConfiguration {
     @Bean
     JwtAccessTokenService jwtAccessTokenService(AuthProperties properties, JwtEncoder jwtEncoder) {
         return new JwtAccessTokenService(jwtEncoder, properties.getJwt().getAccessTokenTtl());
-    }
-
-    @Bean
-    ApplicationRunner authConfigurationValidator(
-            AuthProperties properties,
-            HttpProperties httpProperties,
-            Environment environment
-    ) {
-        return args -> {
-            validate(properties, environment.getActiveProfiles());
-            warnIfTrustedProxiesEmptyInNonLocalProfile(httpProperties, environment.getActiveProfiles());
-        };
     }
 
     private static void warnIfTrustedProxiesEmptyInNonLocalProfile(
@@ -106,6 +128,11 @@ public class AuthConfiguration {
         }
         if (properties.getJwt().getSecret().getBytes(StandardCharsets.UTF_8).length < 32) {
             throw IdentityErrors.jwtSecretTooWeak();
+        }
+        for (String previousSecret : properties.getJwt().getPreviousSecrets()) {
+            if (isBlank(previousSecret) || previousSecret.getBytes(StandardCharsets.UTF_8).length < 32) {
+                throw IdentityErrors.jwtSecretTooWeak();
+            }
         }
         if (properties.getDebug().isEnabled() && !hasLocalOrTestProfile(activeProfiles)) {
             throw IdentityErrors.debugOtpProfileInvalid();

@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,10 @@ public class OtpValkeyAdapter implements OtpChallengeStore {
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper;
 
-    public OtpValkeyAdapter(StringRedisTemplate redis, ObjectMapper objectMapper) {
+    public OtpValkeyAdapter(
+            StringRedisTemplate redis,
+            @Qualifier("valkeyObjectMapper") ObjectMapper objectMapper
+    ) {
         this.redis = redis;
         this.objectMapper = objectMapper;
     }

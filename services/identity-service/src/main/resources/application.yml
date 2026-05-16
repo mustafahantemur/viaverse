@@ -60,6 +60,11 @@ management:
       probes:
         enabled: true
       show-details: when_authorized
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db,redis
   metrics:
     tags:
       application: ${spring.application.name}
@@ -97,6 +102,7 @@ viaverse:
   auth:
     jwt:
       secret: ${IDENTITY_JWT_SECRET:}
+      previous-secrets: ${IDENTITY_JWT_PREVIOUS_SECRETS:}
       access-token-ttl: ${IDENTITY_JWT_ACCESS_TOKEN_TTL:PT15M}
     refresh-token-ttl: ${IDENTITY_REFRESH_TOKEN_TTL:P30D}
     otp:
@@ -106,6 +112,8 @@ viaverse:
         provider: ${VIAVERSE_OTP_DELIVERY_PROVIDER:debug}
     registration-token:
       ttl: ${IDENTITY_REGISTRATION_TOKEN_TTL:PT30M}
+    admin-invitation:
+      ttl: ${IDENTITY_ADMIN_INVITATION_TTL:P7D}
     sms:
       provider: ${VIAVERSE_SMS_PROVIDER:none}
       netgsm:
@@ -113,7 +121,7 @@ viaverse:
         username: ${NETGSM_USERNAME:}
         password: ${NETGSM_PASSWORD:}
         header: ${NETGSM_HEADER:}
-        message-template: ${NETGSM_MESSAGE_TEMPLATE:Viaverse verification code: %s}
+        message-template: "${NETGSM_MESSAGE_TEMPLATE:Viaverse verification code: %s}"
     social:
       google:
         enabled: ${VIAVERSE_SOCIAL_GOOGLE_ENABLED:false}
@@ -132,6 +140,8 @@ viaverse:
         identifier-max-attempts: ${VIAVERSE_AUTH_START_IDENTIFIER_MAX_ATTEMPTS:3}
         ip-window-seconds: ${VIAVERSE_AUTH_START_IP_WINDOW_SECONDS:60}
         ip-max-attempts: ${VIAVERSE_AUTH_START_IP_MAX_ATTEMPTS:20}
+        device-window-seconds: ${VIAVERSE_AUTH_START_DEVICE_WINDOW_SECONDS:60}
+        device-max-attempts: ${VIAVERSE_AUTH_START_DEVICE_MAX_ATTEMPTS:20}
       otp-verify:
         flow-window-seconds: ${VIAVERSE_AUTH_OTP_FLOW_WINDOW_SECONDS:300}
         flow-max-attempts: ${VIAVERSE_AUTH_OTP_FLOW_MAX_ATTEMPTS:5}
@@ -188,6 +198,8 @@ viaverse:
         identifier-max-attempts: 3
         ip-window-seconds: 60
         ip-max-attempts: 20
+        device-window-seconds: 60
+        device-max-attempts: 20
       otp-verify:
         flow-window-seconds: 300
         flow-max-attempts: 5

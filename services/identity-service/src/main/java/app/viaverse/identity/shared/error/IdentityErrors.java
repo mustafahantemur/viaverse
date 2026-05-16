@@ -102,6 +102,14 @@ public final class IdentityErrors {
         return unauthorized(AppErrorCode.AUTH_INVALID_SOCIAL_TOKEN, "Invalid social identity token");
     }
 
+    public static IdentityException invalidAdminInvitationToken() {
+        return unauthorized(AppErrorCode.AUTH_INVALID_ADMIN_INVITATION_TOKEN, "Invalid admin invitation token");
+    }
+
+    public static IdentityException adminInvitationTokenExpired() {
+        return unauthorized(AppErrorCode.AUTH_ADMIN_INVITATION_TOKEN_EXPIRED, "Admin invitation token expired");
+    }
+
     public static IdentityException providerDisabled(String provider) {
         return badRequest(
                 AppErrorCode.AUTH_PROVIDER_DISABLED,

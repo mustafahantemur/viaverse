@@ -11,6 +11,7 @@ import app.viaverse.identity.auth.domain.value.OtpDeliveryRequest;
 import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
 import app.viaverse.identity.config.AuthProperties;
 import app.viaverse.identity.shared.error.IdentityErrors;
+import app.viaverse.identity.shared.error.RateLimitExceededException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;
@@ -81,12 +82,16 @@ public class OtpChallengeService {
      * Mutates flow/challenge to terminal states on expiry.
      */
     public void validateWaitingForOtp(AuthLoginFlow flow, OtpChallenge challenge, Instant now) {
+        if (challenge.getStatus() == OtpChallengeStatusEnum.LOCKED) {
+            throw new RateLimitExceededException(properties.getRateLimit().getLockout().getDurationSeconds());
+        }
         if (flow.getStatus() != LoginFlowStatusEnum.OTP_REQUIRED || challenge.getStatus() != OtpChallengeStatusEnum.ACTIVE) {
             throw IdentityErrors.authFlowNotWaitingForOtp();
         }
         if (flow.getExpiresAt().isBefore(now) || challenge.getExpiresAt().isBefore(now)) {
             flow.fail(LoginFlowStatusEnum.EXPIRED, now);
             challenge.expire();
+            challengeStore.save(challenge);
             throw IdentityErrors.otpExpired();
         }
     }
@@ -101,11 +106,13 @@ public class OtpChallengeService {
      */
     public boolean recordFailure(OtpChallenge challenge) {
         challenge.recordFailure();
+        challengeStore.save(challenge);
         return challenge.getStatus() == OtpChallengeStatusEnum.LOCKED;
     }
 
     public void verify(OtpChallenge challenge, Instant now) {
         challenge.verify(now);
+        challengeStore.save(challenge);
     }
 
     private String generateOtp() {
