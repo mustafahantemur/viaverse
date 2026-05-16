@@ -1,112 +1,99 @@
 package app.viaverse.identity.auth.application.service;
 
+import app.viaverse.identity.auth.application.port.out.AuthSessionRepository;
+import app.viaverse.identity.auth.application.port.out.RefreshTokenRepository;
+import app.viaverse.identity.auth.application.port.out.SessionEventPublisher;
 import app.viaverse.identity.auth.domain.enums.RefreshTokenStatus;
-import app.viaverse.identity.auth.infrastructure.persistence.entity.AuthRefreshTokenJpaEntity;
-import app.viaverse.identity.auth.infrastructure.persistence.entity.AuthSessionJpaEntity;
-import app.viaverse.identity.auth.infrastructure.persistence.repository.AuthRefreshTokenJpaRepository;
-import app.viaverse.identity.auth.infrastructure.persistence.repository.AuthSessionJpaRepository;
+import app.viaverse.identity.auth.domain.model.AuthSession;
+import app.viaverse.identity.auth.domain.model.RefreshToken;
 import app.viaverse.identity.auth.infrastructure.security.SecureTokenGenerator;
 import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
 import app.viaverse.identity.config.AuthProperties;
-import app.viaverse.identity.shared.audit.IdentityAuditEvent;
-import app.viaverse.identity.shared.audit.IdentityAuditEvents;
+import app.viaverse.identity.shared.aspect.RefreshTokenReuseDetectedException;
 import app.viaverse.identity.shared.error.IdentityErrors;
-import app.viaverse.observability.audit.AuditLogger;
 import java.time.Instant;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RefreshTokenRotationService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RefreshTokenRotationService.class);
 
     private final AuthProperties properties;
     private final TokenHasher tokenHasher;
     private final SecureTokenGenerator tokenGenerator;
-    private final AuthSessionJpaRepository sessionRepository;
-    private final AuthRefreshTokenJpaRepository refreshTokenRepository;
-    private final AuditLogger auditLogger;
+    private final AuthSessionRepository sessionRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final SessionEventPublisher sessionEventPublisher;
 
     public RefreshTokenRotationService(
             AuthProperties properties,
             TokenHasher tokenHasher,
             SecureTokenGenerator tokenGenerator,
-            AuthSessionJpaRepository sessionRepository,
-            AuthRefreshTokenJpaRepository refreshTokenRepository,
-            AuditLogger auditLogger
+            AuthSessionRepository sessionRepository,
+            RefreshTokenRepository refreshTokenRepository,
+            SessionEventPublisher sessionEventPublisher
     ) {
         this.properties = properties;
         this.tokenHasher = tokenHasher;
         this.tokenGenerator = tokenGenerator;
         this.sessionRepository = sessionRepository;
         this.refreshTokenRepository = refreshTokenRepository;
-        this.auditLogger = auditLogger;
+        this.sessionEventPublisher = sessionEventPublisher;
     }
 
     public Rotation rotate(String refreshToken, Instant now) {
         if (refreshToken == null || refreshToken.isBlank()) {
             throw IdentityErrors.refreshTokenRequired();
         }
-        AuthRefreshTokenJpaEntity currentToken = refreshTokenRepository
-                .findByTokenHashAndStatus(tokenHasher.hash(refreshToken), RefreshTokenStatus.ACTIVE)
-                .orElseGet(() -> handleRefreshTokenReuse(refreshToken, now));
-        if (currentToken.getExpiresAt().isBefore(now)) {
-            currentToken.expire(now);
+        String hash = tokenHasher.hash(refreshToken);
+        RefreshToken current = refreshTokenRepository.findByTokenHash(hash)
+                .orElseThrow(IdentityErrors::invalidRefreshToken);
+        if (current.getStatus() != RefreshTokenStatus.ACTIVE) {
+            handleReuse(current, now);
+        }
+        if (current.getExpiresAt().isBefore(now)) {
+            current.expire(now);
+            refreshTokenRepository.save(current);
             throw IdentityErrors.refreshTokenExpired();
         }
 
-        String replacementRawToken = tokenGenerator.generateUrlToken();
-        AuthRefreshTokenJpaEntity replacement = refreshTokenRepository.save(new AuthRefreshTokenJpaEntity(
+        String replacementRaw = tokenGenerator.generateUrlToken();
+        RefreshToken replacement = refreshTokenRepository.save(RefreshToken.issue(
                 UUID.randomUUID(),
-                currentToken.getSessionId(),
-                tokenHasher.hash(replacementRawToken),
+                current.getSessionId(),
+                tokenHasher.hash(replacementRaw),
                 now,
                 now.plus(properties.getRefreshTokenTtl())
         ));
-        currentToken.rotate(replacement.getId(), now);
-        return new Rotation(currentToken.getSessionId(), replacementRawToken);
+        current.rotate(replacement.getId(), now);
+        refreshTokenRepository.save(current);
+        return new Rotation(current.getSessionId(), replacementRaw);
     }
 
-    public AuthRefreshTokenJpaEntity activeRefreshTokenOrNull(String refreshToken) {
+    public RefreshToken revokeIfActive(String refreshToken, Instant now) {
         if (refreshToken == null || refreshToken.isBlank()) {
             return null;
         }
-        return refreshTokenRepository
-                .findByTokenHashAndStatus(tokenHasher.hash(refreshToken), RefreshTokenStatus.ACTIVE)
+        return refreshTokenRepository.findByTokenHash(tokenHasher.hash(refreshToken))
+                .filter(token -> token.getStatus() == RefreshTokenStatus.ACTIVE)
+                .map(token -> {
+                    token.revoke(now);
+                    return refreshTokenRepository.save(token);
+                })
                 .orElse(null);
     }
 
-    private AuthRefreshTokenJpaEntity handleRefreshTokenReuse(String refreshToken, Instant now) {
-        AuthRefreshTokenJpaEntity token = refreshTokenRepository.findByTokenHash(tokenHasher.hash(refreshToken))
+    private void handleReuse(RefreshToken token, Instant now) {
+        AuthSession session = sessionRepository.findById(token.getSessionId())
                 .orElseThrow(IdentityErrors::invalidRefreshToken);
-        if (token.getStatus() == RefreshTokenStatus.ROTATED || token.getStatus() == RefreshTokenStatus.REVOKED) {
-            LOGGER.atWarn()
-                    .addKeyValue("event.action", "token.refresh")
-                    .addKeyValue("event.outcome", "reuse_detected")
-                    .addKeyValue("auth.session_id", token.getSessionId())
-                    .log("token.refresh reuse_detected");
-            sessionRepository.findById(token.getSessionId()).ifPresent(session -> {
-                IdentityAuditEvents.recordAccountSecurityEvent(
-                        auditLogger,
-                        session.getAccountId(),
-                        IdentityAuditEvent.REFRESH_TOKEN_REUSED
-                );
-                revokeSessionTokens(session, now);
-            });
-        }
-        throw IdentityErrors.invalidRefreshToken();
-    }
-
-    private void revokeSessionTokens(AuthSessionJpaEntity session, Instant now) {
         session.revoke(now);
-        for (AuthRefreshTokenJpaEntity activeToken : refreshTokenRepository.findBySessionIdAndStatus(
-                session.getId(),
-                RefreshTokenStatus.ACTIVE
-        )) {
-            activeToken.revoke(now);
+        sessionRepository.save(session);
+        for (RefreshToken active : refreshTokenRepository.findActiveBySessionId(session.getId())) {
+            active.revoke(now);
+            refreshTokenRepository.save(active);
         }
+        sessionEventPublisher.publishRevoked(session.getAccountId(), session.getId());
+        throw new RefreshTokenReuseDetectedException(session.getId(), session.getAccountId());
     }
 
     public record Rotation(UUID sessionId, String refreshToken) {
