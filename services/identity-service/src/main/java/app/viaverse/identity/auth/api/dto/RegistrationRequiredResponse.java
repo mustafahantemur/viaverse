@@ -6,6 +6,6 @@ import java.time.Instant;
 public record RegistrationRequiredResponse(
         AuthNextStep nextStep,
         String registrationToken,
-        Instant expiresAt
+        Instant registrationExpiresAt
 ) implements VerifyOtpResponse {
 }
