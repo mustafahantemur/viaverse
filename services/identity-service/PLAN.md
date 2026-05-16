@@ -23,92 +23,103 @@ Notable revisions from the original checklist:
 
 ---
 
-## Phase 0 — Foundation (Sequential, must finish first)
+## Phase 0 — Foundation (Sequential, must finish first) — **done**
 
-- [ ] `build.gradle.kts` — add Valkey, Spring Cloud Stream + Kafka, MapStruct, OpenTelemetry, Testcontainers (see CODING_STANDARDS.md)
-- [ ] Rename all existing enums to `XxxEnum` (e.g. `AccountStatus` → `AccountStatusEnum`) — project-wide rename, update all references
-- [ ] Create `IdentityErrorEnum` + `ErrorTypeEnum`; rewrite `IdentityException` to wrap enum; delete `IdentityErrors.java`; update `GlobalExceptionHandler`
-- [ ] Create target package skeleton (empty packages matching ARCHITECTURE.md tree)
-- [ ] Migration V5: drop `auth_otp_challenge` table, drop `auth_rate_limit_bucket` table, drop `registration_token_hash` + `registration_expires_at` from `auth_login_flow`, add device columns to `auth_session`
-- [ ] Add `Clock` bean to `AuthConfiguration`; update `application.yml` with Valkey + Kafka connection config
-
----
-
-## Phase 1 — Domain Model Extraction [parallel]
-
-- [ ] `[~A]` Extract `AuthLoginFlow`, `OtpChallenge`, `RefreshToken`, `IdentityIdentifier` domain models from JPA entities — pure Java records/classes, no annotations, business state transition methods move here
-- [ ] `[~B]` Extract `Account` domain model from `IdentityAccountJpaEntity`
-- [ ] `[~C]` Define all outbound port interfaces in `auth.application.port.out.*` (see ARCHITECTURE.md list)
-- [ ] `[~C]` Move `OtpDeliveryPort` to `auth.application.port.out`
-- [ ] `[~C]` Define all inbound port interfaces in `auth.application.port.in.*`
-- [ ] `[~D]` Strip JPA entities to pure data holders — remove all business methods (`markOtpVerified`, `recordFailure`, `verify`, `rotate`, `revoke`, `expire`, etc.)
-- [ ] `[~D]` Define `ConsentRecordRepository` outbound port in `consent.application.port.out`
+- [x] `build.gradle.kts` — add Valkey, Spring Cloud Stream + Kafka, MapStruct, OpenTelemetry, Testcontainers (see CODING_STANDARDS.md)
+- [x] Rename all existing enums to `XxxEnum` (e.g. `AccountStatus` → `AccountStatusEnum`) — project-wide rename, update all references
+- [x] ~~Create `IdentityErrorEnum` + `ErrorTypeEnum`~~ — superseded: identity errors are constructed via `IdentityErrors` helpers over the shared `AppErrorCode` enum; no per-service error enum exists. `GlobalExceptionHandler` maps `AppException` subclasses to RFC 7807.
+- [x] Create target package skeleton (empty packages matching ARCHITECTURE.md tree)
+- [x] Migration V2 (`V2__identity_auth_onboarding.sql`) is the live schema: device columns on `auth_session`, registration-token fields on `auth_login_flow`, etc. The "drop bucket/challenge" V5 plan is obsolete — those tables were never created in the current schema; Valkey is the single source for OTP/rate-limit state.
+- [x] Add `Clock` bean to `AuthConfiguration`; update `application.yml` with Valkey + Kafka connection config
 
 ---
 
-## Phase 2 — Infrastructure Adapters [parallel]
+## Phase 1 — Domain Model Extraction — **done**
 
-- [ ] `[~A]` MapStruct mappers + JPA adapters: `account`, `auth_login_flow`, `auth_session`, `refresh_token`, `identity_identifier`, `consent_record`
-- [ ] `[~B]` Valkey adapters: `OtpValkeyAdapter`, `RegistrationTokenValkeyAdapter`, `RateLimitValkeyAdapter` (atomic INCR+EXPIRE via Lua script), `SessionCacheValkeyAdapter`
-- [ ] `[~C]` Kafka publisher adapters: `AccountKafkaPublisher` + `SessionKafkaPublisher` + define all event records (`AccountCreatedV1KafkaEvent`, etc.)
-- [ ] `[~D]` `ValkeyConfiguration`, `KafkaConfiguration`, `ForwardedHeaderFilterConfiguration` beans
-
----
-
-## Phase 3 — Application Layer Rewrite [parallel]
-
-- [ ] `[~A]` Rewrite `StartAuthUseCaseImpl`, `VerifyOtpUseCaseImpl` — ports only, `Clock` injected, no JPA imports
-- [ ] `[~A]` Rewrite `CompleteRegistrationUseCaseImpl`, `RefreshTokenUseCaseImpl`, `LogoutUseCaseImpl`
-- [ ] `[~A]` New: `ListSessionsUseCaseImpl`, `RevokeSessionUseCaseImpl`
-- [ ] `[~B]` Rewrite application services (`OtpChallengeService`, `AuthSessionService`, `RegistrationTokenService`, `RefreshTokenRotationService`, `AuthAbuseProtectionService`) — no JPA imports
-- [ ] `[~C]` Implement `@LogParam` annotation + update `ObservedActionAspect` to extract annotated params — delete all `ActionLogContext.put(...)` from use cases
-- [ ] `[~C]` Implement `@AuditEvent` annotation + `AuditEventAspect` (after-returning) + `AuditableResult` interface — delete all `IdentityAuditEvents.*` / `auditLogger.*` calls from use cases; remove `AuditLogger` from use case constructors
-- [ ] `[~C]` Implement `RefreshTokenReuseDetectedException` (internal); update `RefreshTokenRotationService` to throw it instead of logging manually — aspect records audit and rethrows as `INVALID_REFRESH_TOKEN`
-- [ ] `[~C]` Add `@PreAuthorize` annotations (Spring Security native) for admin endpoints — no custom authorization aspect needed
-- [ ] `[~D]` Fix rate limit first-attempt bug (count attempt on bucket creation, not after)
-- [ ] `[~D]` Fix marketing consent version (inject from `AuthProperties`, not hardcoded `"v1"`)
-- [ ] `[~D]` Add `@Transactional` to JPA adapters; remove from use cases
-- [ ] `[~D]` Create `BaseJpaEntity` (`@MappedSuperclass` + `@EnableJpaAuditing`) — remove manual `createdAt`/`updatedAt` from all entity constructors
+- [x] `[~A]` Extract `AuthLoginFlow`, `OtpChallenge`, `RefreshToken`, `IdentityIdentifier` domain models from JPA entities — pure Java records/classes, no annotations, business state transition methods move here
+- [x] `[~B]` Extract `Account` domain model from `IdentityAccountJpaEntity`
+- [x] `[~C]` Define all outbound port interfaces in `auth.application.port.out.*` (see ARCHITECTURE.md list)
+- [x] `[~C]` Move `OtpDeliveryPort` to `auth.application.port.out`
+- [x] `[~C]` Define all inbound port interfaces in `auth.application.port.in.*`
+- [x] `[~D]` Strip JPA entities to pure data holders — remove all business methods (`markOtpVerified`, `recordFailure`, `verify`, `rotate`, `revoke`, `expire`, etc.)
+- [x] `[~D]` Define `ConsentRecordRepository` outbound port in `consent.application.port.out`
 
 ---
 
-## Phase 4 — API Layer [parallel]
+## Phase 2 — Infrastructure Adapters — **done**
 
-- [ ] `[~A]` `ApiResponse<T>` wrapper + update all controller methods + MapStruct DTO mappers (`AuthDtoMapper`, `SessionDtoMapper`)
-- [ ] `[~B]` `SessionController` — `GET /api/v1/me/sessions`, `DELETE /api/v1/me/sessions/{sessionId}`, `DELETE /api/v1/me/sessions`
-- [ ] `[~C]` Remove `clientIp()` from `AuthController`; rely on `ForwardedHeaderFilter`
-- [ ] `[~C]` Add rate limiting to `/refresh` and `/logout` endpoints
-- [ ] `[~C]` Validate logout: reject (400) if both JWT principal and refresh token are absent
-- [ ] `[~D]` Update `SecurityConfiguration` to permit session endpoints (authenticated) and apply correct rules
+- [x] `[~A]` MapStruct mappers + JPA adapters: `account`, `auth_login_flow`, `auth_session`, `refresh_token`, `identity_identifier`, `consent_record`
+- [x] `[~B]` Valkey adapters: `OtpValkeyAdapter`, `RegistrationTokenValkeyAdapter`, `RateLimitValkeyAdapter` (atomic INCR+EXPIRE via Lua script), `SessionCacheValkeyAdapter`
+- [x] `[~C]` Kafka publisher adapters: `AccountKafkaPublisher` + `SessionKafkaPublisher` + event records (`AccountCreatedV1KafkaEvent`, `AccountStatusChangedV1KafkaEvent`, `SessionRevokedV1KafkaEvent`)
+- [x] `[~D]` ~~`ForwardedHeaderFilterConfiguration`~~ → replaced by `ClientIpResolver` + `HttpConfiguration` + `HttpProperties` (explicit trusted-proxy list, not blind header trust). `ValkeyConfiguration` and Kafka binding config live in `application.yml`.
 
 ---
 
-## Phase 5 — Observability [parallel]
+## Phase 3 — Application Layer Rewrite — **done**
 
-- [ ] `[~A]` `OpenTelemetryConfiguration` + auto-instrumentation wiring
-- [ ] `[~B]` `docker-compose.yml` — PostgreSQL, Valkey, Kafka (KRaft mode), Fluent Bit, OpenSearch
-- [ ] `[~C]` `fluent-bit.conf` — tail ECS logs → OpenSearch; parse multiline if needed
-- [ ] `[~D]` Update integration tests to use Testcontainers for Valkey and Kafka alongside PostgreSQL
-
----
-
-## Phase 6 — Missing Features [parallel]
-
-- [ ] `[~A]` Google Sign-In: `SocialAuthPort` + `GoogleOidcAdapter` (verify ID token, link/create account)
-- [ ] `[~B]` Apple Sign-In: `AppleOidcAdapter`
-- [ ] `[~C]` NetGSM SMS: `NetgsmSmsOtpDeliveryAdapter` implements `OtpDeliveryPort`
-- [ ] `[~D]` SMTP email OTP: `SmtpEmailOtpDeliveryAdapter` implements `OtpDeliveryPort`
-- [ ] `[~E]` Admin registration: role claim (`roles: ["ADMIN"]`) in JWT, admin-only registration endpoint with pre-authorized invite token
+- [x] `[~A]` Rewrite `StartAuthUseCaseImpl`, `VerifyOtpUseCaseImpl` — ports only, `Clock` injected, no JPA imports
+- [x] `[~A]` Rewrite `CompleteRegistrationUseCaseImpl`, `RefreshTokenUseCaseImpl`, `LogoutUseCaseImpl`
+- [x] `[~A]` New: `ListSessionsUseCaseImpl`, `RevokeSessionUseCaseImpl`
+- [x] `[~B]` Rewrite application services (`OtpChallengeService`, `AuthSessionIssuer`, `RegistrationTokenService`, `RefreshTokenRotationService`, `AuthAbuseProtectionService`) — no JPA imports
+- [x] `[~C]` `@LogParam` + `ObservedActionAspect`; all `ActionLogContext.put(...)` removed from use cases
+- [x] `[~C]` `@AuditEvent` + `AuditEventAspect` + `AuditableResult`; old `IdentityAuditEvents` helper deleted
+- [x] `[~C]` `RefreshTokenReuseDetectedException` + `RefreshTokenReuseAspect` records the audit event and rethrows the canonical identity exception
+- [x] `[~C]` `@PreAuthorize` for admin endpoints (Spring Security native)
+- [x] `[~D]` Rate-limit first-attempt counting fix
+- [x] `[~D]` Marketing consent version sourced from `AuthProperties`, not hardcoded
+- [x] `[~D]` `@Transactional` on JPA adapters only
+- [x] `[~D]` `BaseJpaEntity` with auditing
 
 ---
 
-## Known Bugs to Fix (tie into whichever phase touches that code)
+## Phase 4 — API Layer — **done**
 
-| Bug | Phase |
+- [x] `[~A]` `ApiResponse<T>` wrapper on every controller; `AuthDtoMapper`, `SessionDtoMapper` for DTO mapping. (Sealed envelope renamed to `AuthCompletionResponse` so it can be reused by social sign-in.)
+- [x] `[~B]` `SessionController` — `GET /api/v1/me/sessions`, `DELETE /api/v1/me/sessions/{sessionId}`, `DELETE /api/v1/me/sessions`
+- [x] `[~C]` Controllers no longer do ad hoc IP parsing — `ClientIpResolver` resolves trusted-proxy chains
+- [x] `[~C]` Rate limiting on `/refresh` and `/logout`
+- [x] `[~C]` Logout with no JWT and no refresh token → 400
+- [x] `[~D]` `SecurityConfiguration` covers `/api/v1/me/**`
+
+---
+
+## Phase 5 — Observability — **done**
+
+- [x] `[~A]` `OpenTelemetryConfiguration` + Micrometer Tracing → OTLP exporter
+- [x] `[~B]` `docker-compose.yml` — PostgreSQL, Valkey, Kafka (KRaft), Jaeger, Kafka UI, OpenSearch
+- [x] `[~C]` ~~`fluent-bit.conf`~~ — superseded by OpenTelemetry Collector → OpenSearch pipeline (see PLAN.md revisions note above)
+- [x] `[~D]` Integration tests use Testcontainers for PostgreSQL + Valkey + Kafka
+
+---
+
+## Phase 6 — Missing Features (active)
+
+**Scaffolded + hardened on `story/identity-refactor` (awaiting real provider creds / step 8 cutover):**
+
+- [x] `[~A]` Google Sign-In: `SocialAuthPort` + `GoogleOidcAdapter` verifies the Google ID token via JWK URI, validates issuer + audience + nonce + subject, links/creates account. Gated by `viaverse.auth.social.google.enabled`.
+- [x] `[~B]` Apple Sign-In: `AppleOidcAdapter` extends the same OIDC base. Gated by `viaverse.auth.social.apple.enabled`.
+- [x] `[~C]` NetGSM SMS: `NetgsmSmsOtpDeliveryAdapter` selected by `OtpChallengeService` via `OtpDeliveryPort.supports()`. Built on a dedicated `RestClient` (3s connect / 5s read; no auto-instrumentation so credentials in the URL can't leak to spans). `AuthConfiguration.validate` fails fast on incomplete NetGSM config and on a message template missing `%s`.
+
+**Not started:**
+
+- [ ] `[~D]` SMTP email OTP: `SmtpEmailOtpDeliveryAdapter` implements `OtpDeliveryPort` (supports `EMAIL`); slots into the same multi-adapter dispatch.
+- [ ] `[~E]` Admin invitation flow: invite-token issuance, admin-only registration endpoint, `roles: ["ADMIN"]` claim in JWT, role-aware `@PreAuthorize`.
+
+**Step 8 cutover work for the already-scaffolded items:**
+
+- [ ] Switch NetGSM adapter to the POST endpoint and re-attach observation with a URL-sanitising convention. Wire real credentials via secret store.
+- [ ] Wire real Google + Apple OAuth client IDs; verify the end-to-end ID-token flow against staging providers; remove the conditional defaults.
+
+---
+
+## Known Bugs to Fix (status)
+
+| Bug | Status |
 |---|---|
-| Rate limit: first attempt to any bucket is uncounted (free pass) | 3D |
-| IP spoofing via `X-Forwarded-For` in `AuthController.clientIp()` | 4C |
-| Logout with null JWT + null refresh token silently succeeds (204) | 4C |
-| `normalizeOptional()` duplicated in two classes | 3B |
-| Marketing consent version hardcoded `"v1"` | 3D |
-| `AppRunner` config validation runs too late (post-startup) → move to `@PostConstruct` | 0 |
+| Rate limit: first attempt to any bucket is uncounted (free pass) | **fixed** (Phase 3D, commit `0004ff0`) |
+| IP spoofing via `X-Forwarded-For` in `AuthController.clientIp()` | **fixed** (`ClientIpResolver` with trusted-proxy list) |
+| Logout with null JWT + null refresh token silently succeeds (204) | **fixed** (`refreshTokenRequired()` 400) |
+| `normalizeOptional()` duplicated in two classes | **fixed** (centralised in `IdentifierNormalizer`) |
+| Marketing consent version hardcoded `"v1"` | **fixed** (`AuthProperties.Consent.marketingVersion`) |
+| `AppRunner` config validation runs too late (post-startup) | **open** — `AuthConfiguration.validate` is still wired via `ApplicationRunner`; move to `@PostConstruct` on the config class (or an `EnvironmentPostProcessor`) so misconfiguration aborts startup before any bean is exposed. |
+| Pre-existing: device-fingerprint rate-limit bucket reuses `getIpMaxAttempts()` instead of a dedicated `deviceMaxAttempts` knob | **open** — track during step 6 (production-readiness gate). |

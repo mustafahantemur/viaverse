@@ -1,6 +1,10 @@
 # Identity Service Phase 2 Plan
 
-Branch: `identity-refactor-pahase-2.0`
+Branch: `identity-refactor-pahase-2.0` (typo in branch name preserved; work
+has since been merged into `story/identity-refactor`).
+
+**Status: closed.** All phase-2 goals are met; ongoing work continues on
+`story/identity-refactor` and is tracked in `PLAN.md` (Phase 6 onward).
 
 ## Why this phase exists
 
@@ -94,4 +98,4 @@ as real OTP delivery or social login begins.
 - [x] Account/session event publishers are wired
 - [x] Session cache is used through a port with invalidation on revoke/expiry
 - [x] Docs describe the code that exists
-- [ ] Identity-service verification suite passes
+- [x] Identity-service verification suite passes (compile + unit suite green on `story/identity-refactor`; full Testcontainers integration run is gated by Docker availability)

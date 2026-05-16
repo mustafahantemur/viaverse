@@ -59,18 +59,21 @@ app.viaverse.identity/
     domain/
       model/        AuthLoginFlow.java, OtpChallenge.java, AuthSession.java,
                     RefreshToken.java, IdentityIdentifier.java
-      enums/        AuthNextStepEnum.java, IdentifierTypeEnum.java, LoginFlowStatusEnum.java,
+      enums/        AuthNextStepEnum.java, IdentifierTypeEnum.java, LoginFlowStatusEnum.java
+                    (OTP_REQUIRED, OTP_VERIFIED, EXTERNAL_VERIFIED, REGISTRATION_REQUIRED,
+                     COMPLETED, EXPIRED, FAILED),
                     OtpChallengeStatusEnum.java, RefreshTokenStatusEnum.java, SessionStatusEnum.java,
-                    RateLimitScopeEnum.java, OtpDeliveryProviderEnum.java, SocialAuthProviderEnum.java
-      value/        NormalizedIdentifier.java, OtpDeliveryRequest.java
+                    RateLimitScopeEnum.java, OtpDeliveryProviderEnum.java, SmsProviderEnum.java,
+                    SocialAuthProviderEnum.java (GOOGLE, APPLE)
+      value/        NormalizedIdentifier.java, OtpDeliveryRequest.java, SocialIdentity.java
       policy/       RegistrationPolicy.java
     application/
-      port/in/      StartAuthUseCase.java, VerifyOtpUseCase.java,
+      port/in/      StartAuthUseCase.java, VerifyOtpUseCase.java, SocialSignInUseCase.java,
                     CompleteRegistrationUseCase.java, RefreshTokenUseCase.java,
                     LogoutUseCase.java, ListSessionsUseCase.java, RevokeSessionUseCase.java
       port/out/     AuthLoginFlowRepository.java, OtpChallengeStore.java,
                     AuthSessionRepository.java, RefreshTokenRepository.java,
-                    IdentifierRepository.java, OtpDeliveryPort.java,
+                    IdentifierRepository.java, OtpDeliveryPort.java, SocialAuthPort.java,
                     RegistrationTokenStore.java, RateLimitPort.java,
                     SessionCachePort.java, SessionEventPublisher.java
       usecase/      StartAuthUseCaseImpl.java … (one per port/in interface)
@@ -82,7 +85,7 @@ app.viaverse.identity/
         in/web/
           controller/   AuthController.java, SessionController.java
           dto/request/  (one per endpoint)
-          dto/response/ (one per endpoint; sealed VerifyOtpResponse, SessionView, …)
+          dto/response/ (one per endpoint; sealed AuthCompletionResponse, SessionView, …)
           mapper/       AuthDtoMapper.java, SessionDtoMapper.java
         out/
           persistence/
@@ -96,7 +99,11 @@ app.viaverse.identity/
                         ValkeyKeyScheme.java
           messaging/    SessionKafkaPublisher.java
             event/      SessionRevokedV1KafkaEvent.java
-          otp/          DebugOtpDeliveryAdapter.java, SmsOtpDeliveryAdapter.java
+          otp/          DebugOtpDeliveryAdapter.java, NetgsmSmsOtpDeliveryAdapter.java
+                        (selected by OtpChallengeService via OtpDeliveryPort.supports())
+          social/       AbstractOidcSocialAuthAdapter.java,
+                        GoogleOidcAdapter.java, AppleOidcAdapter.java
+                        (each gated by @ConditionalOnProperty on viaverse.auth.social.*.enabled)
           seed/         LocalTestUserSeeder.java
       security/         JwtAccessTokenService.java, TokenHasher.java, SecureTokenGenerator.java,
                         JwtPrincipal.java, JwtPrincipalResolver.java, IdentityJwtValidator.java,
@@ -114,18 +121,21 @@ app.viaverse.identity/
     audit/          IdentityAuditEventEnum.java, AuditLogJpaEntity.java,
                     AuditLogJpaRepository.java, AuditLogAdapter.java
     error/          IdentityErrors.java, IdentityException.java,
-                    RateLimitExceededException.java
+                    RateLimitExceededException.java, RefreshTokenReuseDetectedException.java
     normalization/  IdentifierNormalizer.java
     persistence/    BaseJpaEntity.java
+    security/       ClientIpResolver.java
+                    (RFC 7239 Forwarded + legacy X-Forwarded-For parser; trust list from HttpProperties)
     aspect/
       ObservedAction.java, LogParam.java, ObservedActionAspect.java
-      AuditEvent.java, AuditEventAspect.java, AuditableResult.java
-      RefreshTokenReuseDetectedException.java
+      AuditEvent.java, AuditEventAspect.java, AuditableResult.java,
+      RefreshTokenReuseAspect.java
 
   config/
     AuthProperties.java, SecurityConfiguration.java, AuthConfiguration.java,
     HttpConfiguration.java, HttpProperties.java, ValkeyConfiguration.java,
-    GlobalExceptionHandler.java, OpenTelemetryConfiguration.java
+    OtpDeliveryConfiguration.java, OpenTelemetryConfiguration.java,
+    GlobalExceptionHandler.java
 ```
 
 ---
