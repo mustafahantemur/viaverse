@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request;
 
-import app.viaverse.identity.consent.domain.ConsentType;
+import app.viaverse.identity.consent.domain.ConsentTypeEnum;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -15,6 +15,6 @@ public record RegisterRequest(
         @NotEmpty List<@Valid ConsentRequest> requiredConsents,
         boolean marketingConsentAccepted
 ) {
-    public record ConsentRequest(@NotNull ConsentType type, @NotBlank String version) {
+    public record ConsentRequest(@NotNull ConsentTypeEnum type, @NotBlank String version) {
     }
 }

@@ -1,7 +1,7 @@
 package app.viaverse.identity.consent.infrastructure.adapter.out.persistence.entity;
 
-import app.viaverse.identity.consent.domain.ConsentCategory;
-import app.viaverse.identity.consent.domain.ConsentType;
+import app.viaverse.identity.consent.domain.ConsentCategoryEnum;
+import app.viaverse.identity.consent.domain.ConsentTypeEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -22,11 +22,11 @@ public class ConsentRecordJpaEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "consent_type", nullable = false, length = 64)
-    private ConsentType consentType;
+    private ConsentTypeEnum consentType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "consent_category", nullable = false, length = 32)
-    private ConsentCategory consentCategory;
+    private ConsentCategoryEnum consentCategory;
 
     @Column(name = "version", nullable = false, length = 64)
     private String version;
@@ -49,8 +49,8 @@ public class ConsentRecordJpaEntity {
     public ConsentRecordJpaEntity(
             UUID id,
             UUID accountId,
-            ConsentType consentType,
-            ConsentCategory consentCategory,
+            ConsentTypeEnum consentType,
+            ConsentCategoryEnum consentCategory,
             String version,
             boolean accepted,
             Instant now,

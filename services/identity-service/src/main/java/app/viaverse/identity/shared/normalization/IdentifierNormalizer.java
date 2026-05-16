@@ -1,6 +1,6 @@
 package app.viaverse.identity.shared.normalization;
 
-import app.viaverse.identity.auth.domain.enums.IdentifierType;
+import app.viaverse.identity.auth.domain.enums.IdentifierTypeEnum;
 import app.viaverse.identity.auth.domain.value.NormalizedIdentifier;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import java.util.regex.Pattern;
@@ -22,7 +22,7 @@ public class IdentifierNormalizer {
             if (!EMAIL_PATTERN.matcher(email).matches()) {
                 throw IdentityErrors.invalidEmailIdentifier();
             }
-            return new NormalizedIdentifier(IdentifierType.EMAIL, email);
+            return new NormalizedIdentifier(IdentifierTypeEnum.EMAIL, email);
         }
 
         String phone = candidate.replaceAll("[\\s()\\-]", "");
@@ -32,6 +32,6 @@ public class IdentifierNormalizer {
         if (!PHONE_PATTERN.matcher(phone).matches()) {
             throw IdentityErrors.invalidIdentifier();
         }
-        return new NormalizedIdentifier(IdentifierType.PHONE, phone);
+        return new NormalizedIdentifier(IdentifierTypeEnum.PHONE, phone);
     }
 }

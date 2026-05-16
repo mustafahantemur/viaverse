@@ -1,9 +1,10 @@
 package app.viaverse.identity.config;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.micrometer.core.instrument.config.MeterFilter;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
-import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.ServiceAttributes;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,9 +54,9 @@ public class OpenTelemetryConfiguration {
         return Resource.getDefault().merge(
                 Resource.create(
                         io.opentelemetry.api.common.Attributes.builder()
-                                .put(ResourceAttributes.SERVICE_NAME, SERVICE_NAME)
-                                .put(ResourceAttributes.SERVICE_VERSION, serviceVersion)
-                                .put(ResourceAttributes.DEPLOYMENT_ENVIRONMENT, deploymentEnvironment)
+                                .put(ServiceAttributes.SERVICE_NAME, SERVICE_NAME)
+                                .put(ServiceAttributes.SERVICE_VERSION, serviceVersion)
+                                .put(AttributeKey.stringKey("deployment.environment.name"), deploymentEnvironment)
                                 .build()));
     }
 

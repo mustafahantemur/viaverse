@@ -5,7 +5,7 @@ import app.viaverse.identity.auth.application.port.out.AuthLoginFlowRepository;
 import app.viaverse.identity.auth.application.port.out.IdentifierRepository;
 import app.viaverse.identity.auth.application.service.AuthAbuseProtectionService;
 import app.viaverse.identity.auth.application.service.OtpChallengeService;
-import app.viaverse.identity.auth.domain.enums.AuthNextStep;
+import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
 import app.viaverse.identity.auth.domain.model.AuthLoginFlow;
 import app.viaverse.identity.auth.domain.value.NormalizedIdentifier;
 import app.viaverse.identity.config.AuthProperties;
@@ -50,7 +50,7 @@ public class StartAuthUseCaseImpl implements StartAuthUseCase {
     public Result execute(Command command) {
         Instant now = clock.instant();
         NormalizedIdentifier normalized = identifierNormalizer.normalize(command.identifier());
-        abuseProtectionService.enforceStart(normalized, command.clientIp(), command.clientFingerprint(), now);
+        abuseProtectionService.enforceStart(normalized, command.clientIp(), command.clientFingerprint());
 
         UUID accountId = identifierRepository
                 .findByTypeAndValue(normalized.type(), normalized.value())
@@ -70,7 +70,7 @@ public class StartAuthUseCaseImpl implements StartAuthUseCase {
         return new Result(
                 flow.getId(),
                 normalized.type(),
-                AuthNextStep.OTP_REQUIRED,
+                AuthNextStepEnum.OTP_REQUIRED,
                 expiresAt,
                 debugOtp
         );

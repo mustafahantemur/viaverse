@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.domain.model;
 
-import app.viaverse.identity.auth.domain.enums.SessionStatus;
+import app.viaverse.identity.auth.domain.enums.SessionStatusEnum;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -12,7 +12,7 @@ public final class AuthSession {
     private final Instant issuedAt;
     private final Instant createdAt;
 
-    private SessionStatus status;
+    private SessionStatusEnum status;
     private Instant expiresAt;
     private Instant lastSeenAt;
     private Instant revokedAt;
@@ -26,7 +26,7 @@ public final class AuthSession {
     public AuthSession(
             UUID id,
             UUID accountId,
-            SessionStatus status,
+            SessionStatusEnum status,
             Instant issuedAt,
             Instant expiresAt,
             Instant lastSeenAt,
@@ -67,7 +67,7 @@ public final class AuthSession {
             Instant now
     ) {
         return new AuthSession(
-                id, accountId, SessionStatus.ACTIVE,
+                id, accountId, SessionStatusEnum.ACTIVE,
                 now, expiresAt, now, null,
                 userAgent, deviceId, deviceName, platform, lastIp,
                 now, now
@@ -76,7 +76,7 @@ public final class AuthSession {
 
     public UUID getId() { return id; }
     public UUID getAccountId() { return accountId; }
-    public SessionStatus getStatus() { return status; }
+    public SessionStatusEnum getStatus() { return status; }
     public Instant getIssuedAt() { return issuedAt; }
     public Instant getExpiresAt() { return expiresAt; }
     public Instant getLastSeenAt() { return lastSeenAt; }
@@ -95,13 +95,13 @@ public final class AuthSession {
     }
 
     public void revoke(Instant now) {
-        this.status = SessionStatus.REVOKED;
+        this.status = SessionStatusEnum.REVOKED;
         this.revokedAt = Objects.requireNonNull(now, "now");
         this.updatedAt = now;
     }
 
     public void expire(Instant now) {
-        this.status = SessionStatus.EXPIRED;
+        this.status = SessionStatusEnum.EXPIRED;
         this.updatedAt = Objects.requireNonNull(now, "now");
     }
 }

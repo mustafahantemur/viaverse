@@ -16,7 +16,8 @@ Thumbs.db
 .kotlin/
 build/
 out/
-!**/port/out/
+!**/src/**/out/
+!**/src/**/out/**
 **/bin/
 
 # Kotlin / Java

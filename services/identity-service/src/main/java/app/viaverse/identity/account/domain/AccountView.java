@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public record AccountView(
         UUID id,
-        AccountStatus status,
+        AccountStatusEnum status,
         String displayName,
         String firstName,
         String lastName,

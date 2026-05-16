@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Transactional
 public class AccountJpaAdapter implements AccountRepository {
-
     private final IdentityAccountJpaRepository repository;
     private final AccountJpaMapper mapper;
 

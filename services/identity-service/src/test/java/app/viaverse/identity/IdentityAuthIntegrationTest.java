@@ -3,11 +3,11 @@ package app.viaverse.identity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import app.viaverse.identity.auth.application.service.LocalTestUserSeeder;
+import app.viaverse.identity.auth.infrastructure.adapter.out.seed.LocalTestUserSeeder;
 import app.viaverse.identity.config.AuthConfiguration;
 import app.viaverse.identity.config.AuthProperties;
-import app.viaverse.identity.auth.domain.enums.OtpDeliveryProvider;
-import app.viaverse.identity.auth.domain.enums.SmsProvider;
+import app.viaverse.identity.auth.domain.enums.OtpDeliveryProviderEnum;
+import app.viaverse.identity.auth.domain.enums.SmsProviderEnum;
 import app.viaverse.identity.support.IdentityTestcontainers;
 import app.viaverse.shared.kernel.error.TechnicalException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -97,7 +97,7 @@ class IdentityAuthIntegrationTest {
         ResponseEntity<Map> response = startAuth(newEmail());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).containsEntry("identifierType", "EMAIL");
+        assertThat(response.getBody()).containsEntry("IdentifierTypeEnum", "EMAIL");
         assertThat(response.getBody()).containsEntry("nextStep", "OTP_REQUIRED");
         assertThat(response.getBody()).containsEntry("debugOtp", DEBUG_OTP);
         assertThat(response.getBody()).containsKey("flowId");
@@ -115,7 +115,7 @@ class IdentityAuthIntegrationTest {
     void debugOtpDeliveryProviderIsActiveForLocalTestFlow() {
         ResponseEntity<Map> response = startAuth(newEmail());
 
-        assertThat(authProperties.getOtp().getDelivery().getProvider()).isEqualTo(OtpDeliveryProvider.DEBUG);
+        assertThat(authProperties.getOtp().getDelivery().getProvider()).isEqualTo(OtpDeliveryProviderEnum.DEBUG);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).containsEntry("debugOtp", DEBUG_OTP);
     }
@@ -381,10 +381,10 @@ class IdentityAuthIntegrationTest {
         AuthProperties properties = new AuthProperties();
         properties.getJwt().setSecret("secret");
 
-        assertThat(properties.getOtp().getDelivery().getProvider()).isEqualTo(OtpDeliveryProvider.DEBUG);
-        assertThat(properties.getSms().getProvider()).isEqualTo(SmsProvider.NONE);
+        assertThat(properties.getOtp().getDelivery().getProvider()).isEqualTo(OtpDeliveryProviderEnum.DEBUG);
+        assertThat(properties.getSms().getProvider()).isEqualTo(SmsProviderEnum.NONE);
 
-        properties.getOtp().getDelivery().setProvider(OtpDeliveryProvider.SMS);
+        properties.getOtp().getDelivery().setProvider(OtpDeliveryProviderEnum.SMS);
         assertThatThrownBy(() -> AuthConfiguration.validate(properties, new String[] {"local"}))
                 .isInstanceOf(TechnicalException.class)
                 .hasMessageContaining("SMS OTP delivery is not implemented yet");

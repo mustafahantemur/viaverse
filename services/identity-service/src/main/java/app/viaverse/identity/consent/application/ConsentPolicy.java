@@ -1,7 +1,7 @@
 package app.viaverse.identity.consent.application;
 
 import app.viaverse.identity.consent.domain.ConsentInput;
-import app.viaverse.identity.consent.domain.ConsentType;
+import app.viaverse.identity.consent.domain.ConsentTypeEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import java.util.List;
 import java.util.Map;
@@ -11,9 +11,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ConsentPolicy {
-    private static final Set<ConsentType> REQUIRED_CONSENTS = Set.of(
-            ConsentType.TERMS_OF_SERVICE,
-            ConsentType.PERSONAL_DATA_PROTECTION_LAW
+    private static final Set<ConsentTypeEnum> REQUIRED_CONSENTS = Set.of(
+            ConsentTypeEnum.TERMS_OF_SERVICE,
+            ConsentTypeEnum.PERSONAL_DATA_PROTECTION_LAW
     );
 
     public void validateRequiredConsents(List<ConsentInput> requiredConsents) {
@@ -21,7 +21,7 @@ public class ConsentPolicy {
             throw IdentityErrors.requiredConsentsMissing(Map.of("requiredConsents", "are required"));
         }
 
-        Set<ConsentType> acceptedTypes = requiredConsents.stream()
+        Set<ConsentTypeEnum> acceptedTypes = requiredConsents.stream()
                 .filter(consent -> consent.version() != null && !consent.version().isBlank())
                 .map(ConsentInput::type)
                 .collect(Collectors.toSet());

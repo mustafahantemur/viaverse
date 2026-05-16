@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.domain.enums;
 
-public enum RateLimitScope {
+public enum RateLimitScopeEnum {
     AUTH_START_IDENTIFIER,
     AUTH_START_IP,
     AUTH_START_DEVICE,

@@ -1,8 +1,7 @@
 package app.viaverse.identity.auth.application.usecase;
 
 import app.viaverse.identity.auth.application.port.in.LogoutUseCase;
-import app.viaverse.identity.auth.application.port.out.AuthSessionRepository;
-import app.viaverse.identity.auth.application.port.out.SessionEventPublisher;
+import app.viaverse.identity.auth.application.service.AuthSessionIssuer;
 import app.viaverse.identity.auth.application.service.RefreshTokenRotationService;
 import app.viaverse.identity.auth.domain.model.AuthSession;
 import app.viaverse.identity.auth.domain.model.RefreshToken;
@@ -18,19 +17,16 @@ public class LogoutUseCaseImpl implements LogoutUseCase {
 
     private final Clock clock;
     private final RefreshTokenRotationService rotationService;
-    private final AuthSessionRepository sessionRepository;
-    private final SessionEventPublisher sessionEventPublisher;
+    private final AuthSessionIssuer sessionIssuer;
 
     public LogoutUseCaseImpl(
             Clock clock,
             RefreshTokenRotationService rotationService,
-            AuthSessionRepository sessionRepository,
-            SessionEventPublisher sessionEventPublisher
+            AuthSessionIssuer sessionIssuer
     ) {
         this.clock = clock;
         this.rotationService = rotationService;
-        this.sessionRepository = sessionRepository;
-        this.sessionEventPublisher = sessionEventPublisher;
+        this.sessionIssuer = sessionIssuer;
     }
 
     @Override
@@ -50,10 +46,7 @@ public class LogoutUseCaseImpl implements LogoutUseCase {
             }
             sessionId = command.principalSessionId();
         }
-        AuthSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(IdentityErrors::invalidSession);
-        session.revoke(now);
-        sessionRepository.save(session);
-        sessionEventPublisher.publishRevoked(session.getAccountId(), session.getId());
+        AuthSession session = sessionIssuer.activeSession(sessionId, now);
+        sessionIssuer.revokeSession(session, now);
     }
 }

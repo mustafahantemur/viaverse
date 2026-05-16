@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.persistence.entity;
 
-import app.viaverse.identity.auth.domain.enums.IdentifierType;
+import app.viaverse.identity.auth.domain.enums.IdentifierTypeEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,7 +21,7 @@ public class IdentityIdentifierJpaEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "identifier_type", nullable = false, length = 16)
-    private IdentifierType identifierType;
+    private IdentifierTypeEnum identifierType;
 
     @Column(name = "normalized_identifier", nullable = false, length = 320)
     private String normalizedIdentifier;
@@ -38,7 +38,7 @@ public class IdentityIdentifierJpaEntity {
     public IdentityIdentifierJpaEntity(
             UUID id,
             UUID accountId,
-            IdentifierType identifierType,
+            IdentifierTypeEnum identifierType,
             String normalizedIdentifier,
             Instant verifiedAt,
             Instant createdAt
@@ -54,4 +54,10 @@ public class IdentityIdentifierJpaEntity {
     public UUID getAccountId() {
         return accountId;
     }
+
+    public UUID getId() { return id; }
+    public IdentifierTypeEnum getIdentifierType() { return identifierType; }
+    public String getNormalizedIdentifier() { return normalizedIdentifier; }
+    public Instant getVerifiedAt() { return verifiedAt; }
+    public Instant getCreatedAt() { return createdAt; }
 }

@@ -18,7 +18,7 @@ public class ValkeyConfiguration {
 
     @Bean
     ObjectMapper valkeyObjectMapper() {
-        return new ObjectMapper();
+        return new ObjectMapper().findAndRegisterModules();
     }
 
     @Bean

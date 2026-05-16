@@ -1,7 +1,7 @@
 package app.viaverse.identity.auth.application.port.in;
 
-import app.viaverse.identity.auth.domain.enums.AuthNextStep;
-import app.viaverse.identity.auth.domain.enums.IdentifierType;
+import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
+import app.viaverse.identity.auth.domain.enums.IdentifierTypeEnum;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -13,8 +13,8 @@ public interface StartAuthUseCase {
 
     record Result(
             UUID flowId,
-            IdentifierType identifierType,
-            AuthNextStep nextStep,
+            IdentifierTypeEnum identifierType,
+            AuthNextStepEnum nextStep,
             Instant expiresAt,
             String debugOtp
     ) {}

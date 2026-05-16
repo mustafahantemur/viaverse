@@ -1,7 +1,7 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.persistence.entity;
 
-import app.viaverse.identity.auth.domain.enums.IdentifierType;
-import app.viaverse.identity.auth.domain.enums.LoginFlowStatus;
+import app.viaverse.identity.auth.domain.enums.IdentifierTypeEnum;
+import app.viaverse.identity.auth.domain.enums.LoginFlowStatusEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,7 +19,7 @@ public class AuthLoginFlowJpaEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "identifier_type", nullable = false, length = 16)
-    private IdentifierType identifierType;
+    private IdentifierTypeEnum identifierType;
 
     @Column(name = "normalized_identifier", nullable = false, length = 320)
     private String normalizedIdentifier;
@@ -29,7 +29,7 @@ public class AuthLoginFlowJpaEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 32)
-    private LoginFlowStatus status;
+    private LoginFlowStatusEnum status;
 
     @Column(name = "registration_token_hash", length = 128)
     private String registrationTokenHash;
@@ -54,10 +54,10 @@ public class AuthLoginFlowJpaEntity {
 
     public AuthLoginFlowJpaEntity(
             UUID id,
-            IdentifierType identifierType,
+            IdentifierTypeEnum identifierType,
             String normalizedIdentifier,
             UUID accountId,
-            LoginFlowStatus status,
+            LoginFlowStatusEnum status,
             String registrationTokenHash,
             Instant registrationExpiresAt,
             Instant expiresAt,
@@ -79,10 +79,10 @@ public class AuthLoginFlowJpaEntity {
     }
 
     public UUID getId() { return id; }
-    public IdentifierType getIdentifierType() { return identifierType; }
+    public IdentifierTypeEnum getIdentifierType() { return identifierType; }
     public String getNormalizedIdentifier() { return normalizedIdentifier; }
     public UUID getAccountId() { return accountId; }
-    public LoginFlowStatus getStatus() { return status; }
+    public LoginFlowStatusEnum getStatus() { return status; }
     public String getRegistrationTokenHash() { return registrationTokenHash; }
     public Instant getRegistrationExpiresAt() { return registrationExpiresAt; }
     public Instant getExpiresAt() { return expiresAt; }

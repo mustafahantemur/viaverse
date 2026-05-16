@@ -7,8 +7,8 @@ import app.viaverse.identity.auth.application.service.AuthAbuseProtectionService
 import app.viaverse.identity.auth.application.service.AuthSessionIssuer;
 import app.viaverse.identity.auth.application.service.OtpChallengeService;
 import app.viaverse.identity.auth.application.service.RegistrationTokenService;
-import app.viaverse.identity.auth.domain.enums.AuthNextStep;
-import app.viaverse.identity.auth.domain.enums.LoginFlowStatus;
+import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
+import app.viaverse.identity.auth.domain.enums.LoginFlowStatusEnum;
 import app.viaverse.identity.auth.domain.model.AuthLoginFlow;
 import app.viaverse.identity.auth.domain.model.OtpChallenge;
 import app.viaverse.identity.shared.error.IdentityErrors;
@@ -56,7 +56,7 @@ public class VerifyOtpUseCaseImpl implements VerifyOtpUseCase {
         otpChallengeService.validateWaitingForOtp(flow, challenge, now);
         if (!otpChallengeService.matches(challenge, command.otp())) {
             if (otpChallengeService.recordFailure(challenge)) {
-                flow.fail(LoginFlowStatus.FAILED, now);
+                flow.fail(LoginFlowStatusEnum.FAILED, now);
                 abuseProtectionService.softLockOtp(flow);
             }
             throw IdentityErrors.invalidOtp();
@@ -67,9 +67,9 @@ public class VerifyOtpUseCaseImpl implements VerifyOtpUseCase {
         if (flow.getAccountId() == null) {
             RegistrationTokenService.Issued registration = registrationTokenService.requireRegistration(flow, now);
             return new Result(
-                    AuthNextStep.REGISTRATION_REQUIRED,
+                    AuthNextStepEnum.REGISTRATION_REQUIRED,
                     registration.registrationToken(),
-                    registration.registrationExpiresAt(),
+                    registration.expiresAt(),
                     null, null, null, null, null, null
             );
         }
@@ -77,7 +77,7 @@ public class VerifyOtpUseCaseImpl implements VerifyOtpUseCase {
         Account account = sessionIssuer.activeAccount(flow.getAccountId());
         AuthSessionIssuer.Issued issued = sessionIssuer.issue(account, command.userAgent(), command.clientIp(), now);
         return new Result(
-                AuthNextStep.AUTHENTICATED,
+                AuthNextStepEnum.AUTHENTICATED,
                 null, null,
                 account.getId(),
                 issued.session().getId(),

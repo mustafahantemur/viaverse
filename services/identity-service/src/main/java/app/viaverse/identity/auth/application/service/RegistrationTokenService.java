@@ -2,7 +2,7 @@ package app.viaverse.identity.auth.application.service;
 
 import app.viaverse.identity.auth.application.port.out.AuthLoginFlowRepository;
 import app.viaverse.identity.auth.application.port.out.RegistrationTokenStore;
-import app.viaverse.identity.auth.domain.enums.LoginFlowStatus;
+import app.viaverse.identity.auth.domain.enums.LoginFlowStatusEnum;
 import app.viaverse.identity.auth.domain.model.AuthLoginFlow;
 import app.viaverse.identity.auth.infrastructure.security.SecureTokenGenerator;
 import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
@@ -55,7 +55,7 @@ public class RegistrationTokenService {
                 .orElseThrow(IdentityErrors::registrationTokenExpired);
         AuthLoginFlow flow = flowRepository.findById(flowId)
                 .orElseThrow(IdentityErrors::invalidRegistrationToken);
-        if (flow.getStatus() != LoginFlowStatus.REGISTRATION_REQUIRED
+        if (flow.getStatus() != LoginFlowStatusEnum.REGISTRATION_REQUIRED
                 || flow.getRegistrationExpiresAt() == null
                 || flow.getRegistrationExpiresAt().isBefore(now)) {
             throw IdentityErrors.registrationTokenExpired();

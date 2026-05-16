@@ -1,7 +1,7 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.persistence.adapter;
 
 import app.viaverse.identity.auth.application.port.out.AuthSessionRepository;
-import app.viaverse.identity.auth.domain.enums.SessionStatus;
+import app.viaverse.identity.auth.domain.enums.SessionStatusEnum;
 import app.viaverse.identity.auth.domain.model.AuthSession;
 import app.viaverse.identity.auth.infrastructure.adapter.out.persistence.mapper.AuthSessionJpaMapper;
 import app.viaverse.identity.auth.infrastructure.adapter.out.persistence.repository.AuthSessionJpaRepository;
@@ -37,7 +37,7 @@ public class AuthSessionJpaAdapter implements AuthSessionRepository {
     @Override
     @Transactional(readOnly = true)
     public List<AuthSession> findActiveByAccountId(UUID accountId) {
-        return repository.findByAccountIdAndStatus(accountId, SessionStatus.ACTIVE)
+        return repository.findByAccountIdAndStatus(accountId, SessionStatusEnum.ACTIVE)
                 .stream()
                 .map(mapper::toDomain)
                 .toList();

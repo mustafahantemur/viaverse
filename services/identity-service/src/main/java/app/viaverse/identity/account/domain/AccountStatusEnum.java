@@ -1,6 +1,6 @@
 package app.viaverse.identity.account.domain;
 
-public enum AccountStatus {
+public enum AccountStatusEnum {
     ACTIVE,
     SUSPENDED
 }

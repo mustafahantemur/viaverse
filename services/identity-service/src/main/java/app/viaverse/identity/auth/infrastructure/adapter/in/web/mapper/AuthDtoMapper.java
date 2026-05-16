@@ -9,7 +9,7 @@ import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCas
 import app.viaverse.identity.auth.application.port.in.RefreshTokenUseCase;
 import app.viaverse.identity.auth.application.port.in.StartAuthUseCase;
 import app.viaverse.identity.auth.application.port.in.VerifyOtpUseCase;
-import app.viaverse.identity.auth.domain.enums.AuthNextStep;
+import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -30,7 +30,7 @@ public interface AuthDtoMapper {
      * REGISTRATION_REQUIRED maps to {@link RegistrationRequiredResponse}.
      */
     default VerifyOtpResponse toResponse(VerifyOtpUseCase.Result result) {
-        if (result.nextStep() == AuthNextStep.REGISTRATION_REQUIRED) {
+        if (result.nextStep() == AuthNextStepEnum.REGISTRATION_REQUIRED) {
             return new RegistrationRequiredResponse(
                     result.nextStep(),
                     result.registrationToken(),
@@ -47,11 +47,11 @@ public interface AuthDtoMapper {
         );
     }
 
-    @Mapping(target = "nextStep", expression = "java(app.viaverse.identity.auth.domain.enums.AuthNextStep.AUTHENTICATED)")
+    @Mapping(target = "nextStep", expression = "java(app.viaverse.identity.auth.domain.enums.AuthNextStepEnum.AUTHENTICATED)")
     @Mapping(target = "account", ignore = true)
     AuthResponse toResponse(CompleteRegistrationUseCase.Result result);
 
-    @Mapping(target = "nextStep", expression = "java(app.viaverse.identity.auth.domain.enums.AuthNextStep.AUTHENTICATED)")
+    @Mapping(target = "nextStep", expression = "java(app.viaverse.identity.auth.domain.enums.AuthNextStepEnum.AUTHENTICATED)")
     @Mapping(target = "account", ignore = true)
     AuthResponse toResponse(RefreshTokenUseCase.Result result);
 

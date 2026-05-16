@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.cache;
 
-import app.viaverse.identity.auth.domain.enums.RateLimitScope;
+import app.viaverse.identity.auth.domain.enums.RateLimitScopeEnum;
 import java.util.UUID;
 
 public final class ValkeyKeyScheme {
@@ -15,7 +15,7 @@ public final class ValkeyKeyScheme {
         return "reg:" + tokenHash;
     }
 
-    public static String rateLimit(RateLimitScope scope, String keyHash) {
+    public static String rateLimit(RateLimitScopeEnum scope, String keyHash) {
         return "rl:" + scope.name().toLowerCase() + ":" + keyHash;
     }
 

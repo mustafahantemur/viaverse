@@ -10,14 +10,19 @@ dependencies {
     implementation("org.aspectj:aspectjweaver:1.9.25.1")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server:4.0.6")
     implementation("org.springframework.security:spring-security-oauth2-jose")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation(libs.spring.cloud.stream)
+    implementation(libs.spring.cloud.stream.binder.kafka)
+    implementation("org.mapstruct:mapstruct:1.6.3")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 
     // Observability: Micrometer Tracing -> OpenTelemetry bridge + OTLP exporter.
     // Versions managed by the Spring Boot BOM declared above.
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp")
 
-    testImplementation("org.testcontainers:testcontainers")
-    testImplementation("org.testcontainers:junit-jupiter")
-    testImplementation("org.testcontainers:postgresql")
-    testImplementation("org.testcontainers:kafka")
+    testImplementation("org.testcontainers:testcontainers:2.0.4")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.4")
+    testImplementation("org.testcontainers:testcontainers-postgresql:2.0.4")
+    testImplementation("org.testcontainers:testcontainers-kafka:2.0.4")
 }

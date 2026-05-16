@@ -20,6 +20,7 @@ import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
 import app.viaverse.identity.consent.domain.ConsentInput;
 import app.viaverse.identity.shared.api.ApiResponse;
 import app.viaverse.identity.shared.error.IdentityErrors;
+import app.viaverse.identity.shared.security.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -42,6 +43,7 @@ public class AuthController {
     private final JwtPrincipalResolver jwtPrincipalResolver;
     private final AuthDtoMapper authDtoMapper;
     private final AuthAbuseProtectionService abuseProtectionService;
+    private final ClientIpResolver clientIpResolver;
 
     public AuthController(
             StartAuthUseCase startAuthUseCase,
@@ -51,7 +53,8 @@ public class AuthController {
             LogoutUseCase logoutUseCase,
             JwtPrincipalResolver jwtPrincipalResolver,
             AuthDtoMapper authDtoMapper,
-            AuthAbuseProtectionService abuseProtectionService
+            AuthAbuseProtectionService abuseProtectionService,
+            ClientIpResolver clientIpResolver
     ) {
         this.startAuthUseCase = startAuthUseCase;
         this.verifyOtpUseCase = verifyOtpUseCase;
@@ -61,6 +64,7 @@ public class AuthController {
         this.jwtPrincipalResolver = jwtPrincipalResolver;
         this.authDtoMapper = authDtoMapper;
         this.abuseProtectionService = abuseProtectionService;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @PostMapping("/start")
@@ -71,7 +75,7 @@ public class AuthController {
     ) {
         StartAuthUseCase.Result result = startAuthUseCase.execute(new StartAuthUseCase.Command(
                 request.identifier(),
-                httpRequest.getRemoteAddr(),
+                clientIpResolver.resolve(httpRequest),
                 clientFingerprint
         ));
         return ApiResponse.ok(authDtoMapper.toResponse(result));
@@ -87,7 +91,7 @@ public class AuthController {
                 request.flowId(),
                 request.otp(),
                 userAgent,
-                httpRequest.getRemoteAddr()
+                clientIpResolver.resolve(httpRequest)
         ));
         return ApiResponse.ok(authDtoMapper.toResponse(result));
     }
@@ -109,7 +113,7 @@ public class AuthController {
                                 .toList(),
                         request.marketingConsentAccepted(),
                         userAgent,
-                        httpRequest.getRemoteAddr()
+                        clientIpResolver.resolve(httpRequest)
                 )
         );
         return ApiResponse.ok(authDtoMapper.toResponse(result));
@@ -121,11 +125,12 @@ public class AuthController {
             @RequestHeader(value = "User-Agent", required = false) String userAgent,
             HttpServletRequest httpRequest
     ) {
-        abuseProtectionService.enforceRefresh(httpRequest.getRemoteAddr());
+        String clientIp = clientIpResolver.resolve(httpRequest);
+        abuseProtectionService.enforceRefresh(clientIp);
         RefreshTokenUseCase.Result result = refreshTokenUseCase.execute(new RefreshTokenUseCase.Command(
                 request.refreshToken(),
                 userAgent,
-                httpRequest.getRemoteAddr()
+                clientIp
         ));
         return ApiResponse.ok(authDtoMapper.toResponse(result));
     }
@@ -136,7 +141,7 @@ public class AuthController {
             @RequestBody(required = false) LogoutRequest request,
             HttpServletRequest httpRequest
     ) {
-        abuseProtectionService.enforceLogout(httpRequest.getRemoteAddr());
+        abuseProtectionService.enforceLogout(clientIpResolver.resolve(httpRequest));
         boolean noPrincipal = (jwt == null);
         boolean noRefresh = (request == null || request.refreshToken() == null || request.refreshToken().isBlank());
         if (noPrincipal && noRefresh) {

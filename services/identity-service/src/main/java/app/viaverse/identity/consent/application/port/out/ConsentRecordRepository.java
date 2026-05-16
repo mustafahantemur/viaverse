@@ -1,6 +1,6 @@
 package app.viaverse.identity.consent.application.port.out;
 
-import app.viaverse.identity.consent.domain.ConsentType;
+import app.viaverse.identity.consent.domain.ConsentTypeEnum;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -11,7 +11,7 @@ public interface ConsentRecordRepository {
     record Record(
             UUID id,
             UUID accountId,
-            ConsentType type,
+            ConsentTypeEnum type,
             String category,
             String version,
             boolean accepted,

@@ -4,6 +4,23 @@
 Phase gates: all tasks in a phase complete before the next phase starts.  
 Each task is scoped to be completable in a single Claude session.
 
+## Current checkpoint
+
+As of this branch checkpoint, the production-shaping work through Phase 5 has
+been implemented or deliberately revised during the later hardening pass.
+The next active product work is **Phase 6**.
+
+Notable revisions from the original checklist:
+
+- Centralized identity errors now use shared `AppErrorCode` values plus `IdentityErrors`
+  instead of introducing a separate `IdentityErrorEnum`.
+- Trusted client IP handling uses `ClientIpResolver` plus explicit trusted-proxy config
+  instead of relying on a broad `ForwardedHeaderFilter`.
+- The shared observability stack uses OpenTelemetry Collector and OpenSearch rather
+  than the older Fluent Bit placeholder.
+- Event publishing and session cache adapters are now live parts of the architecture,
+  not future stubs.
+
 ---
 
 ## Phase 0 — Foundation (Sequential, must finish first)

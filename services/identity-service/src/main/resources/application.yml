@@ -4,6 +4,16 @@ server:
 spring:
   application:
     name: identity-service
+  cloud:
+    stream:
+      bindings:
+        identityAccountEvents-out-0:
+          destination: viaverse.identity.account-events
+        identitySessionEvents-out-0:
+          destination: viaverse.identity.session-events
+      kafka:
+        binder:
+          brokers: ${IDENTITY_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
   datasource:
     url: ${IDENTITY_SERVICE_DB_URL:jdbc:postgresql://localhost:5432/viaverse_identity}
     username: ${IDENTITY_SERVICE_DB_USERNAME:viaverse}
@@ -56,6 +66,8 @@ logging:
     app.viaverse: INFO
 
 viaverse:
+  http:
+    trusted-proxies: ${VIAVERSE_HTTP_TRUSTED_PROXIES:}
   auth:
     jwt:
       secret: ${IDENTITY_JWT_SECRET:}
@@ -114,6 +126,8 @@ logging:
   level:
     app.viaverse: DEBUG
 viaverse:
+  http:
+    trusted-proxies: ${VIAVERSE_HTTP_TRUSTED_PROXIES:127.0.0.1,::1}
   auth:
     jwt:
       secret: ${IDENTITY_JWT_SECRET:local-dev-identity-jwt-secret-change-me}
@@ -132,6 +146,8 @@ spring:
   datasource:
     url: ${IDENTITY_SERVICE_TEST_DB_URL:jdbc:postgresql://localhost:5432/viaverse_identity_test}
 viaverse:
+  http:
+    trusted-proxies: 127.0.0.1,::1
   auth:
     jwt:
       secret: ${IDENTITY_JWT_SECRET:test-identity-jwt-secret-change-me}

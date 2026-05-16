@@ -9,8 +9,6 @@
 | Spring Data repo | `JpaRepository` | `AuthLoginFlowJpaRepository` |
 | JPA adapter | `JpaAdapter` | `AuthLoginFlowJpaAdapter` |
 | Valkey adapter | `ValkeyAdapter` | `RateLimitValkeyAdapter` |
-| Kafka publisher | `KafkaPublisher` | `AccountKafkaPublisher` |
-| Kafka event | `V{n}KafkaEvent` | `AccountCreatedV1KafkaEvent` |
 | Inbound port | `UseCase` (interface) | `StartAuthUseCase` |
 | Use case impl | `UseCaseImpl` | `StartAuthUseCaseImpl` |
 | Outbound port | `Repository` / `Port` / `Store` | `OtpDeliveryPort`, `RateLimitPort` |
@@ -39,11 +37,11 @@
 |---|---|---|
 | Method authorization | `@PreAuthorize("hasRole('ADMIN')")` | Custom `RequiresRole` + aspect |
 | Caching | `@Cacheable` / `@CacheEvict` (Spring Cache + Valkey) | Custom caching aspect |
-| Entity timestamps | `@EnableJpaAuditing` + `@CreatedDate` / `@LastModifiedDate` on `BaseJpaEntity` | Manual `createdAt = now` in constructors |
+| Entity timestamps | Prefer `@EnableJpaAuditing` + `@CreatedDate` / `@LastModifiedDate` on `BaseJpaEntity` for new entities | Ad hoc timestamp writes spread across use cases |
 | JWT validation | Spring Security OAuth2 Resource Server (`JwtDecoder`) | Custom JWT parsing |
 | Bean validation | `@Valid`, `@NotBlank`, `@Pattern` | Custom validation aspect |
 
-`BaseJpaEntity` (`@MappedSuperclass` + `@EntityListeners(AuditingEntityListener.class)`) — all JPA entities extend it.
+`BaseJpaEntity` is available for shared auditing concerns. Existing identity persistence entities still keep explicit timestamp fields until that migration is completed deliberately.
 
 ---
 
@@ -64,37 +62,21 @@ public AuthResult complete(@LogParam("auth.identifier") String identifier, ...) 
 }
 ```
 
-Return types implement `AuditableResult { UUID auditSubjectId(); }`.
+Return types implement `AuditableResult { UUID accountId(); }`.
 
 **Security-alert path** (e.g. token reuse): throw `RefreshTokenReuseDetectedException` (internal) →
-`AuditEventAspect` catches → records `REFRESH_TOKEN_REUSED` → rethrows as `IdentityErrorEnum.INVALID_REFRESH_TOKEN`.
+`RefreshTokenReuseAspect` records the typed audit event and rethrows the canonical identity exception.
 
-`IdentityAuditEvents.java` and `IdentityErrors.java` are **deleted**.
+`IdentityAuditEvents.java` is removed. `IdentityErrors.java` remains the centralized helper for public identity errors.
 
 ---
 
-## Error Enum
+## Errors
 
-Single source of truth — code + HTTP status + type + message in one place:
-
-```java
-public enum IdentityErrorEnum {
-    INVALID_OTP         ("IDENTITY_1010", HttpStatus.UNPROCESSABLE_ENTITY, ErrorTypeEnum.AUTHENTICATION, "The provided OTP is incorrect."),
-    OTP_EXPIRED         ("IDENTITY_1011", HttpStatus.GONE,                 ErrorTypeEnum.AUTHENTICATION, "OTP has expired."),
-    RATE_LIMIT_EXCEEDED ("IDENTITY_5001", HttpStatus.TOO_MANY_REQUESTS,    ErrorTypeEnum.RATE_LIMIT,     "Too many attempts. Try again later."),
-    // ...all errors here
-    ;
-    // code, status, type, message fields + toException() / toException(fieldErrors)
-}
-
-public enum ErrorTypeEnum { AUTHENTICATION, AUTHORIZATION, VALIDATION, RATE_LIMIT, TECHNICAL, CONFIGURATION }
-```
-
-Usage: `throw IdentityErrorEnum.INVALID_OTP.toException();`
-
-`GlobalExceptionHandler` reads `error.getCode()`, `error.getType()`, `error.getMessage()` from the exception.
-
-> i18n: replace `message` with a message key, resolve via `MessageSource` at response time.
+- Use shared `AppErrorCode` values for stable machine-readable codes.
+- Use `IdentityErrors` to construct identity-specific public exceptions in one place.
+- `GlobalExceptionHandler` maps those exceptions to RFC 7807 responses with `identityCode`.
+- Keep field validation structured; do not scatter user-facing literals through use cases.
 
 ---
 
@@ -117,29 +99,16 @@ All endpoints return `ApiResponse<T>` except 204. Errors use RFC 7807 `ProblemDe
 
 ---
 
-## Kafka Events
-
-```java
-public record AccountCreatedV1KafkaEvent(
-    UUID eventId, Instant occurredAt, String version,  // "v1"
-    UUID accountId, ...
-) implements ViaverseEvent {}
-```
-
-Kafka key = `accountId.toString()`. Spring Cloud Stream `StreamBridge` — not Kafka API directly.
-
----
-
 ## build.gradle.kts additions (identity-service)
 
 ```kotlin
 implementation("org.springframework.boot:spring-boot-starter-data-redis")
-implementation("org.springframework.cloud:spring-cloud-stream")
-implementation("org.springframework.cloud:spring-cloud-stream-binder-kafka")
+implementation(libs.spring.cloud.stream)
+implementation(libs.spring.cloud.stream.binder.kafka)
 implementation("org.mapstruct:mapstruct:1.6.3")
 annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
-implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter")
-testImplementation("org.testcontainers:postgresql")
-testImplementation("org.testcontainers:kafka")
-testImplementation("org.testcontainers:testcontainers")
+testImplementation("org.testcontainers:testcontainers:2.0.4")
+testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.4")
+testImplementation("org.testcontainers:testcontainers-postgresql:2.0.4")
+testImplementation("org.testcontainers:testcontainers-kafka:2.0.4")
 ```

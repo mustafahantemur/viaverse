@@ -3,7 +3,7 @@ package app.viaverse.identity.config;
 import app.viaverse.identity.auth.infrastructure.security.JwtAccessTokenService;
 import app.viaverse.identity.auth.infrastructure.security.IdentityJwtValidator;
 import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
-import app.viaverse.identity.auth.domain.enums.OtpDeliveryProvider;
+import app.viaverse.identity.auth.domain.enums.OtpDeliveryProviderEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import java.nio.charset.StandardCharsets;
@@ -91,7 +91,7 @@ public class AuthConfiguration {
                 && (properties.getDebug().getFixedOtp() == null || properties.getDebug().getFixedOtp().isBlank())) {
             throw IdentityErrors.debugOtpFixedValueRequired();
         }
-        if (properties.getOtp().getDelivery().getProvider() == OtpDeliveryProvider.SMS) {
+        if (properties.getOtp().getDelivery().getProvider() == OtpDeliveryProviderEnum.SMS) {
             throw IdentityErrors.smsProviderDisabled();
         }
     }

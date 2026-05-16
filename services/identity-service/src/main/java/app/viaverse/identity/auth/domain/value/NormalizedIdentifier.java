@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.domain.value;
 
-import app.viaverse.identity.auth.domain.enums.IdentifierType;
+import app.viaverse.identity.auth.domain.enums.IdentifierTypeEnum;
 
-public record NormalizedIdentifier(IdentifierType type, String value) {
+public record NormalizedIdentifier(IdentifierTypeEnum type, String value) {
 }

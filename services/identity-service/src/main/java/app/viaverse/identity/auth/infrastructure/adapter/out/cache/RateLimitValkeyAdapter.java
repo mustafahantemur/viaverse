@@ -1,7 +1,7 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.cache;
 
 import app.viaverse.identity.auth.application.port.out.RateLimitPort;
-import app.viaverse.identity.auth.domain.enums.RateLimitScope;
+import app.viaverse.identity.auth.domain.enums.RateLimitScopeEnum;
 import app.viaverse.identity.auth.infrastructure.adapter.out.cache.ValkeyKeyScheme;
 import java.time.Duration;
 import java.util.List;
@@ -21,7 +21,7 @@ public class RateLimitValkeyAdapter implements RateLimitPort {
     }
 
     @Override
-    public Result incrementAndCheck(RateLimitScope scope, String key, int limit, Duration window) {
+    public Result incrementAndCheck(RateLimitScopeEnum scope, String key, int limit, Duration window) {
         String bucketKey = ValkeyKeyScheme.rateLimit(scope, key);
         Long count = redis.execute(
                 rateLimitScript,

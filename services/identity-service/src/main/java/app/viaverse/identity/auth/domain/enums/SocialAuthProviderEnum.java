@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.domain.enums;
 
-public enum SocialAuthProvider {
+public enum SocialAuthProviderEnum {
     GOOGLE,
     APPLE,
     INSTAGRAM

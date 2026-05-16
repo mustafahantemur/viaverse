@@ -7,6 +7,8 @@ import app.viaverse.identity.auth.application.service.RefreshTokenRotationServic
 import app.viaverse.identity.auth.application.service.RefreshTokenRotationService.Rotation;
 import app.viaverse.identity.auth.domain.model.AuthSession;
 import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.identity.shared.audit.AuditEvent;
+import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import java.time.Clock;
 import java.time.Instant;
 import org.springframework.stereotype.Service;
@@ -30,11 +32,12 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
 
     @Override
     @ObservedAction("token.refresh")
+    @AuditEvent(IdentityAuditEventEnum.REFRESH_TOKEN_ROTATED)
     public Result execute(Command command) {
         Instant now = clock.instant();
         Rotation rotation = rotationService.rotate(command.refreshToken(), now);
         AuthSession session = sessionIssuer.activeSession(rotation.sessionId(), now);
-        session.touch(now);
+        session = sessionIssuer.touchSession(session, now);
         Account account = sessionIssuer.activeAccount(session.getAccountId());
         AuthSessionIssuer.Issued issued = sessionIssuer.issueForExistingSession(
                 account, session, rotation.refreshToken(), rotation.refreshTokenExpiresAt(), now);

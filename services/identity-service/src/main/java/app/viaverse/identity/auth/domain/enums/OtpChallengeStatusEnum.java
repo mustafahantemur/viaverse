@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.domain.enums;
 
-public enum OtpChallengeStatus {
+public enum OtpChallengeStatusEnum {
     ACTIVE,
     VERIFIED,
     EXPIRED,

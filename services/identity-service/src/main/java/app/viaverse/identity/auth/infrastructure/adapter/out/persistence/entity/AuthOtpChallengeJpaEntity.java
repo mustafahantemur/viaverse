@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.persistence.entity;
 
-import app.viaverse.identity.auth.domain.enums.OtpChallengeStatus;
+import app.viaverse.identity.auth.domain.enums.OtpChallengeStatusEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -30,7 +30,7 @@ public class AuthOtpChallengeJpaEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 32)
-    private OtpChallengeStatus status;
+    private OtpChallengeStatusEnum status;
 
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
@@ -50,7 +50,7 @@ public class AuthOtpChallengeJpaEntity {
             String otpHash,
             int attempts,
             int maxAttempts,
-            OtpChallengeStatus status,
+            OtpChallengeStatusEnum status,
             Instant expiresAt,
             Instant verifiedAt,
             Instant createdAt
@@ -71,7 +71,7 @@ public class AuthOtpChallengeJpaEntity {
     public String getOtpHash() { return otpHash; }
     public int getAttempts() { return attempts; }
     public int getMaxAttempts() { return maxAttempts; }
-    public OtpChallengeStatus getStatus() { return status; }
+    public OtpChallengeStatusEnum getStatus() { return status; }
     public Instant getExpiresAt() { return expiresAt; }
     public Instant getVerifiedAt() { return verifiedAt; }
     public Instant getCreatedAt() { return createdAt; }

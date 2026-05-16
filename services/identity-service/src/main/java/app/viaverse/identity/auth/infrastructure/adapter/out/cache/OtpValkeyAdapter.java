@@ -1,7 +1,7 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.cache;
 
 import app.viaverse.identity.auth.application.port.out.OtpChallengeStore;
-import app.viaverse.identity.auth.domain.enums.OtpChallengeStatus;
+import app.viaverse.identity.auth.domain.enums.OtpChallengeStatusEnum;
 import app.viaverse.identity.auth.domain.model.OtpChallenge;
 import app.viaverse.identity.auth.infrastructure.adapter.out.cache.ValkeyKeyScheme;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -77,7 +77,7 @@ public class OtpValkeyAdapter implements OtpChallengeStore {
             String otpHash,
             int attempts,
             int maxAttempts,
-            OtpChallengeStatus status,
+            OtpChallengeStatusEnum status,
             Instant expiresAt,
             Instant verifiedAt,
             Instant createdAt

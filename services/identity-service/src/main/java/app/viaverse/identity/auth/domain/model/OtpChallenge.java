@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.domain.model;
 
-import app.viaverse.identity.auth.domain.enums.OtpChallengeStatus;
+import app.viaverse.identity.auth.domain.enums.OtpChallengeStatusEnum;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -21,7 +21,7 @@ public final class OtpChallenge {
     private final Instant createdAt;
 
     private int attempts;
-    private OtpChallengeStatus status;
+    private OtpChallengeStatusEnum status;
     private Instant verifiedAt;
 
     public OtpChallenge(
@@ -30,7 +30,7 @@ public final class OtpChallenge {
             String otpHash,
             int attempts,
             int maxAttempts,
-            OtpChallengeStatus status,
+            OtpChallengeStatusEnum status,
             Instant expiresAt,
             Instant verifiedAt,
             Instant createdAt
@@ -63,7 +63,7 @@ public final class OtpChallenge {
                 otpHash,
                 0,
                 maxAttempts,
-                OtpChallengeStatus.ACTIVE,
+                OtpChallengeStatusEnum.ACTIVE,
                 expiresAt,
                 null,
                 now
@@ -90,7 +90,7 @@ public final class OtpChallenge {
         return maxAttempts;
     }
 
-    public OtpChallengeStatus getStatus() {
+    public OtpChallengeStatusEnum getStatus() {
         return status;
     }
 
@@ -110,7 +110,7 @@ public final class OtpChallenge {
      * Whether the challenge can still accept a verification attempt.
      */
     public boolean isActive() {
-        return status == OtpChallengeStatus.ACTIVE;
+        return status == OtpChallengeStatusEnum.ACTIVE;
     }
 
     /**
@@ -120,7 +120,7 @@ public final class OtpChallenge {
     public void recordFailure() {
         this.attempts++;
         if (attempts >= maxAttempts) {
-            this.status = OtpChallengeStatus.LOCKED;
+            this.status = OtpChallengeStatusEnum.LOCKED;
         }
     }
 
@@ -128,14 +128,14 @@ public final class OtpChallenge {
      * Transition into the terminal EXPIRED state.
      */
     public void expire() {
-        this.status = OtpChallengeStatus.EXPIRED;
+        this.status = OtpChallengeStatusEnum.EXPIRED;
     }
 
     /**
      * Transition into the terminal VERIFIED state and stamp verification time.
      */
     public void verify(Instant now) {
-        this.status = OtpChallengeStatus.VERIFIED;
+        this.status = OtpChallengeStatusEnum.VERIFIED;
         this.verifiedAt = Objects.requireNonNull(now, "now");
     }
 }

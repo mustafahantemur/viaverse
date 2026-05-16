@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.domain.model;
 
-import app.viaverse.identity.auth.domain.enums.IdentifierType;
+import app.viaverse.identity.auth.domain.enums.IdentifierTypeEnum;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -14,7 +14,7 @@ import java.util.UUID;
 public record IdentityIdentifier(
         UUID id,
         UUID accountId,
-        IdentifierType identifierType,
+        IdentifierTypeEnum identifierType,
         String normalizedIdentifier,
         Instant verifiedAt,
         Instant createdAt
@@ -34,7 +34,7 @@ public record IdentityIdentifier(
     public static IdentityIdentifier verify(
             UUID id,
             UUID accountId,
-            IdentifierType identifierType,
+            IdentifierTypeEnum identifierType,
             String normalizedIdentifier,
             Instant now
     ) {

@@ -1,6 +1,6 @@
 package app.viaverse.identity.account.domain.model;
 
-import app.viaverse.identity.account.domain.AccountStatus;
+import app.viaverse.identity.account.domain.AccountStatusEnum;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -17,7 +17,7 @@ public final class Account {
     private final UUID id;
     private final Instant createdAt;
 
-    private AccountStatus status;
+    private AccountStatusEnum status;
     private String displayName;
     private String firstName;
     private String lastName;
@@ -26,7 +26,7 @@ public final class Account {
 
     public Account(
             UUID id,
-            AccountStatus status,
+            AccountStatusEnum status,
             String displayName,
             String firstName,
             String lastName,
@@ -45,13 +45,13 @@ public final class Account {
     }
 
     /**
-     * Factory for newly-registered accounts. Starts in {@link AccountStatus#ACTIVE}
+     * Factory for newly-registered accounts. Starts in {@link AccountStatusEnum#ACTIVE}
      * with {@code profileCompleted=false} and no first/last name set.
      */
     public static Account register(UUID id, String displayName, Instant now) {
         return new Account(
                 id,
-                AccountStatus.ACTIVE,
+                AccountStatusEnum.ACTIVE,
                 displayName,
                 null,
                 null,
@@ -65,7 +65,7 @@ public final class Account {
         return id;
     }
 
-    public AccountStatus getStatus() {
+    public AccountStatusEnum getStatus() {
         return status;
     }
 
@@ -115,18 +115,18 @@ public final class Account {
     }
 
     /**
-     * Transition the account into {@link AccountStatus#SUSPENDED}.
+     * Transition the account into {@link AccountStatusEnum#SUSPENDED}.
      */
     public void suspend(Instant now) {
-        this.status = AccountStatus.SUSPENDED;
+        this.status = AccountStatusEnum.SUSPENDED;
         this.updatedAt = Objects.requireNonNull(now, "now");
     }
 
     /**
-     * Transition the account back into {@link AccountStatus#ACTIVE}.
+     * Transition the account back into {@link AccountStatusEnum#ACTIVE}.
      */
     public void reactivate(Instant now) {
-        this.status = AccountStatus.ACTIVE;
+        this.status = AccountStatusEnum.ACTIVE;
         this.updatedAt = Objects.requireNonNull(now, "now");
     }
 }

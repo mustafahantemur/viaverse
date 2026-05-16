@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.domain.model;
 
-import app.viaverse.identity.auth.domain.enums.RefreshTokenStatus;
+import app.viaverse.identity.auth.domain.enums.RefreshTokenStatusEnum;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -20,7 +20,7 @@ public final class RefreshToken {
     private final Instant expiresAt;
     private final Instant createdAt;
 
-    private RefreshTokenStatus status;
+    private RefreshTokenStatusEnum status;
     private Instant revokedAt;
     private UUID replacedByTokenId;
 
@@ -28,7 +28,7 @@ public final class RefreshToken {
             UUID id,
             UUID sessionId,
             String tokenHash,
-            RefreshTokenStatus status,
+            RefreshTokenStatusEnum status,
             Instant issuedAt,
             Instant expiresAt,
             Instant revokedAt,
@@ -54,7 +54,7 @@ public final class RefreshToken {
                 id,
                 sessionId,
                 tokenHash,
-                RefreshTokenStatus.ACTIVE,
+                RefreshTokenStatusEnum.ACTIVE,
                 now,
                 expiresAt,
                 null,
@@ -75,7 +75,7 @@ public final class RefreshToken {
         return tokenHash;
     }
 
-    public RefreshTokenStatus getStatus() {
+    public RefreshTokenStatusEnum getStatus() {
         return status;
     }
 
@@ -100,14 +100,14 @@ public final class RefreshToken {
     }
 
     public boolean isActive() {
-        return status == RefreshTokenStatus.ACTIVE;
+        return status == RefreshTokenStatusEnum.ACTIVE;
     }
 
     /**
      * Rotate this token — caller has issued {@code replacementTokenId} as the successor.
      */
     public void rotate(UUID replacementTokenId, Instant now) {
-        this.status = RefreshTokenStatus.ROTATED;
+        this.status = RefreshTokenStatusEnum.ROTATED;
         this.replacedByTokenId = Objects.requireNonNull(replacementTokenId, "replacementTokenId");
         this.revokedAt = Objects.requireNonNull(now, "now");
     }
@@ -116,7 +116,7 @@ public final class RefreshToken {
      * Explicitly revoke this token (logout, session-revoke, security event).
      */
     public void revoke(Instant now) {
-        this.status = RefreshTokenStatus.REVOKED;
+        this.status = RefreshTokenStatusEnum.REVOKED;
         this.revokedAt = Objects.requireNonNull(now, "now");
     }
 
@@ -124,7 +124,7 @@ public final class RefreshToken {
      * Mark this token as expired due to TTL.
      */
     public void expire(Instant now) {
-        this.status = RefreshTokenStatus.EXPIRED;
+        this.status = RefreshTokenStatusEnum.EXPIRED;
         this.revokedAt = Objects.requireNonNull(now, "now");
     }
 }

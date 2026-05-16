@@ -5,14 +5,14 @@
 | Decision | Choice |
 |---|---|
 | Profile scope | Separate `profile-service` — identity owns auth/sessions/consents only |
-| Session state | PostgreSQL (device audit) + Valkey (hot cache per request) |
+| Session state | PostgreSQL |
 | Rate limiting | Valkey INCR + TTL — no PostgreSQL locks |
-| OTP & reg token | Valkey with TTL — removes 2 DB tables |
-| Messaging | Spring Cloud Stream + Kafka (broker-agnostic) |
+| OTP & reg token | Valkey with TTL |
+| Messaging | Spring Cloud Stream / Kafka publishers for account and session events |
 | Mapping | MapStruct |
 | Logging pipeline | ECS → Fluent Bit → OpenSearch |
 | Tracing | OpenTelemetry auto-instrumentation |
-| IP extraction | `ForwardedHeaderFilter` + trusted proxy config — not in controller |
+| IP extraction | `ClientIpResolver` + explicit trusted proxy config |
 
 ---
 
@@ -47,14 +47,13 @@ app.viaverse.identity/
           controller/   MeController.java
           mapper/       AccountDtoMapper.java
         out/
+          messaging/   AccountKafkaPublisher.java
+            event/     AccountCreatedV1KafkaEvent.java, AccountStatusChangedV1KafkaEvent.java
           persistence/
-            entity/     IdentityAccountJpaEntity.java  (extends BaseJpaEntity)
+            entity/     IdentityAccountJpaEntity.java
             mapper/     AccountJpaMapper.java
             adapter/    AccountJpaAdapter.java
             repository/ IdentityAccountJpaRepository.java
-          messaging/
-            adapter/    AccountKafkaPublisher.java
-            event/      AccountCreatedV1KafkaEvent.java, AccountStatusChangedV1KafkaEvent.java
 
   auth/
     domain/
@@ -72,9 +71,10 @@ app.viaverse.identity/
       port/out/     AuthLoginFlowRepository.java, OtpChallengeStore.java,
                     AuthSessionRepository.java, RefreshTokenRepository.java,
                     IdentifierRepository.java, OtpDeliveryPort.java,
-                    RegistrationTokenStore.java, RateLimitPort.java, SessionEventPublisher.java
+                    RegistrationTokenStore.java, RateLimitPort.java,
+                    SessionCachePort.java, SessionEventPublisher.java
       usecase/      StartAuthUseCaseImpl.java … (one per port/in interface)
-      service/      OtpChallengeService.java, AuthSessionService.java,
+      service/      OtpChallengeService.java, AuthSessionIssuer.java,
                     RegistrationTokenService.java, RefreshTokenRotationService.java,
                     AuthAbuseProtectionService.java
     infrastructure/
@@ -94,12 +94,10 @@ app.viaverse.identity/
           cache/        OtpValkeyAdapter.java, RegistrationTokenValkeyAdapter.java,
                         RateLimitValkeyAdapter.java, SessionCacheValkeyAdapter.java,
                         ValkeyKeyScheme.java
-          otp/          DebugOtpDeliveryAdapter.java, NetgsmSmsOtpDeliveryAdapter.java,
-                        SmtpEmailOtpDeliveryAdapter.java, SmsOtpDeliveryAdapter.java
-          social/       GoogleOidcAdapter.java, AppleOidcAdapter.java  (SocialAuthPort lives in application/port/out)
-          messaging/
-            adapter/    SessionKafkaPublisher.java
+          messaging/    SessionKafkaPublisher.java
             event/      SessionRevokedV1KafkaEvent.java
+          otp/          DebugOtpDeliveryAdapter.java, SmsOtpDeliveryAdapter.java
+          seed/         LocalTestUserSeeder.java
       security/         JwtAccessTokenService.java, TokenHasher.java, SecureTokenGenerator.java,
                         JwtPrincipal.java, JwtPrincipalResolver.java, IdentityJwtValidator.java,
                         IdentityAuthenticationEntryPoint.java
@@ -115,13 +113,10 @@ app.viaverse.identity/
   shared/
     audit/          IdentityAuditEventEnum.java, AuditLogJpaEntity.java,
                     AuditLogJpaRepository.java, AuditLogAdapter.java
-    error/
-      IdentityErrorEnum.java          ← single source of truth for all errors
-      ErrorTypeEnum.java
-      IdentityException.java
-      RateLimitExceededException.java
+    error/          IdentityErrors.java, IdentityException.java,
+                    RateLimitExceededException.java
     normalization/  IdentifierNormalizer.java
-    persistence/    BaseJpaEntity.java  ← @MappedSuperclass with @CreatedDate / @LastModifiedDate
+    persistence/    BaseJpaEntity.java
     aspect/
       ObservedAction.java, LogParam.java, ObservedActionAspect.java
       AuditEvent.java, AuditEventAspect.java, AuditableResult.java
@@ -129,9 +124,8 @@ app.viaverse.identity/
 
   config/
     AuthProperties.java, SecurityConfiguration.java, AuthConfiguration.java,
-    ValkeyConfiguration.java, KafkaConfiguration.java,
-    GlobalExceptionHandler.java, OpenTelemetryConfiguration.java,
-    ForwardedHeaderFilterConfiguration.java
+    HttpConfiguration.java, HttpProperties.java, ValkeyConfiguration.java,
+    GlobalExceptionHandler.java, OpenTelemetryConfiguration.java
 ```
 
 ---
@@ -140,23 +134,10 @@ app.viaverse.identity/
 
 | Key | Value | TTL | Removes |
 |---|---|---|---|
-| `otp:{flowId}` | `{otpHash, attempts, maxAttempts, status}` | OTP TTL | `auth_otp_challenge` table |
-| `reg:{tokenHash}` | `{flowId}` | Registration TTL | `registration_token_hash` col |
-| `rl:{scope}:{keyHash}` | integer | Window seconds | `auth_rate_limit_bucket` table |
-| `session:{sessionId}` | `{accountId, status, expiresAt}` | Access token TTL | DB hit per request |
-
----
-
-## Kafka Events
-
-Topic: `viaverse.identity.{aggregate}-events` — key = `accountId`.
-
-| Topic | Event | Trigger |
-|---|---|---|
-| `viaverse.identity.account-events` | `AccountCreatedV1` | Registration complete |
-| `viaverse.identity.account-events` | `AccountStatusChangedV1` | Suspended / reactivated |
-| `viaverse.identity.session-events` | `SessionRevokedV1` | Session revoked |
-| `viaverse.identity.consent-events` | `ConsentUpdatedV1` | Consent recorded |
+| `otp:{flowId}` | `{otpHash, attempts, maxAttempts, status}` | OTP TTL | Active OTP state |
+| `reg:{tokenHash}` | `{flowId}` | Registration TTL | Registration token lookup |
+| `rl:{scope}:{keyHash}` | integer | Window seconds | Abuse protection counters |
+| `session:{sessionId}` | `{accountId, status, expiresAt}` | Session expiry | Session read-through cache |
 
 ---
 
@@ -179,7 +160,8 @@ DELETE /api/v1/me/sessions             ← revoke all except current
 iss: "viaverse-identity"   sub: "{accountId}"  sid: "{sessionId}"   iat/exp: Unix epoch
 ```
 
-Other services validate via shared HMAC secret. Session invalidation propagates via `SessionRevokedV1`.
+Other services validate via the shared HMAC secret. Session revocation is also published through
+`viaverse.identity.session-events` so future consumers can react without coupling to the identity database.
 
 ---
 
@@ -189,4 +171,5 @@ Other services validate via shared HMAC secret. Session invalidation propagates 
 |---|---|
 | Account, identifiers, sessions, consents, JWT | Avatar, bio, preferences, categories, ratings |
 
-profile-service creates its record on `AccountCreatedV1`, linked by `accountId`.
+Account lifecycle publication exists through `viaverse.identity.account-events`; profile creation remains
+deferred until a profile-service consumer is introduced.

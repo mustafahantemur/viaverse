@@ -1,4 +1,4 @@
 package app.viaverse.identity.consent.domain;
 
-public record ConsentInput(ConsentType type, String version) {
+public record ConsentInput(ConsentTypeEnum type, String version) {
 }

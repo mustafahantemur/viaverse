@@ -1,7 +1,7 @@
 package app.viaverse.identity.shared.aspect;
 
 import app.viaverse.identity.shared.audit.AuditEvent;
-import app.viaverse.identity.shared.audit.IdentityAuditEvent;
+import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import app.viaverse.identity.shared.logging.LogParam;
 import app.viaverse.observability.audit.AuditAction;
 import app.viaverse.observability.audit.AuditActor;
@@ -53,7 +53,7 @@ public final class AuditEventAspect {
         record(auditEvent.value(), accountId);
     }
 
-    void record(IdentityAuditEvent event, UUID accountId) {
+    void record(IdentityAuditEventEnum event, UUID accountId) {
         auditLogger.record(new app.viaverse.observability.audit.AuditEvent(
                 UUID.randomUUID(),
                 Instant.now(),

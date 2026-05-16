@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.domain.enums;
 
-public enum SessionStatus {
+public enum SessionStatusEnum {
     ACTIVE,
     REVOKED,
     EXPIRED

@@ -1,6 +1,6 @@
 package app.viaverse.identity.shared.aspect;
 
-import app.viaverse.identity.shared.audit.IdentityAuditEvent;
+import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -22,7 +22,7 @@ public final class RefreshTokenReuseAspect {
         try {
             return joinPoint.proceed();
         } catch (RefreshTokenReuseDetectedException reuse) {
-            auditEventAspect.record(IdentityAuditEvent.REFRESH_TOKEN_REUSE_DETECTED, reuse.getAccountId());
+            auditEventAspect.record(IdentityAuditEventEnum.REFRESH_TOKEN_REUSE_DETECTED, reuse.accountId());
             throw IdentityErrors.invalidRefreshToken();
         }
     }

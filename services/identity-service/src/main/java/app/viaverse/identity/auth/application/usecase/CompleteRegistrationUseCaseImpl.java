@@ -1,7 +1,7 @@
 package app.viaverse.identity.auth.application.usecase;
 
-import app.viaverse.identity.account.application.port.out.AccountEventPublisher;
 import app.viaverse.identity.account.application.port.out.AccountRepository;
+import app.viaverse.identity.account.application.port.out.AccountEventPublisher;
 import app.viaverse.identity.account.domain.model.Account;
 import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCase;
 import app.viaverse.identity.auth.application.port.out.AuthLoginFlowRepository;
@@ -11,12 +11,15 @@ import app.viaverse.identity.auth.application.service.RegistrationTokenService;
 import app.viaverse.identity.auth.domain.model.AuthLoginFlow;
 import app.viaverse.identity.auth.domain.model.IdentityIdentifier;
 import app.viaverse.identity.auth.domain.policy.RegistrationPolicy;
+import app.viaverse.identity.config.AuthProperties;
 import app.viaverse.identity.consent.application.ConsentPolicy;
 import app.viaverse.identity.consent.application.port.out.ConsentRecordRepository;
-import app.viaverse.identity.consent.domain.ConsentCategory;
+import app.viaverse.identity.consent.domain.ConsentCategoryEnum;
 import app.viaverse.identity.consent.domain.ConsentInput;
-import app.viaverse.identity.consent.domain.ConsentType;
+import app.viaverse.identity.consent.domain.ConsentTypeEnum;
 import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.identity.shared.audit.AuditEvent;
+import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;
@@ -26,9 +29,8 @@ import org.springframework.stereotype.Service;
 public class CompleteRegistrationUseCaseImpl implements CompleteRegistrationUseCase {
 
     private static final String CONSENT_SOURCE_REGISTRATION = "registration";
-    private static final String MARKETING_CONSENT_VERSION = "v1";
-
     private final Clock clock;
+    private final AuthProperties properties;
     private final RegistrationPolicy registrationPolicy;
     private final ConsentPolicy consentPolicy;
     private final RegistrationTokenService registrationTokenService;
@@ -41,6 +43,7 @@ public class CompleteRegistrationUseCaseImpl implements CompleteRegistrationUseC
 
     public CompleteRegistrationUseCaseImpl(
             Clock clock,
+            AuthProperties properties,
             RegistrationPolicy registrationPolicy,
             ConsentPolicy consentPolicy,
             RegistrationTokenService registrationTokenService,
@@ -52,6 +55,7 @@ public class CompleteRegistrationUseCaseImpl implements CompleteRegistrationUseC
             ConsentRecordRepository consentRecordRepository
     ) {
         this.clock = clock;
+        this.properties = properties;
         this.registrationPolicy = registrationPolicy;
         this.consentPolicy = consentPolicy;
         this.registrationTokenService = registrationTokenService;
@@ -65,6 +69,7 @@ public class CompleteRegistrationUseCaseImpl implements CompleteRegistrationUseC
 
     @Override
     @ObservedAction("auth.register")
+    @AuditEvent(IdentityAuditEventEnum.ACCOUNT_CREATED)
     public Result execute(Command command) {
         Instant now = clock.instant();
         registrationPolicy.validateProfile(command.displayName());
@@ -98,7 +103,7 @@ public class CompleteRegistrationUseCaseImpl implements CompleteRegistrationUseC
                     UUID.randomUUID(),
                     accountId,
                     consent.type(),
-                    ConsentCategory.REQUIRED_LEGAL.name(),
+                    ConsentCategoryEnum.REQUIRED_LEGAL.name(),
                     consent.version(),
                     true,
                     now,
@@ -108,9 +113,9 @@ public class CompleteRegistrationUseCaseImpl implements CompleteRegistrationUseC
         consentRecordRepository.save(new ConsentRecordRepository.Record(
                 UUID.randomUUID(),
                 accountId,
-                ConsentType.MARKETING_COMMUNICATION,
-                ConsentCategory.OPTIONAL_MARKETING.name(),
-                MARKETING_CONSENT_VERSION,
+                ConsentTypeEnum.MARKETING_COMMUNICATION,
+                ConsentCategoryEnum.OPTIONAL_MARKETING.name(),
+                properties.getConsent().getMarketingVersion(),
                 command.marketingConsentAccepted(),
                 now,
                 CONSENT_SOURCE_REGISTRATION
@@ -118,9 +123,8 @@ public class CompleteRegistrationUseCaseImpl implements CompleteRegistrationUseC
 
         flow.complete(accountId, now);
         flowRepository.save(flow);
-        accountEventPublisher.publishCreated(accountId, account.getDisplayName());
-
         AuthSessionIssuer.Issued issued = sessionIssuer.issue(account, command.userAgent(), command.clientIp(), now);
+        accountEventPublisher.publishCreated(account.getId(), account.getDisplayName());
         return new Result(
                 accountId,
                 issued.session().getId(),

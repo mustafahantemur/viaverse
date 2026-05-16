@@ -1,7 +1,7 @@
 package app.viaverse.identity.auth.domain.model;
 
-import app.viaverse.identity.auth.domain.enums.IdentifierType;
-import app.viaverse.identity.auth.domain.enums.LoginFlowStatus;
+import app.viaverse.identity.auth.domain.enums.IdentifierTypeEnum;
+import app.viaverse.identity.auth.domain.enums.LoginFlowStatusEnum;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -16,13 +16,13 @@ import java.util.UUID;
 public final class AuthLoginFlow {
 
     private final UUID id;
-    private final IdentifierType identifierType;
+    private final IdentifierTypeEnum identifierType;
     private final String normalizedIdentifier;
     private final Instant expiresAt;
     private final Instant createdAt;
 
     private UUID accountId;
-    private LoginFlowStatus status;
+    private LoginFlowStatusEnum status;
     private String registrationTokenHash;
     private Instant registrationExpiresAt;
     private Instant completedAt;
@@ -30,10 +30,10 @@ public final class AuthLoginFlow {
 
     public AuthLoginFlow(
             UUID id,
-            IdentifierType identifierType,
+            IdentifierTypeEnum identifierType,
             String normalizedIdentifier,
             UUID accountId,
-            LoginFlowStatus status,
+            LoginFlowStatusEnum status,
             String registrationTokenHash,
             Instant registrationExpiresAt,
             Instant expiresAt,
@@ -59,7 +59,7 @@ public final class AuthLoginFlow {
      */
     public static AuthLoginFlow issue(
             UUID id,
-            IdentifierType identifierType,
+            IdentifierTypeEnum identifierType,
             String normalizedIdentifier,
             UUID accountId,
             Instant expiresAt,
@@ -70,7 +70,7 @@ public final class AuthLoginFlow {
                 identifierType,
                 normalizedIdentifier,
                 accountId,
-                LoginFlowStatus.OTP_REQUIRED,
+                LoginFlowStatusEnum.OTP_REQUIRED,
                 null,
                 null,
                 expiresAt,
@@ -84,7 +84,7 @@ public final class AuthLoginFlow {
         return id;
     }
 
-    public IdentifierType getIdentifierType() {
+    public IdentifierTypeEnum getIdentifierType() {
         return identifierType;
     }
 
@@ -96,7 +96,7 @@ public final class AuthLoginFlow {
         return accountId;
     }
 
-    public LoginFlowStatus getStatus() {
+    public LoginFlowStatusEnum getStatus() {
         return status;
     }
 
@@ -129,7 +129,7 @@ public final class AuthLoginFlow {
      * either {@link #complete} (existing account) or {@link #requireRegistration} (new account).
      */
     public void markOtpVerified(Instant now) {
-        this.status = LoginFlowStatus.OTP_VERIFIED;
+        this.status = LoginFlowStatusEnum.OTP_VERIFIED;
         this.updatedAt = Objects.requireNonNull(now, "now");
     }
 
@@ -137,7 +137,7 @@ public final class AuthLoginFlow {
      * Hand off to the registration step — caller has already issued a registration token.
      */
     public void requireRegistration(String registrationTokenHash, Instant registrationExpiresAt, Instant now) {
-        this.status = LoginFlowStatus.REGISTRATION_REQUIRED;
+        this.status = LoginFlowStatusEnum.REGISTRATION_REQUIRED;
         this.registrationTokenHash = Objects.requireNonNull(registrationTokenHash, "registrationTokenHash");
         this.registrationExpiresAt = Objects.requireNonNull(registrationExpiresAt, "registrationExpiresAt");
         this.updatedAt = Objects.requireNonNull(now, "now");
@@ -147,7 +147,7 @@ public final class AuthLoginFlow {
      * Complete the flow — bind the resolved account and stamp completion time.
      */
     public void complete(UUID accountId, Instant now) {
-        this.status = LoginFlowStatus.COMPLETED;
+        this.status = LoginFlowStatusEnum.COMPLETED;
         this.accountId = Objects.requireNonNull(accountId, "accountId");
         this.completedAt = Objects.requireNonNull(now, "now");
         this.updatedAt = now;
@@ -156,7 +156,7 @@ public final class AuthLoginFlow {
     /**
      * Transition into a terminal failure state (e.g. {@code OTP_FAILED}, {@code EXPIRED}).
      */
-    public void fail(LoginFlowStatus failureStatus, Instant now) {
+    public void fail(LoginFlowStatusEnum failureStatus, Instant now) {
         this.status = Objects.requireNonNull(failureStatus, "failureStatus");
         this.updatedAt = Objects.requireNonNull(now, "now");
     }

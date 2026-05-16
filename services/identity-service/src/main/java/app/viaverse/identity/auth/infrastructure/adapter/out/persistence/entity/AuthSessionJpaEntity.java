@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.persistence.entity;
 
-import app.viaverse.identity.auth.domain.enums.SessionStatus;
+import app.viaverse.identity.auth.domain.enums.SessionStatusEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,7 +21,7 @@ public class AuthSessionJpaEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 32)
-    private SessionStatus status;
+    private SessionStatusEnum status;
 
     @Column(name = "issued_at", nullable = false)
     private Instant issuedAt;
@@ -62,7 +62,7 @@ public class AuthSessionJpaEntity {
     public AuthSessionJpaEntity(
             UUID id,
             UUID accountId,
-            SessionStatus status,
+            SessionStatusEnum status,
             Instant issuedAt,
             Instant expiresAt,
             Instant lastSeenAt,
@@ -93,7 +93,7 @@ public class AuthSessionJpaEntity {
 
     public UUID getId() { return id; }
     public UUID getAccountId() { return accountId; }
-    public SessionStatus getStatus() { return status; }
+    public SessionStatusEnum getStatus() { return status; }
     public Instant getIssuedAt() { return issuedAt; }
     public Instant getExpiresAt() { return expiresAt; }
     public Instant getLastSeenAt() { return lastSeenAt; }

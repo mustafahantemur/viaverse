@@ -1,7 +1,7 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.persistence.repository;
 
-import app.viaverse.identity.auth.domain.enums.IdentifierType;
-import app.viaverse.identity.auth.domain.enums.LoginFlowStatus;
+import app.viaverse.identity.auth.domain.enums.IdentifierTypeEnum;
+import app.viaverse.identity.auth.domain.enums.LoginFlowStatusEnum;
 import app.viaverse.identity.auth.infrastructure.adapter.out.persistence.entity.AuthLoginFlowJpaEntity;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,8 +11,8 @@ public interface AuthLoginFlowJpaRepository extends JpaRepository<AuthLoginFlowJ
     Optional<AuthLoginFlowJpaEntity> findByRegistrationTokenHash(String registrationTokenHash);
 
     Optional<AuthLoginFlowJpaEntity> findTopByIdentifierTypeAndNormalizedIdentifierAndStatusOrderByCreatedAtDesc(
-            IdentifierType identifierType,
+            IdentifierTypeEnum identifierType,
             String normalizedIdentifier,
-            LoginFlowStatus status
+            LoginFlowStatusEnum status
     );
 }

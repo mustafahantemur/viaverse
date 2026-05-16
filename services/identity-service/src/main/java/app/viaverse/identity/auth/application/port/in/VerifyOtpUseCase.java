@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.application.port.in;
 
-import app.viaverse.identity.auth.domain.enums.AuthNextStep;
+import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -11,7 +11,7 @@ public interface VerifyOtpUseCase {
     record Command(UUID flowId, String otp, String userAgent, String clientIp) {}
 
     record Result(
-            AuthNextStep nextStep,
+            AuthNextStepEnum nextStep,
             String registrationToken,
             Instant registrationExpiresAt,
             UUID accountId,

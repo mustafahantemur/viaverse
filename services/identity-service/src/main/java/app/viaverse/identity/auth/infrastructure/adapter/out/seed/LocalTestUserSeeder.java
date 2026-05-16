@@ -1,17 +1,18 @@
-package app.viaverse.identity.auth.application.service;
+package app.viaverse.identity.auth.infrastructure.adapter.out.seed;
 
-import app.viaverse.identity.account.domain.AccountStatus;
+import app.viaverse.identity.account.domain.AccountStatusEnum;
 import app.viaverse.identity.account.infrastructure.adapter.out.persistence.entity.IdentityAccountJpaEntity;
 import app.viaverse.identity.account.infrastructure.adapter.out.persistence.repository.IdentityAccountJpaRepository;
 import app.viaverse.identity.auth.domain.value.NormalizedIdentifier;
 import app.viaverse.identity.auth.infrastructure.adapter.out.persistence.entity.IdentityIdentifierJpaEntity;
 import app.viaverse.identity.auth.infrastructure.adapter.out.persistence.repository.IdentityIdentifierJpaRepository;
 import app.viaverse.identity.config.AuthProperties;
-import app.viaverse.identity.consent.domain.ConsentCategory;
-import app.viaverse.identity.consent.domain.ConsentType;
+import app.viaverse.identity.consent.domain.ConsentCategoryEnum;
+import app.viaverse.identity.consent.domain.ConsentTypeEnum;
 import app.viaverse.identity.consent.infrastructure.adapter.out.persistence.entity.ConsentRecordJpaEntity;
 import app.viaverse.identity.consent.infrastructure.adapter.out.persistence.repository.ConsentRecordJpaRepository;
 import app.viaverse.identity.shared.normalization.IdentifierNormalizer;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Set;
@@ -27,11 +28,12 @@ public class LocalTestUserSeeder implements ApplicationRunner {
     public static final String EMAIL_IDENTIFIER = "test.user@viaverse.local";
     public static final String PHONE_IDENTIFIER = "+905551110000";
 
-    private static final Set<ConsentType> REQUIRED_CONSENTS = Set.of(
-            ConsentType.TERMS_OF_SERVICE,
-            ConsentType.PERSONAL_DATA_PROTECTION_LAW
+    private static final Set<ConsentTypeEnum> REQUIRED_CONSENTS = Set.of(
+            ConsentTypeEnum.TERMS_OF_SERVICE,
+            ConsentTypeEnum.PERSONAL_DATA_PROTECTION_LAW
     );
 
+    private final Clock clock;
     private final AuthProperties properties;
     private final Environment environment;
     private final IdentifierNormalizer identifierNormalizer;
@@ -40,6 +42,7 @@ public class LocalTestUserSeeder implements ApplicationRunner {
     private final ConsentRecordJpaRepository consentRepository;
 
     public LocalTestUserSeeder(
+            Clock clock,
             AuthProperties properties,
             Environment environment,
             IdentifierNormalizer identifierNormalizer,
@@ -47,6 +50,7 @@ public class LocalTestUserSeeder implements ApplicationRunner {
             IdentityIdentifierJpaRepository identifierRepository,
             ConsentRecordJpaRepository consentRepository
     ) {
+        this.clock = clock;
         this.properties = properties;
         this.environment = environment;
         this.identifierNormalizer = identifierNormalizer;
@@ -72,7 +76,7 @@ public class LocalTestUserSeeder implements ApplicationRunner {
     }
 
     private void seedUser(String rawIdentifier, String displayName, String firstName, String lastName) {
-        Instant now = Instant.now();
+        Instant now = clock.instant();
         NormalizedIdentifier identifier = identifierNormalizer.normalize(rawIdentifier);
         UUID accountId = identifierRepository.findByIdentifierTypeAndNormalizedIdentifier(
                         identifier.type(),
@@ -93,7 +97,7 @@ public class LocalTestUserSeeder implements ApplicationRunner {
         UUID accountId = UUID.randomUUID();
         accountRepository.save(new IdentityAccountJpaEntity(
                 accountId,
-                AccountStatus.ACTIVE,
+                AccountStatusEnum.ACTIVE,
                 displayName,
                 firstName,
                 lastName,
@@ -113,13 +117,13 @@ public class LocalTestUserSeeder implements ApplicationRunner {
     }
 
     private void ensureRequiredConsents(UUID accountId, Instant now) {
-        for (ConsentType consentType : REQUIRED_CONSENTS) {
+        for (ConsentTypeEnum consentType : REQUIRED_CONSENTS) {
             consentRepository.findByAccountIdAndConsentTypeAndVersion(accountId, consentType, "v1")
                     .orElseGet(() -> consentRepository.save(new ConsentRecordJpaEntity(
                             UUID.randomUUID(),
                             accountId,
                             consentType,
-                            ConsentCategory.REQUIRED_LEGAL,
+                            ConsentCategoryEnum.REQUIRED_LEGAL,
                             "v1",
                             true,
                             now,

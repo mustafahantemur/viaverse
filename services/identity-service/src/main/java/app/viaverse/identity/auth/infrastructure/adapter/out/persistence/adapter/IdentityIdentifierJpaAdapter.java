@@ -1,7 +1,7 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.persistence.adapter;
 
 import app.viaverse.identity.auth.application.port.out.IdentifierRepository;
-import app.viaverse.identity.auth.domain.enums.IdentifierType;
+import app.viaverse.identity.auth.domain.enums.IdentifierTypeEnum;
 import app.viaverse.identity.auth.domain.model.IdentityIdentifier;
 import app.viaverse.identity.auth.infrastructure.adapter.out.persistence.mapper.IdentityIdentifierJpaMapper;
 import app.viaverse.identity.auth.infrastructure.adapter.out.persistence.repository.IdentityIdentifierJpaRepository;
@@ -28,7 +28,7 @@ public class IdentityIdentifierJpaAdapter implements IdentifierRepository {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<IdentityIdentifier> findByTypeAndValue(IdentifierType type, String normalizedValue) {
+    public Optional<IdentityIdentifier> findByTypeAndValue(IdentifierTypeEnum type, String normalizedValue) {
         return repository.findByIdentifierTypeAndNormalizedIdentifier(type, normalizedValue).map(mapper::toDomain);
     }
 }

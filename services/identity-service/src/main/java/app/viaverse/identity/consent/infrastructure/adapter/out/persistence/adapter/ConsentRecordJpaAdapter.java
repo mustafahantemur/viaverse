@@ -9,11 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Transactional
 public class ConsentRecordJpaAdapter implements ConsentRecordRepository {
-
     private final ConsentRecordJpaRepository repository;
     private final ConsentRecordJpaMapper mapper;
 
-    public ConsentRecordJpaAdapter(ConsentRecordJpaRepository repository, ConsentRecordJpaMapper mapper) {
+    public ConsentRecordJpaAdapter(
+            ConsentRecordJpaRepository repository,
+            ConsentRecordJpaMapper mapper
+    ) {
         this.repository = repository;
         this.mapper = mapper;
     }

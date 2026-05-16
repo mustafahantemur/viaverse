@@ -1,7 +1,7 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.cache;
 
-import app.viaverse.identity.auth.domain.enums.SessionStatus;
-import app.viaverse.identity.auth.infrastructure.adapter.out.cache.ValkeyKeyScheme;
+import app.viaverse.identity.auth.application.port.out.SessionCachePort;
+import app.viaverse.identity.auth.domain.model.AuthSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SessionCacheValkeyAdapter {
+public class SessionCacheValkeyAdapter implements SessionCachePort {
 
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper;
@@ -22,30 +22,40 @@ public class SessionCacheValkeyAdapter {
         this.objectMapper = objectMapper;
     }
 
-    public void put(UUID sessionId, UUID accountId, SessionStatus status, Instant expiresAt, Duration ttl) {
+    @Override
+    public void put(AuthSession session, Instant now) {
+        Duration ttl = Duration.between(now, session.getExpiresAt());
+        if (ttl.isNegative() || ttl.isZero()) {
+            evict(session.getId());
+            return;
+        }
         try {
-            String json = objectMapper.writeValueAsString(new SessionSnapshot(accountId, status, expiresAt));
-            redis.opsForValue().set(ValkeyKeyScheme.session(sessionId), json, ttl);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Failed to serialize session", e);
+            String json = objectMapper.writeValueAsString(new Snapshot(
+                    session.getAccountId(),
+                    session.getStatus(),
+                    session.getExpiresAt()
+            ));
+            redis.opsForValue().set(ValkeyKeyScheme.session(session.getId()), json, ttl);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Failed to serialize session cache snapshot", exception);
         }
     }
 
-    public Optional<SessionSnapshot> find(UUID sessionId) {
+    @Override
+    public Optional<Snapshot> find(UUID sessionId) {
         String json = redis.opsForValue().get(ValkeyKeyScheme.session(sessionId));
         if (json == null) {
             return Optional.empty();
         }
         try {
-            return Optional.of(objectMapper.readValue(json, SessionSnapshot.class));
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Failed to deserialize session", e);
+            return Optional.of(objectMapper.readValue(json, Snapshot.class));
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Failed to deserialize session cache snapshot", exception);
         }
     }
 
+    @Override
     public void evict(UUID sessionId) {
         redis.delete(ValkeyKeyScheme.session(sessionId));
     }
-
-    public record SessionSnapshot(UUID accountId, SessionStatus status, Instant expiresAt) {}
 }

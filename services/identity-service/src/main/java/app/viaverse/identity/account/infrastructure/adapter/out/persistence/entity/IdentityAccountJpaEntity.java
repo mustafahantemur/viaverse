@@ -1,6 +1,6 @@
 package app.viaverse.identity.account.infrastructure.adapter.out.persistence.entity;
 
-import app.viaverse.identity.account.domain.AccountStatus;
+import app.viaverse.identity.account.domain.AccountStatusEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,7 +18,7 @@ public class IdentityAccountJpaEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 32)
-    private AccountStatus status;
+    private AccountStatusEnum status;
 
     @Column(name = "display_name", nullable = false, length = 120)
     private String displayName;
@@ -43,7 +43,7 @@ public class IdentityAccountJpaEntity {
 
     public IdentityAccountJpaEntity(
             UUID id,
-            AccountStatus status,
+            AccountStatusEnum status,
             String displayName,
             String firstName,
             String lastName,
@@ -61,31 +61,12 @@ public class IdentityAccountJpaEntity {
         this.updatedAt = updatedAt;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public AccountStatus getStatus() {
-        return status;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public boolean isProfileCompleted() {
-        return profileCompleted;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
+    public UUID getId() { return id; }
+    public AccountStatusEnum getStatus() { return status; }
+    public String getDisplayName() { return displayName; }
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
+    public boolean isProfileCompleted() { return profileCompleted; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
 }

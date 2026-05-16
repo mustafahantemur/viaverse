@@ -1,6 +1,6 @@
 package app.viaverse.identity.consent.domain;
 
-public enum ConsentCategory {
+public enum ConsentCategoryEnum {
     REQUIRED_LEGAL,
     OPTIONAL_MARKETING
 }

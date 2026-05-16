@@ -1,6 +1,6 @@
 package app.viaverse.identity.shared.audit;
 
-public enum IdentityAuditEvent {
+public enum IdentityAuditEventEnum {
     ACCOUNT_CREATED,
     LOGIN_SUCCEEDED,
     LOGIN_FAILED,

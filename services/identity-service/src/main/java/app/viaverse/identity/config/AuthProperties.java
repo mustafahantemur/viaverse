@@ -1,7 +1,7 @@
 package app.viaverse.identity.config;
 
-import app.viaverse.identity.auth.domain.enums.OtpDeliveryProvider;
-import app.viaverse.identity.auth.domain.enums.SmsProvider;
+import app.viaverse.identity.auth.domain.enums.OtpDeliveryProviderEnum;
+import app.viaverse.identity.auth.domain.enums.SmsProviderEnum;
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -52,18 +52,6 @@ public class AuthProperties {
         return consent;
     }
 
-    /**
-     * Consent-related configuration.
-     *
-     * <p>TODO (Phase 3A): The {@code CompleteRegistration} use case currently
-     * hardcodes the marketing consent version as {@code "v1"} when persisting
-     * a {@code ConsentRecord} of type {@code MARKETING_COMMUNICATION}. The
-     * use-case rewrite in Phase 3A should inject {@link AuthProperties} (or
-     * just this {@link Consent} block) and read
-     * {@link Consent#getMarketingVersion()} instead of using a string literal,
-     * so the active version is centrally configurable via
-     * {@code viaverse.auth.consent.marketing-version}.
-     */
     public static class Consent {
         private String marketingVersion = "v1";
 
@@ -124,26 +112,26 @@ public class AuthProperties {
     }
 
     public static class Delivery {
-        private OtpDeliveryProvider provider = OtpDeliveryProvider.DEBUG;
+        private OtpDeliveryProviderEnum provider = OtpDeliveryProviderEnum.DEBUG;
 
-        public OtpDeliveryProvider getProvider() {
+        public OtpDeliveryProviderEnum getProvider() {
             return provider;
         }
 
-        public void setProvider(OtpDeliveryProvider provider) {
+        public void setProvider(OtpDeliveryProviderEnum provider) {
             this.provider = provider;
         }
     }
 
     public static class Sms {
-        private SmsProvider provider = SmsProvider.NONE;
+        private SmsProviderEnum provider = SmsProviderEnum.NONE;
         private final Netgsm netgsm = new Netgsm();
 
-        public SmsProvider getProvider() {
+        public SmsProviderEnum getProvider() {
             return provider;
         }
 
-        public void setProvider(SmsProvider provider) {
+        public void setProvider(SmsProviderEnum provider) {
             this.provider = provider;
         }
 

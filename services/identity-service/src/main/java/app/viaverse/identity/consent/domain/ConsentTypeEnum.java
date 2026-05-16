@@ -1,6 +1,6 @@
 package app.viaverse.identity.consent.domain;
 
-public enum ConsentType {
+public enum ConsentTypeEnum {
     TERMS_OF_SERVICE,
     PERSONAL_DATA_PROTECTION_LAW,
     MARKETING_COMMUNICATION

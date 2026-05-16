@@ -2,8 +2,8 @@ package app.viaverse.identity.auth.application.service;
 
 import app.viaverse.identity.auth.application.port.out.OtpChallengeStore;
 import app.viaverse.identity.auth.application.port.out.OtpDeliveryPort;
-import app.viaverse.identity.auth.domain.enums.LoginFlowStatus;
-import app.viaverse.identity.auth.domain.enums.OtpChallengeStatus;
+import app.viaverse.identity.auth.domain.enums.LoginFlowStatusEnum;
+import app.viaverse.identity.auth.domain.enums.OtpChallengeStatusEnum;
 import app.viaverse.identity.auth.domain.model.AuthLoginFlow;
 import app.viaverse.identity.auth.domain.model.OtpChallenge;
 import app.viaverse.identity.auth.domain.value.NormalizedIdentifier;
@@ -12,7 +12,6 @@ import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
 import app.viaverse.identity.config.AuthProperties;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import java.security.SecureRandom;
-import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -32,22 +31,19 @@ public class OtpChallengeService {
     private final OtpDeliveryPort deliveryPort;
     private final TokenHasher tokenHasher;
     private final SecureRandom secureRandom;
-    private final Clock clock;
 
     public OtpChallengeService(
             AuthProperties properties,
             OtpChallengeStore challengeStore,
             OtpDeliveryPort deliveryPort,
             TokenHasher tokenHasher,
-            SecureRandom secureRandom,
-            Clock clock
+            SecureRandom secureRandom
     ) {
         this.properties = properties;
         this.challengeStore = challengeStore;
         this.deliveryPort = deliveryPort;
         this.tokenHasher = tokenHasher;
         this.secureRandom = secureRandom;
-        this.clock = clock;
     }
 
     /**
@@ -79,11 +75,11 @@ public class OtpChallengeService {
      * Mutates flow/challenge to terminal states on expiry.
      */
     public void validateWaitingForOtp(AuthLoginFlow flow, OtpChallenge challenge, Instant now) {
-        if (flow.getStatus() != LoginFlowStatus.OTP_REQUIRED || challenge.getStatus() != OtpChallengeStatus.ACTIVE) {
+        if (flow.getStatus() != LoginFlowStatusEnum.OTP_REQUIRED || challenge.getStatus() != OtpChallengeStatusEnum.ACTIVE) {
             throw IdentityErrors.authFlowNotWaitingForOtp();
         }
         if (flow.getExpiresAt().isBefore(now) || challenge.getExpiresAt().isBefore(now)) {
-            flow.fail(LoginFlowStatus.EXPIRED, now);
+            flow.fail(LoginFlowStatusEnum.EXPIRED, now);
             challenge.expire();
             throw IdentityErrors.otpExpired();
         }
@@ -99,7 +95,7 @@ public class OtpChallengeService {
      */
     public boolean recordFailure(OtpChallenge challenge) {
         challenge.recordFailure();
-        return challenge.getStatus() == OtpChallengeStatus.LOCKED;
+        return challenge.getStatus() == OtpChallengeStatusEnum.LOCKED;
     }
 
     public void verify(OtpChallenge challenge, Instant now) {
@@ -117,8 +113,4 @@ public class OtpChallengeService {
         return properties.getDebug().isEnabled() ? otp : null;
     }
 
-    @SuppressWarnings("unused")
-    private Instant now() {
-        return clock.instant();
-    }
 }

@@ -1,7 +1,7 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.persistence.adapter;
 
 import app.viaverse.identity.auth.application.port.out.RefreshTokenRepository;
-import app.viaverse.identity.auth.domain.enums.RefreshTokenStatus;
+import app.viaverse.identity.auth.domain.enums.RefreshTokenStatusEnum;
 import app.viaverse.identity.auth.domain.model.RefreshToken;
 import app.viaverse.identity.auth.infrastructure.adapter.out.persistence.mapper.RefreshTokenJpaMapper;
 import app.viaverse.identity.auth.infrastructure.adapter.out.persistence.repository.AuthRefreshTokenJpaRepository;
@@ -37,7 +37,7 @@ public class RefreshTokenJpaAdapter implements RefreshTokenRepository {
     @Override
     @Transactional(readOnly = true)
     public List<RefreshToken> findActiveBySessionId(UUID sessionId) {
-        return repository.findBySessionIdAndStatus(sessionId, RefreshTokenStatus.ACTIVE)
+        return repository.findBySessionIdAndStatus(sessionId, RefreshTokenStatusEnum.ACTIVE)
                 .stream()
                 .map(mapper::toDomain)
                 .toList();
