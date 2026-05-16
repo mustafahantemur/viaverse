@@ -44,6 +44,18 @@ public class AuthAbuseProtectionService {
                 otpVerify.getIpMaxAttempts(), Duration.ofSeconds(otpVerify.getIpWindowSeconds()));
     }
 
+    public void enforceRefresh(String clientIp) {
+        AuthProperties.AuthStart cfg = properties.getRateLimit().getAuthStart();
+        check(RateLimitScope.AUTH_START_IP, "refresh:" + clientIp,
+                cfg.getIpMaxAttempts(), Duration.ofSeconds(cfg.getIpWindowSeconds()));
+    }
+
+    public void enforceLogout(String clientIp) {
+        AuthProperties.AuthStart cfg = properties.getRateLimit().getAuthStart();
+        check(RateLimitScope.AUTH_START_IP, "logout:" + clientIp,
+                cfg.getIpMaxAttempts(), Duration.ofSeconds(cfg.getIpWindowSeconds()));
+    }
+
     public void softLockOtp(AuthLoginFlow flow) {
         Duration lockout = Duration.ofSeconds(properties.getRateLimit().getLockout().getDurationSeconds());
         check(RateLimitScope.OTP_VERIFY_FLOW, flow.getId().toString(), 0, lockout);

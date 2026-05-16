@@ -14,10 +14,12 @@ import app.viaverse.identity.auth.application.port.in.LogoutUseCase;
 import app.viaverse.identity.auth.application.port.in.RefreshTokenUseCase;
 import app.viaverse.identity.auth.application.port.in.StartAuthUseCase;
 import app.viaverse.identity.auth.application.port.in.VerifyOtpUseCase;
+import app.viaverse.identity.auth.application.service.AuthAbuseProtectionService;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
 import app.viaverse.identity.consent.domain.ConsentInput;
 import app.viaverse.identity.shared.api.ApiResponse;
+import app.viaverse.identity.shared.error.IdentityErrors;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,6 +41,7 @@ public class AuthController {
     private final LogoutUseCase logoutUseCase;
     private final JwtPrincipalResolver jwtPrincipalResolver;
     private final AuthDtoMapper authDtoMapper;
+    private final AuthAbuseProtectionService abuseProtectionService;
 
     public AuthController(
             StartAuthUseCase startAuthUseCase,
@@ -47,7 +50,8 @@ public class AuthController {
             RefreshTokenUseCase refreshTokenUseCase,
             LogoutUseCase logoutUseCase,
             JwtPrincipalResolver jwtPrincipalResolver,
-            AuthDtoMapper authDtoMapper
+            AuthDtoMapper authDtoMapper,
+            AuthAbuseProtectionService abuseProtectionService
     ) {
         this.startAuthUseCase = startAuthUseCase;
         this.verifyOtpUseCase = verifyOtpUseCase;
@@ -56,6 +60,7 @@ public class AuthController {
         this.logoutUseCase = logoutUseCase;
         this.jwtPrincipalResolver = jwtPrincipalResolver;
         this.authDtoMapper = authDtoMapper;
+        this.abuseProtectionService = abuseProtectionService;
     }
 
     @PostMapping("/start")
@@ -66,7 +71,7 @@ public class AuthController {
     ) {
         StartAuthUseCase.Result result = startAuthUseCase.execute(new StartAuthUseCase.Command(
                 request.identifier(),
-                clientIp(httpRequest),
+                httpRequest.getRemoteAddr(),
                 clientFingerprint
         ));
         return ApiResponse.ok(authDtoMapper.toResponse(result));
@@ -82,7 +87,7 @@ public class AuthController {
                 request.flowId(),
                 request.otp(),
                 userAgent,
-                clientIp(httpRequest)
+                httpRequest.getRemoteAddr()
         ));
         return ApiResponse.ok(authDtoMapper.toResponse(result));
     }
@@ -104,7 +109,7 @@ public class AuthController {
                                 .toList(),
                         request.marketingConsentAccepted(),
                         userAgent,
-                        clientIp(httpRequest)
+                        httpRequest.getRemoteAddr()
                 )
         );
         return ApiResponse.ok(authDtoMapper.toResponse(result));
@@ -116,10 +121,11 @@ public class AuthController {
             @RequestHeader(value = "User-Agent", required = false) String userAgent,
             HttpServletRequest httpRequest
     ) {
+        abuseProtectionService.enforceRefresh(httpRequest.getRemoteAddr());
         RefreshTokenUseCase.Result result = refreshTokenUseCase.execute(new RefreshTokenUseCase.Command(
                 request.refreshToken(),
                 userAgent,
-                clientIp(httpRequest)
+                httpRequest.getRemoteAddr()
         ));
         return ApiResponse.ok(authDtoMapper.toResponse(result));
     }
@@ -127,8 +133,15 @@ public class AuthController {
     @PostMapping("/logout")
     public ApiResponse<Void> logout(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestBody(required = false) LogoutRequest request
+            @RequestBody(required = false) LogoutRequest request,
+            HttpServletRequest httpRequest
     ) {
+        abuseProtectionService.enforceLogout(httpRequest.getRemoteAddr());
+        boolean noPrincipal = (jwt == null);
+        boolean noRefresh = (request == null || request.refreshToken() == null || request.refreshToken().isBlank());
+        if (noPrincipal && noRefresh) {
+            throw IdentityErrors.refreshTokenRequired();
+        }
         JwtPrincipal principal = jwt == null ? null : jwtPrincipalResolver.resolve(jwt);
         logoutUseCase.execute(new LogoutUseCase.Command(
                 principal == null ? null : principal.accountId(),
@@ -136,17 +149,5 @@ public class AuthController {
                 request == null ? null : request.refreshToken()
         ));
         return ApiResponse.ok(null);
-    }
-
-    private String clientIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
-        }
-        String realIp = request.getHeader("X-Real-IP");
-        if (realIp != null && !realIp.isBlank()) {
-            return realIp.trim();
-        }
-        return request.getRemoteAddr();
     }
 }
