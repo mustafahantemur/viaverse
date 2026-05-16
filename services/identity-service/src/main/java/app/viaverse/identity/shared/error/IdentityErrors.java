@@ -181,6 +181,14 @@ public final class IdentityErrors {
         );
     }
 
+    public static TechnicalException rateLimitBackendUnavailable(Throwable cause) {
+        return new TechnicalException(
+                AppErrorCode.TECHNICAL_ERROR,
+                "Rate-limit backend is unavailable; failing closed",
+                cause
+        );
+    }
+
     public static TechnicalException smsDeliveryRejected() {
         return new TechnicalException(
                 AppErrorCode.TECHNICAL_SMS_DELIVERY_FAILED,
