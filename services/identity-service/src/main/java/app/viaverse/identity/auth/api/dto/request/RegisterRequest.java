@@ -1,4 +1,4 @@
-package app.viaverse.identity.auth.api.dto;
+package app.viaverse.identity.auth.api.dto.request;
 
 import app.viaverse.identity.consent.domain.ConsentType;
 import jakarta.validation.Valid;

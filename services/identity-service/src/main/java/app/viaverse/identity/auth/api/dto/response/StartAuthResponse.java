@@ -1,4 +1,4 @@
-package app.viaverse.identity.auth.api.dto;
+package app.viaverse.identity.auth.api.dto.response;
 
 import app.viaverse.identity.auth.domain.enums.AuthNextStep;
 import app.viaverse.identity.auth.domain.enums.IdentifierType;

@@ -1,6 +1,6 @@
 package app.viaverse.identity.auth.api.mapper;
 
-import app.viaverse.identity.auth.api.dto.SessionView;
+import app.viaverse.identity.auth.api.dto.response.SessionView;
 import app.viaverse.identity.auth.domain.model.AuthSession;
 import java.util.List;
 import java.util.UUID;

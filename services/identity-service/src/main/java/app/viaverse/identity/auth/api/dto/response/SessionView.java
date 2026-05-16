@@ -1,4 +1,4 @@
-package app.viaverse.identity.auth.api.dto;
+package app.viaverse.identity.auth.api.dto.response;
 
 import java.time.Instant;
 import java.util.UUID;

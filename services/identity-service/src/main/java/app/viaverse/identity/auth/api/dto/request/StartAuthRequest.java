@@ -1,4 +1,4 @@
-package app.viaverse.identity.auth.api.dto;
+package app.viaverse.identity.auth.api.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

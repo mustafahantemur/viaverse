@@ -1,13 +1,13 @@
-package app.viaverse.identity.auth.api;
+package app.viaverse.identity.auth.api.controller;
 
-import app.viaverse.identity.auth.api.dto.AuthResponse;
-import app.viaverse.identity.auth.api.dto.LogoutRequest;
-import app.viaverse.identity.auth.api.dto.RefreshRequest;
-import app.viaverse.identity.auth.api.dto.RegisterRequest;
-import app.viaverse.identity.auth.api.dto.StartAuthRequest;
-import app.viaverse.identity.auth.api.dto.StartAuthResponse;
-import app.viaverse.identity.auth.api.dto.VerifyOtpRequest;
-import app.viaverse.identity.auth.api.dto.VerifyOtpResponse;
+import app.viaverse.identity.auth.api.dto.response.AuthResponse;
+import app.viaverse.identity.auth.api.dto.request.LogoutRequest;
+import app.viaverse.identity.auth.api.dto.request.RefreshRequest;
+import app.viaverse.identity.auth.api.dto.request.RegisterRequest;
+import app.viaverse.identity.auth.api.dto.request.StartAuthRequest;
+import app.viaverse.identity.auth.api.dto.response.StartAuthResponse;
+import app.viaverse.identity.auth.api.dto.request.VerifyOtpRequest;
+import app.viaverse.identity.auth.api.dto.response.VerifyOtpResponse;
 import app.viaverse.identity.auth.api.mapper.AuthDtoMapper;
 import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCase;
 import app.viaverse.identity.auth.application.port.in.LogoutUseCase;

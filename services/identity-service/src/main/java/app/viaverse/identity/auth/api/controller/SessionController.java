@@ -1,6 +1,6 @@
-package app.viaverse.identity.auth.api;
+package app.viaverse.identity.auth.api.controller;
 
-import app.viaverse.identity.auth.api.dto.SessionView;
+import app.viaverse.identity.auth.api.dto.response.SessionView;
 import app.viaverse.identity.auth.api.mapper.SessionDtoMapper;
 import app.viaverse.identity.auth.application.port.in.ListSessionsUseCase;
 import app.viaverse.identity.auth.application.port.in.RevokeSessionUseCase;

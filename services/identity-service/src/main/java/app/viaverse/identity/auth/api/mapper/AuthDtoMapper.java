@@ -1,10 +1,10 @@
 package app.viaverse.identity.auth.api.mapper;
 
 import app.viaverse.identity.account.domain.AccountView;
-import app.viaverse.identity.auth.api.dto.AuthResponse;
-import app.viaverse.identity.auth.api.dto.RegistrationRequiredResponse;
-import app.viaverse.identity.auth.api.dto.StartAuthResponse;
-import app.viaverse.identity.auth.api.dto.VerifyOtpResponse;
+import app.viaverse.identity.auth.api.dto.response.AuthResponse;
+import app.viaverse.identity.auth.api.dto.response.RegistrationRequiredResponse;
+import app.viaverse.identity.auth.api.dto.response.StartAuthResponse;
+import app.viaverse.identity.auth.api.dto.response.VerifyOtpResponse;
 import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCase;
 import app.viaverse.identity.auth.application.port.in.RefreshTokenUseCase;
 import app.viaverse.identity.auth.application.port.in.StartAuthUseCase;

@@ -1,4 +1,4 @@
-package app.viaverse.identity.account.api;
+package app.viaverse.identity.account.api.controller;
 
 import app.viaverse.identity.account.api.mapper.AccountDtoMapper;
 import app.viaverse.identity.account.application.port.in.GetCurrentAccountUseCase;
