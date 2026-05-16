@@ -9,6 +9,7 @@ dependencies {
     implementation("org.springframework:spring-aop:7.0.7")
     implementation("org.aspectj:aspectjweaver:1.9.25.1")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server:4.0.6")
+    implementation("org.springframework.boot:spring-boot-starter-actuator:4.0.6")
     implementation("org.springframework.security:spring-security-oauth2-jose")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation(libs.spring.cloud.stream)

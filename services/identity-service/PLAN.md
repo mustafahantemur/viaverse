@@ -124,3 +124,13 @@ Notable revisions from the original checklist:
 | `AppRunner` config validation runs too late (post-startup) | **open** — `AuthConfiguration.validate` is still wired via `ApplicationRunner`; move to `@PostConstruct` on the config class (or an `EnvironmentPostProcessor`) so misconfiguration aborts startup before any bean is exposed. |
 | Pre-existing: device-fingerprint rate-limit bucket reuses `getIpMaxAttempts()` instead of a dedicated `deviceMaxAttempts` knob | **open** — track during step 6 (production-readiness gate). |
 | JWT signing secret has no rotation strategy — single `viaverse.auth.jwt.secret` used indefinitely | **open** — needs `JwtDecoder` that accepts a list of secrets (current + previous N) so the secret can be rotated without invalidating every active session. Treat as a separate phase after step 8. |
+
+---
+
+## Production-readiness gate — Step 6 status
+
+- [x] 6.1 Cache strategy + TTL audit
+- [x] 6.2 Security headers / CORS / JWT posture
+- [x] 6.3 Kafka transactional outbox + producer hardening
+- [x] 6.4 OTel/logging hardening: request/correlation filter restored, use-case spans emitted from `@ObservedAction`, trace/span ids present in action logs, OpenSearch template + ISM retention payloads added
+- [x] 6.5 Health/readiness review: liveness is process-only, readiness depends on database + Valkey, Kafka remains decoupled through the outbox, and an `outbox` health contributor surfaces backlog/terminal failures for operators

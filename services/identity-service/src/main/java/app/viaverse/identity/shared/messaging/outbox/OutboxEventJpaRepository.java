@@ -14,6 +14,14 @@ import org.springframework.data.repository.query.Param;
 
 public interface OutboxEventJpaRepository extends JpaRepository<OutboxEventJpaEntity, UUID> {
 
+    long countByStatus(OutboxEventStatusEnum status);
+
+    @Query("""
+            SELECT MIN(e.createdAt) FROM OutboxEventJpaEntity e
+            WHERE e.status = app.viaverse.identity.shared.messaging.outbox.OutboxEventStatusEnum.PENDING
+            """)
+    Instant findOldestPendingCreatedAt();
+
     /**
      * Claim a batch of pending events that are due. Uses a pessimistic write
      * lock with {@code SKIP LOCKED} so concurrent pollers (multiple service

@@ -10,7 +10,7 @@
 | OTP & reg token | Valkey with TTL |
 | Messaging | Spring Cloud Stream / Kafka publishers for account and session events |
 | Mapping | MapStruct |
-| Logging pipeline | ECS → Fluent Bit → OpenSearch |
+| Logging pipeline | ECS stdout → OpenTelemetry Collector → OpenSearch |
 | Tracing | OpenTelemetry auto-instrumentation |
 | IP extraction | `ClientIpResolver` + explicit trusted proxy config |
 
