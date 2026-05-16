@@ -2,6 +2,7 @@ package app.viaverse.identity.shared.aspect;
 
 import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
+import app.viaverse.identity.shared.error.RefreshTokenReuseDetectedException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
