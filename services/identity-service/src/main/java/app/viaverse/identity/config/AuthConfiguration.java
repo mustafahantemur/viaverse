@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.springframework.boot.ApplicationRunner;
@@ -31,6 +33,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 @Configuration
 @EnableConfigurationProperties(AuthProperties.class)
 public class AuthConfiguration {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthConfiguration.class);
+
     @Bean
     SecureRandom secureRandom() {
         return new SecureRandom();
@@ -71,8 +75,29 @@ public class AuthConfiguration {
     }
 
     @Bean
-    ApplicationRunner authConfigurationValidator(AuthProperties properties, Environment environment) {
-        return args -> validate(properties, environment.getActiveProfiles());
+    ApplicationRunner authConfigurationValidator(
+            AuthProperties properties,
+            HttpProperties httpProperties,
+            Environment environment
+    ) {
+        return args -> {
+            validate(properties, environment.getActiveProfiles());
+            warnIfTrustedProxiesEmptyInNonLocalProfile(httpProperties, environment.getActiveProfiles());
+        };
+    }
+
+    private static void warnIfTrustedProxiesEmptyInNonLocalProfile(
+            HttpProperties httpProperties,
+            String[] activeProfiles
+    ) {
+        if (httpProperties.getTrustedProxies().isEmpty() && !hasLocalOrTestProfile(activeProfiles)) {
+            LOGGER.warn(
+                    "viaverse.http.trusted-proxies is empty in a non-local profile. "
+                            + "ClientIpResolver will report the direct peer (typically the load balancer) "
+                            + "as the client IP. Set VIAVERSE_HTTP_TRUSTED_PROXIES to the upstream proxy "
+                            + "CIDR (e.g. the ALB / CloudFront range) before going to production."
+            );
+        }
     }
 
     public static void validate(AuthProperties properties, String[] activeProfiles) {

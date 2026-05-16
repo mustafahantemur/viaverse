@@ -72,6 +72,8 @@ logging:
 viaverse:
   http:
     trusted-proxies: ${VIAVERSE_HTTP_TRUSTED_PROXIES:}
+    cors:
+      allowed-origins: ${VIAVERSE_HTTP_CORS_ALLOWED_ORIGINS:}
   auth:
     jwt:
       secret: ${IDENTITY_JWT_SECRET:}
