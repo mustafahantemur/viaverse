@@ -104,6 +104,9 @@ public class AuthConfiguration {
                     || isBlank(netgsm.getMessageTemplate())) {
                 throw IdentityErrors.netgsmConfigurationInvalid();
             }
+            if (countOccurrences(netgsm.getMessageTemplate(), "%s") != 1) {
+                throw IdentityErrors.netgsmConfigurationInvalid();
+            }
         }
         if (properties.getSocial().getGoogle().isEnabled()
                 && isBlank(properties.getSocial().getGoogle().getClientId())) {
@@ -121,5 +124,15 @@ public class AuthConfiguration {
 
     private static boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private static int countOccurrences(String haystack, String needle) {
+        int count = 0;
+        int index = 0;
+        while ((index = haystack.indexOf(needle, index)) != -1) {
+            count++;
+            index += needle.length();
+        }
+        return count;
     }
 }
