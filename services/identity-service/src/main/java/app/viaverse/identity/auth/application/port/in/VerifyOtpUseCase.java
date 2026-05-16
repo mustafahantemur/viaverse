@@ -1,6 +1,7 @@
 package app.viaverse.identity.auth.application.port.in;
 
 import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
+import app.viaverse.identity.shared.aspect.AuditableResult;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -20,5 +21,5 @@ public interface VerifyOtpUseCase {
             Instant accessTokenExpiresAt,
             String refreshToken,
             Instant refreshTokenExpiresAt
-    ) {}
+    ) implements AuditableResult {}
 }

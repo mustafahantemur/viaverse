@@ -32,6 +32,8 @@ public class AuditLogAdapter implements AuditLogger {
                 context == null ? null : context.correlationId(),
                 context == null ? null : context.requestId(),
                 context == null ? null : context.source(),
+                context == null ? null : context.sourceIp(),
+                context == null ? null : context.userAgent(),
                 metadataJson(event.metadata()),
                 Instant.now()
         ));

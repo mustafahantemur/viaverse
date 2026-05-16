@@ -5,6 +5,8 @@ import app.viaverse.identity.auth.application.service.AuthSessionIssuer;
 import app.viaverse.identity.auth.application.service.RefreshTokenRotationService;
 import app.viaverse.identity.auth.domain.model.AuthSession;
 import app.viaverse.identity.auth.domain.model.RefreshToken;
+import app.viaverse.identity.shared.audit.AuditEvent;
+import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import app.viaverse.identity.shared.logging.ObservedAction;
 import java.time.Clock;
@@ -31,6 +33,7 @@ public class LogoutUseCaseImpl implements LogoutUseCase {
 
     @Override
     @ObservedAction("auth.logout")
+    @AuditEvent(IdentityAuditEventEnum.LOGOUT)
     public void execute(Command command) {
         Instant now = clock.instant();
         UUID sessionId = null;
