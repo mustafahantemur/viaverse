@@ -1,9 +1,10 @@
 package app.viaverse.identity.config;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.micrometer.core.instrument.config.MeterFilter;
+import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.semconv.ServiceAttributes;
@@ -58,7 +59,7 @@ public class OpenTelemetryConfiguration {
                         io.opentelemetry.api.common.Attributes.builder()
                                 .put(ServiceAttributes.SERVICE_NAME, SERVICE_NAME)
                                 .put(ServiceAttributes.SERVICE_VERSION, serviceVersion)
-                                .put(AttributeKey.stringKey("deployment.environment.name"), deploymentEnvironment)
+                                .put(AttributeKey.stringKey("deployment.environment"), deploymentEnvironment)
                                 .build()));
     }
 
@@ -75,8 +76,13 @@ public class OpenTelemetryConfiguration {
     }
 
     @Bean
-    public Tracer identityTracer() {
-        return GlobalOpenTelemetry.getTracer(SERVICE_NAME, serviceVersion);
+    public Tracer identityTracer(OpenTelemetry openTelemetry) {
+        return openTelemetry.getTracer(SERVICE_NAME, serviceVersion);
+    }
+
+    @Bean
+    public org.springframework.boot.ApplicationRunner installOpenTelemetryLogbackAppender(OpenTelemetry openTelemetry) {
+        return args -> OpenTelemetryAppender.install(openTelemetry);
     }
 
     /**

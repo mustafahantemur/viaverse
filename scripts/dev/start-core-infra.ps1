@@ -174,6 +174,31 @@ function Invoke-OpenSearchJson($method, $url, $bodyPath, [switch] $AllowConflict
     }
 }
 
+function Ensure-DashboardsDataView($dashboardsPort) {
+    $findUrl = "http://localhost:$dashboardsPort/api/saved_objects/_find?type=index-pattern&search_fields=title&search=viaverse-logs-*"
+    $headers = @{ "osd-xsrf" = "true" }
+    $existing = Invoke-RestMethod -Method "GET" -Uri $findUrl -Headers $headers
+    if ($existing.total -gt 0) {
+        Write-Host "OpenSearch Dashboards data view viaverse-logs-* already exists."
+        return
+    }
+
+    $body = @{
+        attributes = @{
+            title = "viaverse-logs-*"
+            timeFieldName = "@timestamp"
+        }
+    } | ConvertTo-Json -Depth 5
+
+    Invoke-RestMethod `
+        -Method "POST" `
+        -Uri "http://localhost:$dashboardsPort/api/saved_objects/index-pattern/viaverse-logs" `
+        -Headers $headers `
+        -ContentType "application/json" `
+        -Body $body | Out-Null
+    Write-Host "Created OpenSearch Dashboards data view viaverse-logs-*."
+}
+
 function Ensure-PostgresDatabases {
     $containerName = "viaverse-postgres"
     $postgresUser = Get-ContainerEnv $containerName "POSTGRES_USER" "viaverse"
@@ -256,10 +281,13 @@ try {
         "PUT" `
         "http://localhost:$opensearchPort/_index_template/viaverse-logs" `
         (Join-Path $opensearchConfigDir "viaverse-logs-template.json")
+    Ensure-DashboardsDataView $dashboardsPort
 
     Write-Host "Local infrastructure is ready."
     Write-Host "OpenSearch: http://localhost:$opensearchPort"
     Write-Host "OpenSearch Dashboards: http://localhost:$dashboardsPort"
+    Write-Host "Prometheus: http://localhost:9090"
+    Write-Host "Jaeger: http://localhost:16686"
     Write-Host "OTLP gRPC: localhost:4317"
     Write-Host "OTLP HTTP: http://localhost:4318"
 }

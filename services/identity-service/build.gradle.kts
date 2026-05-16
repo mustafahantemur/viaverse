@@ -25,8 +25,9 @@ dependencies {
 
     // Observability: Micrometer Tracing -> OpenTelemetry bridge + OTLP exporter.
     // Versions managed by the Spring Boot BOM declared above.
+    implementation("org.springframework.boot:spring-boot-starter-opentelemetry:4.0.6")
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
-    implementation("io.opentelemetry:opentelemetry-exporter-otlp")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:2.27.0-alpha")
 
     testImplementation("org.testcontainers:testcontainers:2.0.4")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.4")

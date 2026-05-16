@@ -69,14 +69,21 @@ management:
     tags:
       application: ${spring.application.name}
   otlp:
-    tracing:
-      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
     metrics:
       export:
         url: ${OTEL_EXPORTER_OTLP_ENDPOINT_METRICS:http://localhost:4318/v1/metrics}
   tracing:
     sampling:
       probability: ${OTEL_TRACES_SAMPLER_ARG:1.0}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+    logging:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:http://localhost:4318/v1/logs}
 
 logging:
   structured:

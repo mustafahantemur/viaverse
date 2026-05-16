@@ -23,6 +23,10 @@ exporters:
     endpoint: jaeger:4317
     tls:
       insecure: true
+  opensearch/logs:
+    http:
+      endpoint: http://opensearch:9200
+    logs_index: viaverse-logs-local
 
 service:
   pipelines:
@@ -34,3 +38,7 @@ service:
       receivers: [otlp]
       processors: [resource/viaverse_local, batch]
       exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [resource/viaverse_local, batch]
+      exporters: [opensearch/logs, debug]

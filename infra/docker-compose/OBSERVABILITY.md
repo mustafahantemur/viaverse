@@ -12,9 +12,11 @@ Every service emits ECS/JSON logs to stdout/stderr and includes:
 - `trace.id` and `span.id` when tracing is active
 - `event.action`, `event.outcome`, and `error.code` for application actions
 
-Fluent Bit tails container stdout logs and ships them to OpenSearch. Services also
-send traces and metrics to the shared OpenTelemetry Collector. Business code does
-not write directly to OpenSearch.
+Fluent Bit tails container stdout logs and ships ECS/JSON application logs to
+OpenSearch. Host-run services can also export Logback events over OTLP to the
+shared OpenTelemetry Collector during local debugging. Services send traces and
+metrics to the same collector. Business code does not write directly to
+OpenSearch.
 
 ## Local startup
 
@@ -25,7 +27,8 @@ not write directly to OpenSearch.
 The main local infra script starts the full developer stack: PostgreSQL, Valkey,
 Kafka, Mailpit, SeaweedFS, OpenSearch, OpenSearch Dashboards, Fluent Bit,
 OpenTelemetry Collector, Prometheus, Jaeger, and Kafka UI. It also applies the
-shared log index template and retention policy.
+shared log index template, retention policy, and the `viaverse-logs-*`
+OpenSearch Dashboards data view used by Discover.
 
 `./scripts/dev/start-observability-local.ps1` remains available when only the
 observability layer needs to be started or refreshed independently.
@@ -51,5 +54,26 @@ retention to match capacity and policy while preserving the same field mappings.
 4. Register the shared `CorrelationIdFilter`.
 5. Use structured action logs with `event.action` and `event.outcome`.
 
-Logs from all services land in the same `viaverse-logs-*` family through Fluent Bit
-and remain filterable by `service.name`.
+Logs from all services land in the same `viaverse-logs-*` family and remain
+filterable by `service.name`. Containerized services arrive through Fluent Bit;
+host-run local services arrive through OTLP log export.
+
+## Where to view telemetry locally
+
+- Logs: OpenSearch Dashboards at `http://localhost:5601`, using the
+  `viaverse-logs-*` data view in Discover.
+- Traces: Jaeger at `http://localhost:16686`.
+- Metrics: Prometheus at `http://localhost:9090`.
+
+OpenTelemetry is the instrumentation and transport standard, not a separate UI.
+In the local stack the collector receives OTLP traffic, forwards traces to
+Jaeger, forwards logs to OpenSearch, and currently keeps the OTLP metrics
+pipeline at debug-export only while Prometheus scrapes service
+`/actuator/prometheus` endpoints directly.
+
+Useful Prometheus starter queries:
+
+- `jvm_memory_used_bytes{service_name="identity-service"}`
+- `http_server_requests_seconds_count{service_name="identity-service"}`
+- `hikaricp_connections_active{service_name="identity-service"}`
+- `sum by (uri, status) (http_server_requests_seconds_count{service_name="identity-service"})`
