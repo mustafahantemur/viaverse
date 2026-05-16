@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import app.viaverse.identity.account.domain.AccountStatusEnum;
+import app.viaverse.identity.account.domain.AccountRoleEnum;
 import app.viaverse.identity.account.domain.model.Account;
 import app.viaverse.identity.auth.application.port.in.SocialSignInUseCase;
 import app.viaverse.identity.auth.application.port.out.AuthLoginFlowRepository;
@@ -36,6 +37,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -156,6 +158,7 @@ class SocialSignInUseCaseImplTest {
         return new Account(
                 accountId,
                 AccountStatusEnum.ACTIVE,
+                Set.of(AccountRoleEnum.USER),
                 "display",
                 "First",
                 "Last",

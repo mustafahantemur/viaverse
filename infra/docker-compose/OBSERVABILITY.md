@@ -12,7 +12,8 @@ Every service emits ECS/JSON logs to stdout/stderr and includes:
 - `trace.id` and `span.id` when tracing is active
 - `event.action`, `event.outcome`, and `error.code` for application actions
 
-Services send telemetry to the shared OpenTelemetry Collector; business code does
+Fluent Bit tails container stdout logs and ships them to OpenSearch. Services also
+send traces and metrics to the shared OpenTelemetry Collector. Business code does
 not write directly to OpenSearch.
 
 ## Local startup
@@ -22,8 +23,8 @@ not write directly to OpenSearch.
 ./scripts/dev/start-observability-local.ps1
 ```
 
-The observability script starts OpenSearch, OpenSearch Dashboards, and the
-collector, then applies the shared log index template and retention policy.
+The observability script starts OpenSearch, OpenSearch Dashboards, Fluent Bit,
+and the collector, then applies the shared log index template and retention policy.
 
 ## Environment promotion
 
@@ -42,9 +43,9 @@ retention to match capacity and policy while preserving the same field mappings.
 
 1. Log ECS/JSON to stdout/stderr.
 2. Set `spring.application.name` and `VIAVERSE_ENV`.
-3. Enable OTLP export to the shared collector.
+3. Enable OTLP export to the shared collector for traces/metrics.
 4. Register the shared `CorrelationIdFilter`.
 5. Use structured action logs with `event.action` and `event.outcome`.
 
-Logs from all services land in the same `viaverse-logs-*` family and remain
-filterable by `service.name`.
+Logs from all services land in the same `viaverse-logs-*` family through Fluent Bit
+and remain filterable by `service.name`.

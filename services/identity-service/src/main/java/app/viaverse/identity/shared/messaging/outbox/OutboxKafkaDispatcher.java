@@ -58,7 +58,11 @@ public class OutboxKafkaDispatcher {
     public void drain() {
         Instant now = clock.instant();
         List<OutboxEventJpaEntity> batch =
-                repository.claimPendingBatch(now, Limit.of(properties.getBatchSize()));
+                repository.findByStatusAndAvailableAtLessThanEqualOrderByAvailableAtAsc(
+                        OutboxEventStatusEnum.PENDING,
+                        now,
+                        Limit.of(properties.getBatchSize())
+                );
         for (OutboxEventJpaEntity row : batch) {
             try {
                 Map<String, String> headers = readHeaders(row.getHeadersJson());

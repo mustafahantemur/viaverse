@@ -16,8 +16,8 @@ Notable revisions from the original checklist:
   instead of introducing a separate `IdentityErrorEnum`.
 - Trusted client IP handling uses `ClientIpResolver` plus explicit trusted-proxy config
   instead of relying on a broad `ForwardedHeaderFilter`.
-- The shared observability stack uses OpenTelemetry Collector and OpenSearch rather
-  than the older Fluent Bit placeholder.
+- The shared observability stack uses Fluent Bit for ECS stdout log shipping and
+  OpenTelemetry Collector for traces/metrics.
 - Event publishing and session cache adapters are now live parts of the architecture,
   not future stubs.
 
@@ -30,7 +30,7 @@ Notable revisions from the original checklist:
 - [x] ~~Create `IdentityErrorEnum` + `ErrorTypeEnum`~~ — superseded: identity errors are constructed via `IdentityErrors` helpers over the shared `AppErrorCode` enum; no per-service error enum exists. `GlobalExceptionHandler` maps `AppException` subclasses to RFC 7807.
 - [x] Create target package skeleton (empty packages matching ARCHITECTURE.md tree)
 - [x] Migration V2 (`V2__identity_auth_onboarding.sql`) is the live schema: device columns on `auth_session`, registration-token fields on `auth_login_flow`, etc. The "drop bucket/challenge" V5 plan is obsolete — those tables were never created in the current schema; Valkey is the single source for OTP/rate-limit state.
-- [x] Add `Clock` bean to `AuthConfiguration`; update `application.yml` with Valkey + Kafka connection config
+- [x] Add shared `Clock` bean via `TimeConfiguration`; update `application.yml` with Valkey + Kafka connection config
 
 ---
 
@@ -87,7 +87,7 @@ Notable revisions from the original checklist:
 
 - [x] `[~A]` `OpenTelemetryConfiguration` + Micrometer Tracing → OTLP exporter
 - [x] `[~B]` `docker-compose.yml` — PostgreSQL, Valkey, Kafka (KRaft), Jaeger, Kafka UI, OpenSearch
-- [x] `[~C]` ~~`fluent-bit.conf`~~ — superseded by OpenTelemetry Collector → OpenSearch pipeline (see PLAN.md revisions note above)
+- [x] `[~C]` `fluent-bit.conf` — ECS stdout log shipping into OpenSearch; OpenTelemetry Collector remains trace/metric transport.
 - [x] `[~D]` Integration tests use Testcontainers for PostgreSQL + Valkey + Kafka
 
 ---
@@ -103,7 +103,7 @@ Notable revisions from the original checklist:
 **Not started:**
 
 - [ ] `[~D]` SMTP email OTP: `SmtpEmailOtpDeliveryAdapter` implements `OtpDeliveryPort` (supports `EMAIL`); slots into the same multi-adapter dispatch.
-- [ ] `[~E]` Admin invitation flow: invite-token issuance, admin-only registration endpoint, `roles: ["ADMIN"]` claim in JWT, role-aware `@PreAuthorize`.
+- [x] `[~E]` Admin invitation flow: invite-token issuance, admin-only registration endpoint, `roles: ["ADMIN"]` claim in JWT, role-aware `@PreAuthorize`.
 
 **Step 8 cutover work for the already-scaffolded items:**
 
@@ -123,7 +123,7 @@ Notable revisions from the original checklist:
 | Marketing consent version hardcoded `"v1"` | **fixed** (`AuthProperties.Consent.marketingVersion`) |
 | `AppRunner` config validation runs too late (post-startup) | **fixed** — `AuthConfiguration` now validates in `@PostConstruct`, before the service starts accepting traffic. |
 | Pre-existing: device-fingerprint rate-limit bucket reuses `getIpMaxAttempts()` instead of a dedicated `deviceMaxAttempts` knob | **fixed** — `auth-start.device-window-seconds` and `auth-start.device-max-attempts` now configure the device bucket independently. |
-| JWT signing secret has no rotation strategy — single `viaverse.auth.jwt.secret` used indefinitely | **open** — needs `JwtDecoder` that accepts a list of secrets (current + previous N) so the secret can be rotated without invalidating every active session. Treat as a separate phase after step 8. |
+| JWT signing secret has no rotation strategy — single `viaverse.auth.jwt.secret` used indefinitely | **fixed** — `viaverse.auth.jwt.previous-secrets` is accepted during the rotation window through `RotatingJwtDecoder`; new tokens are still issued only with the current secret. |
 
 ---
 

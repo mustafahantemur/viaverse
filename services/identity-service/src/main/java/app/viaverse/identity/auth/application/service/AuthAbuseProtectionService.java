@@ -26,8 +26,7 @@ public class AuthAbuseProtectionService {
                 authStart.getIdentifierMaxAttempts(), Duration.ofSeconds(authStart.getIdentifierWindowSeconds()));
         check(RateLimitScopeEnum.AUTH_START_IP, clientIp,
                 authStart.getIpMaxAttempts(), Duration.ofSeconds(authStart.getIpWindowSeconds()));
-        check(RateLimitScopeEnum.AUTH_START_DEVICE, clientFingerprint,
-                authStart.getDeviceMaxAttempts(), Duration.ofSeconds(authStart.getDeviceWindowSeconds()));
+        checkDeviceIfPresent(authStart, clientFingerprint);
         enforceResendCooldown(normalized);
     }
 
@@ -37,8 +36,7 @@ public class AuthAbuseProtectionService {
                 authStart.getIdentifierMaxAttempts(), Duration.ofSeconds(authStart.getIdentifierWindowSeconds()));
         check(RateLimitScopeEnum.AUTH_START_IP, clientIp,
                 authStart.getIpMaxAttempts(), Duration.ofSeconds(authStart.getIpWindowSeconds()));
-        check(RateLimitScopeEnum.AUTH_START_DEVICE, clientFingerprint,
-                authStart.getDeviceMaxAttempts(), Duration.ofSeconds(authStart.getDeviceWindowSeconds()));
+        checkDeviceIfPresent(authStart, clientFingerprint);
     }
 
     public void enforceOtpAttempt(AuthLoginFlow flow, String clientIp) {
@@ -67,9 +65,12 @@ public class AuthAbuseProtectionService {
 
     public void softLockOtp(AuthLoginFlow flow) {
         Duration lockout = Duration.ofSeconds(properties.getRateLimit().getLockout().getDurationSeconds());
-        check(RateLimitScopeEnum.OTP_VERIFY_FLOW, flow.getId().toString(), 0, lockout);
-        check(RateLimitScopeEnum.OTP_VERIFY_IDENTIFIER,
-                flow.getIdentifierType() + ":" + flow.getNormalizedIdentifier(), 0, lockout);
+        primeLockout(RateLimitScopeEnum.OTP_VERIFY_FLOW, flow.getId().toString(), lockout);
+        primeLockout(
+                RateLimitScopeEnum.OTP_VERIFY_IDENTIFIER,
+                flow.getIdentifierType() + ":" + flow.getNormalizedIdentifier(),
+                lockout
+        );
     }
 
     private void enforceResendCooldown(NormalizedIdentifier normalized) {
@@ -88,10 +89,22 @@ public class AuthAbuseProtectionService {
         }
     }
 
+    private void checkDeviceIfPresent(AuthProperties.AuthStart authStart, String clientFingerprint) {
+        if (clientFingerprint == null || clientFingerprint.isBlank()) {
+            return;
+        }
+        check(RateLimitScopeEnum.AUTH_START_DEVICE, clientFingerprint,
+                authStart.getDeviceMaxAttempts(), Duration.ofSeconds(authStart.getDeviceWindowSeconds()));
+    }
+
     private void check(RateLimitScopeEnum scope, String key, int limit, Duration window) {
         RateLimitPort.Result result = rateLimit.incrementAndCheck(scope, key, limit, window);
         if (!result.allowed()) {
             throw new RateLimitExceededException(result.ttlSeconds());
         }
+    }
+
+    private void primeLockout(RateLimitScopeEnum scope, String key, Duration window) {
+        rateLimit.incrementAndCheck(scope, key, 0, window);
     }
 }

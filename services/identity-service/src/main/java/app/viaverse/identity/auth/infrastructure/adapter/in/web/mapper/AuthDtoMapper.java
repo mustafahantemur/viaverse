@@ -6,6 +6,7 @@ import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.Reg
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.StartAuthResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthCompletionResponse;
 import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCase;
+import app.viaverse.identity.auth.application.port.in.CompleteAdminRegistrationUseCase;
 import app.viaverse.identity.auth.application.port.in.RefreshTokenUseCase;
 import app.viaverse.identity.auth.application.port.in.SocialSignInUseCase;
 import app.viaverse.identity.auth.application.port.in.StartAuthUseCase;
@@ -72,6 +73,10 @@ public interface AuthDtoMapper {
 
     @Mapping(target = "nextStep", expression = "java(app.viaverse.identity.auth.domain.enums.AuthNextStepEnum.AUTHENTICATED)")
     @Mapping(target = "account", ignore = true)
+    AuthResponse toResponse(CompleteAdminRegistrationUseCase.Result result);
+
+    @Mapping(target = "nextStep", expression = "java(app.viaverse.identity.auth.domain.enums.AuthNextStepEnum.AUTHENTICATED)")
+    @Mapping(target = "account", ignore = true)
     AuthResponse toResponse(RefreshTokenUseCase.Result result);
 
     /**
@@ -82,6 +87,39 @@ public interface AuthDtoMapper {
     default AuthResponse toAuthResponse(VerifyOtpUseCase.Result result, AccountView account) {
         return new AuthResponse(
                 result.nextStep(),
+                result.accessToken(),
+                result.accessTokenExpiresAt(),
+                result.refreshToken(),
+                result.refreshTokenExpiresAt(),
+                account
+        );
+    }
+
+    default AuthResponse toAuthResponse(SocialSignInUseCase.Result result, AccountView account) {
+        return new AuthResponse(
+                result.nextStep(),
+                result.accessToken(),
+                result.accessTokenExpiresAt(),
+                result.refreshToken(),
+                result.refreshTokenExpiresAt(),
+                account
+        );
+    }
+
+    default AuthResponse toAuthResponse(CompleteRegistrationUseCase.Result result, AccountView account) {
+        return new AuthResponse(
+                AuthNextStepEnum.AUTHENTICATED,
+                result.accessToken(),
+                result.accessTokenExpiresAt(),
+                result.refreshToken(),
+                result.refreshTokenExpiresAt(),
+                account
+        );
+    }
+
+    default AuthResponse toAuthResponse(CompleteAdminRegistrationUseCase.Result result, AccountView account) {
+        return new AuthResponse(
+                AuthNextStepEnum.AUTHENTICATED,
                 result.accessToken(),
                 result.accessTokenExpiresAt(),
                 result.refreshToken(),

@@ -4,6 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import app.viaverse.identity.auth.infrastructure.adapter.out.seed.LocalTestUserSeeder;
+import app.viaverse.identity.auth.infrastructure.security.JwtAccessTokenService;
+import app.viaverse.identity.account.domain.AccountRoleEnum;
+import app.viaverse.identity.account.domain.AccountStatusEnum;
+import app.viaverse.identity.account.infrastructure.adapter.out.persistence.entity.IdentityAccountJpaEntity;
+import app.viaverse.identity.account.infrastructure.adapter.out.persistence.repository.IdentityAccountJpaRepository;
 import app.viaverse.identity.config.AuthConfiguration;
 import app.viaverse.identity.config.AuthProperties;
 import app.viaverse.identity.auth.domain.enums.OtpDeliveryProviderEnum;
@@ -20,6 +25,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.time.Instant;
+import java.util.Set;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +39,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -79,15 +87,29 @@ class IdentityAuthIntegrationTest {
     @Autowired
     private AuthProperties authProperties;
 
+    @Autowired
+    private IdentityAccountJpaRepository accountRepository;
+
+    @Autowired
+    private JwtAccessTokenService jwtAccessTokenService;
+
+    @Autowired
+    private RedisConnectionFactory redisConnectionFactory;
+
     @BeforeEach
     void cleanDatabase() {
+        try (var connection = redisConnectionFactory.getConnection()) {
+            connection.serverCommands().flushDb();
+        }
         jdbcTemplate.execute("DELETE FROM auth_rate_limit_bucket");
+        jdbcTemplate.execute("DELETE FROM admin_invitation");
         jdbcTemplate.execute("DELETE FROM consent_record");
         jdbcTemplate.execute("DELETE FROM auth_refresh_token");
         jdbcTemplate.execute("DELETE FROM auth_session");
         jdbcTemplate.execute("DELETE FROM auth_otp_challenge");
         jdbcTemplate.execute("DELETE FROM auth_login_flow");
         jdbcTemplate.execute("DELETE FROM identity_identifier");
+        jdbcTemplate.execute("DELETE FROM identity_account_role");
         jdbcTemplate.execute("DELETE FROM identity_account");
         jdbcTemplate.execute("DELETE FROM audit_log");
     }
@@ -97,7 +119,7 @@ class IdentityAuthIntegrationTest {
         ResponseEntity<Map> response = startAuth(newEmail());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).containsEntry("IdentifierTypeEnum", "EMAIL");
+        assertThat(response.getBody()).containsEntry("identifierType", "EMAIL");
         assertThat(response.getBody()).containsEntry("nextStep", "OTP_REQUIRED");
         assertThat(response.getBody()).containsEntry("debugOtp", DEBUG_OTP);
         assertThat(response.getBody()).containsKey("flowId");
@@ -162,6 +184,7 @@ class IdentityAuthIntegrationTest {
     void existingUserCanLoginViaOtp() {
         String email = newEmail();
         registerNewUser(email);
+        makeOtpCooldownOld();
 
         ResponseEntity<Map> start = startAuth(email);
         ResponseEntity<Map> verify = post(
@@ -347,7 +370,7 @@ class IdentityAuthIntegrationTest {
     void debugOtpOnlyWorksInLocalOrTestProfiles() {
         ResponseEntity<Map> response = startAuth(newEmail());
         AuthProperties properties = new AuthProperties();
-        properties.getJwt().setSecret("secret");
+        properties.getJwt().setSecret("test-identity-jwt-secret-change-me");
         properties.getDebug().setEnabled(true);
         properties.getDebug().setFixedOtp(DEBUG_OTP);
 
@@ -360,7 +383,7 @@ class IdentityAuthIntegrationTest {
     @Test
     void seedUsersEnabledOutsideLocalOrTestFailsValidation() {
         AuthProperties properties = new AuthProperties();
-        properties.getJwt().setSecret("secret");
+        properties.getJwt().setSecret("test-identity-jwt-secret-change-me");
         properties.getDebug().setSeedTestUsers(true);
 
         assertThatThrownBy(() -> AuthConfiguration.validate(properties, new String[] {"prod"}))
@@ -379,7 +402,7 @@ class IdentityAuthIntegrationTest {
     @Test
     void smsProviderIsNotActiveByDefaultAndRequiresNetgsmConfigurationWhenEnabled() {
         AuthProperties properties = new AuthProperties();
-        properties.getJwt().setSecret("secret");
+        properties.getJwt().setSecret("test-identity-jwt-secret-change-me");
 
         assertThat(properties.getOtp().getDelivery().getProvider()).isEqualTo(OtpDeliveryProviderEnum.DEBUG);
         assertThat(properties.getSms().getProvider()).isEqualTo(SmsProviderEnum.NONE);
@@ -516,6 +539,35 @@ class IdentityAuthIntegrationTest {
         assertThat(response.getBody()).containsEntry("code", "VALIDATION_FAILED");
     }
 
+    @Test
+    void adminInvitationRequiresAdminRole() {
+        Map<String, Object> registered = registerNewUser(newEmail());
+
+        ResponseEntity<Map> response = post(
+                "/api/v1/admin/invitations",
+                Map.of(),
+                (String) registered.get("accessToken")
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void adminInvitationCreatesAdminAccountAndCannotBeReused() {
+        String adminToken = issueAdminInvitationAsSeededAdmin();
+        Map<String, Object> verified = verifyNewUser(newEmail());
+        Map<String, Object> request = registrationRequest((String) verified.get("registrationToken"));
+        request.put("invitationToken", adminToken);
+
+        ResponseEntity<Map> registerAdmin = post("/api/v1/auth/register-admin", request);
+        ResponseEntity<Map> reuse = post("/api/v1/auth/register-admin", request);
+
+        assertThat(registerAdmin.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(reuse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(jwtRoles((String) registerAdmin.getBody().get("accessToken")))
+                .containsExactlyInAnyOrder("USER", "ADMIN");
+    }
+
     private ResponseEntity<Map> startAuth(String email) {
         return post("/api/v1/auth/start", Map.of("identifier", email));
     }
@@ -560,6 +612,62 @@ class IdentityAuthIntegrationTest {
 
     private String newEmail() {
         return "identity-" + UUID.randomUUID() + "@example.com";
+    }
+
+    private String issueAdminInvitationAsSeededAdmin() {
+        Instant now = Instant.now();
+        UUID adminId = UUID.randomUUID();
+        accountRepository.save(new IdentityAccountJpaEntity(
+                adminId,
+                AccountStatusEnum.ACTIVE,
+                Set.of(AccountRoleEnum.USER, AccountRoleEnum.ADMIN),
+                "Ops Admin",
+                "Ops",
+                "Admin",
+                true,
+                now,
+                now
+        ));
+        UUID sessionId = UUID.randomUUID();
+        jdbcTemplate.update(
+                """
+                        INSERT INTO auth_session (
+                            id, account_id, status, issued_at, expires_at,
+                            user_agent, created_at, updated_at
+                        ) VALUES (?, ?, 'ACTIVE', ?, ?, ?, ?, ?)
+                        """,
+                sessionId,
+                adminId,
+                java.sql.Timestamp.from(now),
+                java.sql.Timestamp.from(now.plusSeconds(3600)),
+                "test",
+                java.sql.Timestamp.from(now),
+                java.sql.Timestamp.from(now)
+        );
+        String accessToken = jwtAccessTokenService.issue(
+                adminId,
+                sessionId,
+                Set.of(AccountRoleEnum.USER, AccountRoleEnum.ADMIN),
+                now
+        );
+        ResponseEntity<Map> response = post(
+                "/api/v1/admin/invitations",
+                Map.of(),
+                accessToken
+        );
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        return (String) response.getBody().get("invitationToken");
+    }
+
+    private List<String> jwtRoles(String token) {
+        try {
+            String payload = token.split("\\.")[1];
+            byte[] decoded = java.util.Base64.getUrlDecoder().decode(payload);
+            Map<String, Object> claims = OBJECT_MAPPER.readValue(decoded, new TypeReference<>() {});
+            return (List<String>) claims.get("roles");
+        } catch (Exception exception) {
+            throw new IllegalStateException(exception);
+        }
     }
 
     private ResponseEntity<Map> post(String path, Object body) {
@@ -628,6 +736,10 @@ class IdentityAuthIntegrationTest {
 
     private void makeOtpCooldownOld() {
         jdbcTemplate.execute("UPDATE auth_otp_challenge SET created_at = now() - interval '120 seconds'");
+        try (var connection = redisConnectionFactory.getConnection()) {
+            connection.keyCommands().keys("rl:auth_start_identifier:resend:*".getBytes())
+                    .forEach(connection.keyCommands()::del);
+        }
     }
 
     private void expireOtpFlows() {

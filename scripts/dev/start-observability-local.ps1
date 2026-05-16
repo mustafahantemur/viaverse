@@ -111,7 +111,7 @@ try {
         Write-Host "Using example env file: $envFile"
     }
 
-    docker compose --env-file $envFile --profile observability up -d opensearch opensearch-dashboards otel-collector
+    docker compose --env-file $envFile --profile observability up -d opensearch opensearch-dashboards fluent-bit otel-collector
     if ($LASTEXITCODE -ne 0) {
         Fail "Docker Compose could not start the local observability stack."
     }

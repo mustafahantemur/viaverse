@@ -112,9 +112,6 @@ public final class ObservedActionAspect {
         for (Map.Entry<String, Object> entry : ActionLogContext.snapshot().entrySet()) {
             builder.addKeyValue(entry.getKey(), entry.getValue());
         }
-        if (throwable != null) {
-            builder.setCause(throwable);
-        }
         builder.log(action + " " + outcome);
     }
 }

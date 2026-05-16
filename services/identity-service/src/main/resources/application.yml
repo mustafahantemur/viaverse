@@ -102,6 +102,7 @@ viaverse:
   auth:
     jwt:
       secret: ${IDENTITY_JWT_SECRET:}
+      previous-secrets: ${IDENTITY_JWT_PREVIOUS_SECRETS:}
       access-token-ttl: ${IDENTITY_JWT_ACCESS_TOKEN_TTL:PT15M}
     refresh-token-ttl: ${IDENTITY_REFRESH_TOKEN_TTL:P30D}
     otp:
@@ -111,6 +112,8 @@ viaverse:
         provider: ${VIAVERSE_OTP_DELIVERY_PROVIDER:debug}
     registration-token:
       ttl: ${IDENTITY_REGISTRATION_TOKEN_TTL:PT30M}
+    admin-invitation:
+      ttl: ${IDENTITY_ADMIN_INVITATION_TTL:P7D}
     sms:
       provider: ${VIAVERSE_SMS_PROVIDER:none}
       netgsm:
@@ -118,7 +121,7 @@ viaverse:
         username: ${NETGSM_USERNAME:}
         password: ${NETGSM_PASSWORD:}
         header: ${NETGSM_HEADER:}
-        message-template: ${NETGSM_MESSAGE_TEMPLATE:Viaverse verification code: %s}
+        message-template: "${NETGSM_MESSAGE_TEMPLATE:Viaverse verification code: %s}"
     social:
       google:
         enabled: ${VIAVERSE_SOCIAL_GOOGLE_ENABLED:false}

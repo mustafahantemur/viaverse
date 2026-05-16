@@ -25,7 +25,9 @@ public class OutboxHealthIndicator implements HealthIndicator {
     public Health health() {
         long pendingCount = repository.countByStatus(OutboxEventStatusEnum.PENDING);
         long failedCount = repository.countByStatus(OutboxEventStatusEnum.FAILED);
-        Instant oldestPendingCreatedAt = repository.findOldestPendingCreatedAt();
+        Instant oldestPendingCreatedAt = repository.findFirstByStatusOrderByCreatedAtAsc(OutboxEventStatusEnum.PENDING)
+                .map(OutboxEventJpaEntity::getCreatedAt)
+                .orElse(null);
 
         Health.Builder builder = failedCount > 0 ? Health.down() : Health.up();
         builder.withDetail("pendingCount", pendingCount)

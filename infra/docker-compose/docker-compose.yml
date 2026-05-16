@@ -114,7 +114,6 @@ services:
     user: "0:0"
     command: ["--config=/etc/otelcol/config.yaml"]
     depends_on:
-      - opensearch
       - jaeger
     environment:
       VIAVERSE_ENV: ${VIAVERSE_ENV:-local}
@@ -123,7 +122,20 @@ services:
       - "${OTEL_HTTP_PORT:-4318}:4318"
     volumes:
       - ./otel-collector.yml:/etc/otelcol/config.yaml:ro
+    profiles: ["observability"]
+
+  fluent-bit:
+    image: fluent/fluent-bit:4.1.0
+    container_name: viaverse-fluent-bit
+    depends_on:
+      - opensearch
+    environment:
+      VIAVERSE_ENV: ${VIAVERSE_ENV:-local}
+    volumes:
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - fluent-bit-state:/fluent-bit/state
     profiles: ["observability"]
 
   prometheus:
@@ -189,3 +201,4 @@ volumes:
   seaweedfs-data:
   prometheus-data:
   opensearch-data:
+  fluent-bit-state:

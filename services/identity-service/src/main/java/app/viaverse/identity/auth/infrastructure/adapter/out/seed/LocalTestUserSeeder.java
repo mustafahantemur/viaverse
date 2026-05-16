@@ -1,6 +1,7 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.seed;
 
 import app.viaverse.identity.account.domain.AccountStatusEnum;
+import app.viaverse.identity.account.domain.AccountRoleEnum;
 import app.viaverse.identity.account.infrastructure.adapter.out.persistence.entity.IdentityAccountJpaEntity;
 import app.viaverse.identity.account.infrastructure.adapter.out.persistence.repository.IdentityAccountJpaRepository;
 import app.viaverse.identity.auth.domain.value.NormalizedIdentifier;
@@ -98,6 +99,7 @@ public class LocalTestUserSeeder implements ApplicationRunner {
         accountRepository.save(new IdentityAccountJpaEntity(
                 accountId,
                 AccountStatusEnum.ACTIVE,
+                Set.of(AccountRoleEnum.USER),
                 displayName,
                 firstName,
                 lastName,
