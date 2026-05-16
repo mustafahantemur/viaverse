@@ -4,10 +4,13 @@ import app.viaverse.observability.correlation.CorrelationIds;
 import app.viaverse.identity.shared.error.RateLimitExceededException;
 import app.viaverse.shared.kernel.error.AppErrorCode;
 import app.viaverse.shared.kernel.error.AppException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.Map;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -23,6 +26,7 @@ public final class ObservedActionAspect {
     public Object observe(ProceedingJoinPoint joinPoint, ObservedAction observedAction) throws Throwable {
         long startedAt = System.nanoTime();
         try {
+            captureLogParams(joinPoint);
             Object result = joinPoint.proceed();
             log(observedAction.value(), "success", null, startedAt, null);
             return result;
@@ -34,6 +38,22 @@ public final class ObservedActionAspect {
             throw throwable;
         } finally {
             ActionLogContext.clear();
+        }
+    }
+
+    private void captureLogParams(ProceedingJoinPoint joinPoint) {
+        if (!(joinPoint.getSignature() instanceof MethodSignature methodSignature)) {
+            return;
+        }
+        Method method = methodSignature.getMethod();
+        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+        Object[] args = joinPoint.getArgs();
+        for (int i = 0; i < parameterAnnotations.length; i++) {
+            for (Annotation annotation : parameterAnnotations[i]) {
+                if (annotation instanceof LogParam logParam && args[i] != null) {
+                    ActionLogContext.put(logParam.value(), args[i]);
+                }
+            }
         }
     }
 
