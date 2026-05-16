@@ -62,6 +62,10 @@ exporters:
     logs_index: viaverse-logs-local
     mapping:
       mode: ecs
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
 
 service:
   pipelines:
@@ -72,7 +76,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [resource/viaverse_local, batch]
-      exporters: [debug]
+      exporters: [otlp/jaeger, debug]
     metrics:
       receivers: [otlp]
       processors: [resource/viaverse_local, batch]
