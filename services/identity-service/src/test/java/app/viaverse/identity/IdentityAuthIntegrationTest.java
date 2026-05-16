@@ -8,6 +8,7 @@ import app.viaverse.identity.config.AuthConfiguration;
 import app.viaverse.identity.config.AuthProperties;
 import app.viaverse.identity.auth.domain.enums.OtpDeliveryProvider;
 import app.viaverse.identity.auth.domain.enums.SmsProvider;
+import app.viaverse.identity.support.IdentityTestcontainers;
 import app.viaverse.shared.kernel.error.TechnicalException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +34,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -51,6 +54,18 @@ import org.springframework.test.context.ContextConfiguration;
 class IdentityAuthIntegrationTest {
     private static final String DEBUG_OTP = "111111";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    @DynamicPropertySource
+    static void registerContainerProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", IdentityTestcontainers.POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", IdentityTestcontainers.POSTGRES::getUsername);
+        registry.add("spring.datasource.password", IdentityTestcontainers.POSTGRES::getPassword);
+        registry.add("spring.data.redis.host", IdentityTestcontainers.VALKEY::getHost);
+        registry.add("spring.data.redis.port",
+                () -> IdentityTestcontainers.VALKEY.getMappedPort(6379));
+        registry.add("spring.kafka.bootstrap-servers",
+                IdentityTestcontainers.KAFKA::getBootstrapServers);
+    }
 
     @LocalServerPort
     private int port;
@@ -619,11 +634,12 @@ class IdentityAuthIntegrationTest {
     static class FlywayInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override
         public void initialize(ConfigurableApplicationContext applicationContext) {
-            String url = applicationContext.getEnvironment().getProperty("spring.datasource.url");
-            String username = applicationContext.getEnvironment().getProperty("spring.datasource.username");
-            String password = applicationContext.getEnvironment().getProperty("spring.datasource.password");
             Flyway.configure()
-                    .dataSource(url, username, password)
+                    .dataSource(
+                            IdentityTestcontainers.POSTGRES.getJdbcUrl(),
+                            IdentityTestcontainers.POSTGRES.getUsername(),
+                            IdentityTestcontainers.POSTGRES.getPassword()
+                    )
                     .locations("classpath:db/migration")
                     .load()
                     .migrate();
