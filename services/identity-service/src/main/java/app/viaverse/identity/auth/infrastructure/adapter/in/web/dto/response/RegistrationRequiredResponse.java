@@ -7,5 +7,5 @@ public record RegistrationRequiredResponse(
         AuthNextStepEnum nextStep,
         String registrationToken,
         Instant registrationExpiresAt
-) implements VerifyOtpResponse {
+) implements AuthCompletionResponse {
 }

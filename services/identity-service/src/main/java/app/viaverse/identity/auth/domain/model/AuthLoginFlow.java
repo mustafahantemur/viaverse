@@ -80,6 +80,34 @@ public final class AuthLoginFlow {
         );
     }
 
+    /**
+     * Factory for identities already verified by an external IdP (e.g. Google, Apple).
+     * Lands in {@link LoginFlowStatusEnum#EXTERNAL_VERIFIED} to preserve the invariant
+     * that {@code OTP_VERIFIED} means an OTP challenge was actually consumed.
+     */
+    public static AuthLoginFlow issueExternallyVerified(
+            UUID id,
+            IdentifierTypeEnum identifierType,
+            String normalizedIdentifier,
+            UUID accountId,
+            Instant expiresAt,
+            Instant now
+    ) {
+        return new AuthLoginFlow(
+                id,
+                identifierType,
+                normalizedIdentifier,
+                accountId,
+                LoginFlowStatusEnum.EXTERNAL_VERIFIED,
+                null,
+                null,
+                expiresAt,
+                null,
+                now,
+                now
+        );
+    }
+
     public UUID getId() {
         return id;
     }

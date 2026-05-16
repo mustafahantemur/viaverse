@@ -11,5 +11,5 @@ public record AuthResponse(
         String refreshToken,
         Instant refreshTokenExpiresAt,
         AccountView account
-) implements VerifyOtpResponse {
+) implements AuthCompletionResponse {
 }

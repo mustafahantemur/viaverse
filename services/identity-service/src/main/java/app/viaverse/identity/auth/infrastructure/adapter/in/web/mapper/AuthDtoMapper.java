@@ -4,9 +4,10 @@ import app.viaverse.identity.account.domain.AccountView;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.RegistrationRequiredResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.StartAuthResponse;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.VerifyOtpResponse;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthCompletionResponse;
 import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCase;
 import app.viaverse.identity.auth.application.port.in.RefreshTokenUseCase;
+import app.viaverse.identity.auth.application.port.in.SocialSignInUseCase;
 import app.viaverse.identity.auth.application.port.in.StartAuthUseCase;
 import app.viaverse.identity.auth.application.port.in.VerifyOtpUseCase;
 import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
@@ -29,7 +30,25 @@ public interface AuthDtoMapper {
      * details should call the richer {@link #toAuthResponse} overload), and
      * REGISTRATION_REQUIRED maps to {@link RegistrationRequiredResponse}.
      */
-    default VerifyOtpResponse toResponse(VerifyOtpUseCase.Result result) {
+    default AuthCompletionResponse toResponse(VerifyOtpUseCase.Result result) {
+        if (result.nextStep() == AuthNextStepEnum.REGISTRATION_REQUIRED) {
+            return new RegistrationRequiredResponse(
+                    result.nextStep(),
+                    result.registrationToken(),
+                    result.registrationExpiresAt()
+            );
+        }
+        return new AuthResponse(
+                result.nextStep(),
+                result.accessToken(),
+                result.accessTokenExpiresAt(),
+                result.refreshToken(),
+                result.refreshTokenExpiresAt(),
+                null
+        );
+    }
+
+    default AuthCompletionResponse toResponse(SocialSignInUseCase.Result result) {
         if (result.nextStep() == AuthNextStepEnum.REGISTRATION_REQUIRED) {
             return new RegistrationRequiredResponse(
                     result.nextStep(),

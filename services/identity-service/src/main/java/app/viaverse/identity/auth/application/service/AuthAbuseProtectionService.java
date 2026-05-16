@@ -31,6 +31,16 @@ public class AuthAbuseProtectionService {
         enforceResendCooldown(normalized);
     }
 
+    public void enforceSocialStart(NormalizedIdentifier normalized, String clientIp, String clientFingerprint) {
+        AuthProperties.AuthStart authStart = properties.getRateLimit().getAuthStart();
+        check(RateLimitScopeEnum.AUTH_START_IDENTIFIER, normalized.type() + ":" + normalized.value(),
+                authStart.getIdentifierMaxAttempts(), Duration.ofSeconds(authStart.getIdentifierWindowSeconds()));
+        check(RateLimitScopeEnum.AUTH_START_IP, clientIp,
+                authStart.getIpMaxAttempts(), Duration.ofSeconds(authStart.getIpWindowSeconds()));
+        check(RateLimitScopeEnum.AUTH_START_DEVICE, clientFingerprint,
+                authStart.getIpMaxAttempts(), Duration.ofSeconds(authStart.getIpWindowSeconds()));
+    }
+
     public void enforceOtpAttempt(AuthLoginFlow flow, String clientIp) {
         AuthProperties.OtpVerify otpVerify = properties.getRateLimit().getOtpVerify();
         String flowKey = flow.getId().toString();

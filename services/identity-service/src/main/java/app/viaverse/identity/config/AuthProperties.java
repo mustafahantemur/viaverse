@@ -141,9 +141,19 @@ public class AuthProperties {
     }
 
     public static class Netgsm {
+        private String endpoint = "https://api.netgsm.com.tr/sms/send/get";
         private String username = "";
         private String password = "";
         private String header = "";
+        private String messageTemplate = "Viaverse verification code: %s";
+
+        public String getEndpoint() {
+            return endpoint;
+        }
+
+        public void setEndpoint(String endpoint) {
+            this.endpoint = endpoint;
+        }
 
         public String getUsername() {
             return username;
@@ -168,12 +178,19 @@ public class AuthProperties {
         public void setHeader(String header) {
             this.header = header;
         }
+
+        public String getMessageTemplate() {
+            return messageTemplate;
+        }
+
+        public void setMessageTemplate(String messageTemplate) {
+            this.messageTemplate = messageTemplate;
+        }
     }
 
     public static class Social {
         private final SocialProvider google = new SocialProvider();
         private final SocialProvider apple = new SocialProvider();
-        private final SocialProvider instagram = new SocialProvider();
 
         public SocialProvider getGoogle() {
             return google;
@@ -181,10 +198,6 @@ public class AuthProperties {
 
         public SocialProvider getApple() {
             return apple;
-        }
-
-        public SocialProvider getInstagram() {
-            return instagram;
         }
     }
 

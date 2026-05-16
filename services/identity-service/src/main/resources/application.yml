@@ -81,9 +81,11 @@ viaverse:
     sms:
       provider: ${VIAVERSE_SMS_PROVIDER:none}
       netgsm:
+        endpoint: ${NETGSM_ENDPOINT:https://api.netgsm.com.tr/sms/send/get}
         username: ${NETGSM_USERNAME:}
         password: ${NETGSM_PASSWORD:}
         header: ${NETGSM_HEADER:}
+        message-template: ${NETGSM_MESSAGE_TEMPLATE:Viaverse verification code: %s}
     social:
       google:
         enabled: ${VIAVERSE_SOCIAL_GOOGLE_ENABLED:false}

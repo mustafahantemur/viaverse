@@ -4,6 +4,7 @@ import app.viaverse.identity.auth.infrastructure.security.JwtAccessTokenService;
 import app.viaverse.identity.auth.infrastructure.security.IdentityJwtValidator;
 import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
 import app.viaverse.identity.auth.domain.enums.OtpDeliveryProviderEnum;
+import app.viaverse.identity.auth.domain.enums.SmsProviderEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import java.nio.charset.StandardCharsets;
@@ -92,11 +93,33 @@ public class AuthConfiguration {
             throw IdentityErrors.debugOtpFixedValueRequired();
         }
         if (properties.getOtp().getDelivery().getProvider() == OtpDeliveryProviderEnum.SMS) {
-            throw IdentityErrors.smsProviderDisabled();
+            if (properties.getSms().getProvider() != SmsProviderEnum.NETGSM) {
+                throw IdentityErrors.smsProviderDisabled();
+            }
+            AuthProperties.Netgsm netgsm = properties.getSms().getNetgsm();
+            if (isBlank(netgsm.getEndpoint())
+                    || isBlank(netgsm.getUsername())
+                    || isBlank(netgsm.getPassword())
+                    || isBlank(netgsm.getHeader())
+                    || isBlank(netgsm.getMessageTemplate())) {
+                throw IdentityErrors.netgsmConfigurationInvalid();
+            }
+        }
+        if (properties.getSocial().getGoogle().isEnabled()
+                && isBlank(properties.getSocial().getGoogle().getClientId())) {
+            throw IdentityErrors.socialProviderConfigurationInvalid("Google");
+        }
+        if (properties.getSocial().getApple().isEnabled()
+                && isBlank(properties.getSocial().getApple().getClientId())) {
+            throw IdentityErrors.socialProviderConfigurationInvalid("Apple");
         }
     }
 
     private static boolean hasLocalOrTestProfile(String[] activeProfiles) {
         return Arrays.stream(activeProfiles).anyMatch(profile -> profile.equals("local") || profile.equals("test"));
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

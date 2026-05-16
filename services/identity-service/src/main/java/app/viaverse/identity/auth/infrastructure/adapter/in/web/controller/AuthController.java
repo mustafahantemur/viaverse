@@ -4,17 +4,20 @@ import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.Aut
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.LogoutRequest;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.RefreshRequest;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.RegisterRequest;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.SocialSignInRequest;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.StartAuthRequest;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.StartAuthResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.VerifyOtpRequest;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.VerifyOtpResponse;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthCompletionResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.mapper.AuthDtoMapper;
 import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCase;
 import app.viaverse.identity.auth.application.port.in.LogoutUseCase;
 import app.viaverse.identity.auth.application.port.in.RefreshTokenUseCase;
+import app.viaverse.identity.auth.application.port.in.SocialSignInUseCase;
 import app.viaverse.identity.auth.application.port.in.StartAuthUseCase;
 import app.viaverse.identity.auth.application.port.in.VerifyOtpUseCase;
 import app.viaverse.identity.auth.application.service.AuthAbuseProtectionService;
+import app.viaverse.identity.auth.domain.enums.SocialAuthProviderEnum;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
 import app.viaverse.identity.consent.domain.ConsentInput;
@@ -26,6 +29,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final StartAuthUseCase startAuthUseCase;
+    private final SocialSignInUseCase socialSignInUseCase;
     private final VerifyOtpUseCase verifyOtpUseCase;
     private final CompleteRegistrationUseCase completeRegistrationUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
@@ -47,6 +52,7 @@ public class AuthController {
 
     public AuthController(
             StartAuthUseCase startAuthUseCase,
+            SocialSignInUseCase socialSignInUseCase,
             VerifyOtpUseCase verifyOtpUseCase,
             CompleteRegistrationUseCase completeRegistrationUseCase,
             RefreshTokenUseCase refreshTokenUseCase,
@@ -57,6 +63,7 @@ public class AuthController {
             ClientIpResolver clientIpResolver
     ) {
         this.startAuthUseCase = startAuthUseCase;
+        this.socialSignInUseCase = socialSignInUseCase;
         this.verifyOtpUseCase = verifyOtpUseCase;
         this.completeRegistrationUseCase = completeRegistrationUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
@@ -82,7 +89,7 @@ public class AuthController {
     }
 
     @PostMapping("/verify-otp")
-    public ApiResponse<VerifyOtpResponse> verifyOtp(
+    public ApiResponse<AuthCompletionResponse> verifyOtp(
             @Valid @RequestBody VerifyOtpRequest request,
             @RequestHeader(value = "User-Agent", required = false) String userAgent,
             HttpServletRequest httpRequest
@@ -92,6 +99,25 @@ public class AuthController {
                 request.otp(),
                 userAgent,
                 clientIpResolver.resolve(httpRequest)
+        ));
+        return ApiResponse.ok(authDtoMapper.toResponse(result));
+    }
+
+    @PostMapping("/social/{provider}")
+    public ApiResponse<AuthCompletionResponse> socialSignIn(
+            @PathVariable SocialAuthProviderEnum provider,
+            @Valid @RequestBody SocialSignInRequest request,
+            @RequestHeader(value = "User-Agent", required = false) String userAgent,
+            @RequestHeader(value = "X-Client-Fingerprint", required = false) String clientFingerprint,
+            HttpServletRequest httpRequest
+    ) {
+        SocialSignInUseCase.Result result = socialSignInUseCase.execute(new SocialSignInUseCase.Command(
+                provider,
+                request.idToken(),
+                request.nonce(),
+                userAgent,
+                clientIpResolver.resolve(httpRequest),
+                clientFingerprint
         ));
         return ApiResponse.ok(authDtoMapper.toResponse(result));
     }

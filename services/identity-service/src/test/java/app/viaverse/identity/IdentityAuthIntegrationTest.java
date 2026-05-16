@@ -377,7 +377,7 @@ class IdentityAuthIntegrationTest {
     }
 
     @Test
-    void smsProviderIsNotActiveByDefaultAndFailsIfEnabledBeforeImplementation() {
+    void smsProviderIsNotActiveByDefaultAndRequiresNetgsmConfigurationWhenEnabled() {
         AuthProperties properties = new AuthProperties();
         properties.getJwt().setSecret("secret");
 
@@ -387,7 +387,12 @@ class IdentityAuthIntegrationTest {
         properties.getOtp().getDelivery().setProvider(OtpDeliveryProviderEnum.SMS);
         assertThatThrownBy(() -> AuthConfiguration.validate(properties, new String[] {"local"}))
                 .isInstanceOf(TechnicalException.class)
-                .hasMessageContaining("SMS OTP delivery is not implemented yet");
+                .hasMessageContaining("SMS OTP provider is disabled");
+
+        properties.getSms().setProvider(SmsProviderEnum.NETGSM);
+        assertThatThrownBy(() -> AuthConfiguration.validate(properties, new String[] {"local"}))
+                .isInstanceOf(TechnicalException.class)
+                .hasMessageContaining("NetGSM SMS configuration is incomplete");
     }
 
     @Test
@@ -396,7 +401,6 @@ class IdentityAuthIntegrationTest {
 
         assertThat(properties.getSocial().getGoogle().isEnabled()).isFalse();
         assertThat(properties.getSocial().getApple().isEnabled()).isFalse();
-        assertThat(properties.getSocial().getInstagram().isEnabled()).isFalse();
     }
 
     @Test

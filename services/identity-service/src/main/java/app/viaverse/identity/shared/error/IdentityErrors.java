@@ -98,6 +98,18 @@ public final class IdentityErrors {
         return unauthorized(AppErrorCode.AUTH_ACCOUNT_NOT_ACTIVE, "Account is not active");
     }
 
+    public static IdentityException invalidSocialToken() {
+        return unauthorized(AppErrorCode.AUTH_INVALID_SOCIAL_TOKEN, "Invalid social identity token");
+    }
+
+    public static IdentityException providerDisabled(String provider) {
+        return badRequest(
+                AppErrorCode.AUTH_PROVIDER_DISABLED,
+                "Authentication provider is disabled",
+                Map.of("provider", provider)
+        );
+    }
+
     public static ValidationException identifierRequired() {
         return new ValidationException("Identifier is required", Map.of("identifier", "must not be blank"));
     }
@@ -133,8 +145,16 @@ public final class IdentityErrors {
     public static TechnicalException smsProviderDisabled() {
         return new TechnicalException(
                 AppErrorCode.AUTH_PROVIDER_DISABLED,
-                "SMS OTP delivery is not implemented yet"
+                "SMS OTP provider is disabled"
         );
+    }
+
+    public static TechnicalException netgsmConfigurationInvalid() {
+        return technicalConfiguration("NetGSM SMS configuration is incomplete");
+    }
+
+    public static TechnicalException socialProviderConfigurationInvalid(String provider) {
+        return technicalConfiguration(provider + " social auth configuration is incomplete");
     }
 
     public static TechnicalException tokenHashFailed(Throwable cause) {
@@ -150,6 +170,21 @@ public final class IdentityErrors {
                 AppErrorCode.TECHNICAL_JWT_ENCODING_FAILED,
                 "Unable to encode access token",
                 cause
+        );
+    }
+
+    public static TechnicalException smsDeliveryFailed(Throwable cause) {
+        return new TechnicalException(
+                AppErrorCode.TECHNICAL_SMS_DELIVERY_FAILED,
+                "Unable to deliver SMS OTP",
+                cause
+        );
+    }
+
+    public static TechnicalException smsDeliveryRejected() {
+        return new TechnicalException(
+                AppErrorCode.TECHNICAL_SMS_DELIVERY_FAILED,
+                "SMS provider rejected OTP delivery"
         );
     }
 
