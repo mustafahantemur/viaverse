@@ -111,7 +111,7 @@ class IdentityAuthIntegrationTest {
 
         assertThat(verified).containsEntry("nextStep", "REGISTRATION_REQUIRED");
         assertThat(verified).containsKey("registrationToken");
-        assertThat(verified).containsKey("expiresAt");
+        assertThat(verified).containsKey("registrationExpiresAt");
     }
 
     @Test
@@ -121,7 +121,7 @@ class IdentityAuthIntegrationTest {
         assertThat(registered).containsEntry("nextStep", "AUTHENTICATED");
         assertThat(registered.get("accessToken")).isInstanceOf(String.class);
         assertThat(registered.get("refreshToken")).isInstanceOf(String.class);
-        assertThat(registered).containsEntry("expiresIn", 900);
+        assertThat(registered).containsKey("accessTokenExpiresAt");
         assertThat((Map<String, Object>) registered.get("account")).containsEntry("profileCompleted", true);
     }
 
@@ -324,7 +324,7 @@ class IdentityAuthIntegrationTest {
         ResponseEntity<Map> logout = post("/api/v1/auth/logout", Map.of(), accessToken);
         ResponseEntity<Map> me = get("/api/v1/me", accessToken);
 
-        assertThat(logout.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(logout.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(me.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
@@ -593,9 +593,14 @@ class IdentityAuthIntegrationTest {
                 ? Map.of()
                 : OBJECT_MAPPER.readValue(response.body(), new TypeReference<>() {
                 });
+        HttpStatus status = HttpStatus.valueOf(response.statusCode());
+        if (status.is2xxSuccessful() && body.containsKey("success") && body.containsKey("data")) {
+            Object data = body.get("data");
+            body = data instanceof Map ? (Map<String, Object>) data : Map.of();
+        }
         HttpHeaders headers = new HttpHeaders();
         response.headers().map().forEach(headers::put);
-        return new ResponseEntity<>(body, headers, HttpStatus.valueOf(response.statusCode()));
+        return new ResponseEntity<>(body, headers, status);
     }
 
     private String baseUrl(String path) {

@@ -67,7 +67,7 @@ public class RefreshTokenRotationService {
         ));
         current.rotate(replacement.getId(), now);
         refreshTokenRepository.save(current);
-        return new Rotation(current.getSessionId(), replacementRaw);
+        return new Rotation(current.getSessionId(), replacementRaw, replacement.getExpiresAt());
     }
 
     public RefreshToken revokeIfActive(String refreshToken, Instant now) {
@@ -96,6 +96,6 @@ public class RefreshTokenRotationService {
         throw new RefreshTokenReuseDetectedException(session.getId(), session.getAccountId());
     }
 
-    public record Rotation(UUID sessionId, String refreshToken) {
+    public record Rotation(UUID sessionId, String refreshToken, Instant refreshTokenExpiresAt) {
     }
 }

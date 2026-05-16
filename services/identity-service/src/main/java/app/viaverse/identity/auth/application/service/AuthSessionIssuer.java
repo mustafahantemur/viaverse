@@ -2,12 +2,9 @@ package app.viaverse.identity.auth.application.service;
 
 import app.viaverse.identity.account.application.port.out.AccountRepository;
 import app.viaverse.identity.account.domain.AccountStatus;
-import app.viaverse.identity.account.domain.AccountView;
 import app.viaverse.identity.account.domain.model.Account;
-import app.viaverse.identity.auth.api.dto.AuthResponse;
 import app.viaverse.identity.auth.application.port.out.AuthSessionRepository;
 import app.viaverse.identity.auth.application.port.out.RefreshTokenRepository;
-import app.viaverse.identity.auth.domain.enums.AuthNextStep;
 import app.viaverse.identity.auth.domain.enums.SessionStatus;
 import app.viaverse.identity.auth.domain.model.AuthSession;
 import app.viaverse.identity.auth.domain.model.RefreshToken;
@@ -21,14 +18,6 @@ import java.time.Instant;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
-/**
- * Application service responsible for issuing auth sessions + access/refresh tokens,
- * resolving the active session/account, and revoking sessions on logout.
- * <p>
- * Phase 3B rewrite — pure ports + domain models, no JPA imports. The class is still
- * named {@code AuthSessionIssuer} to minimize churn for upstream callers; conceptually
- * it is the {@code AuthSessionService}.
- */
 @Service
 public class AuthSessionIssuer {
 
@@ -61,17 +50,17 @@ public class AuthSessionIssuer {
         this.clock = clock;
     }
 
-    public AuthResponse issue(Account account, String userAgent, Instant now) {
-        Instant expiresAt = now.plus(properties.getRefreshTokenTtl());
+    public Issued issue(Account account, String userAgent, String clientIp, Instant now) {
+        Instant refreshExpiresAt = now.plus(properties.getRefreshTokenTtl());
         AuthSession session = sessionRepository.save(AuthSession.issue(
                 UUID.randomUUID(),
                 account.getId(),
-                expiresAt,
+                refreshExpiresAt,
                 normalizeOptional(userAgent),
                 null,
                 null,
                 null,
-                null,
+                normalizeOptional(clientIp),
                 now
         ));
         String refreshToken = tokenGenerator.generateUrlToken();
@@ -80,30 +69,23 @@ public class AuthSessionIssuer {
                 session.getId(),
                 tokenHasher.hash(refreshToken),
                 now,
-                expiresAt
+                refreshExpiresAt
         ));
-        return new AuthResponse(
-                AuthNextStep.AUTHENTICATED,
-                jwtAccessTokenService.issue(account.getId(), session.getId(), now),
-                refreshToken,
-                jwtAccessTokenService.expiresInSeconds(),
-                accountView(account)
-        );
+        String accessToken = jwtAccessTokenService.issue(account.getId(), session.getId(), now);
+        Instant accessExpiresAt = now.plusSeconds(jwtAccessTokenService.expiresInSeconds());
+        return new Issued(session, accessToken, accessExpiresAt, refreshToken, refreshExpiresAt);
     }
 
-    public AuthResponse issueForExistingSession(
+    public Issued issueForExistingSession(
             Account account,
             AuthSession session,
             String refreshToken,
+            Instant refreshTokenExpiresAt,
             Instant now
     ) {
-        return new AuthResponse(
-                AuthNextStep.AUTHENTICATED,
-                jwtAccessTokenService.issue(account.getId(), session.getId(), now),
-                refreshToken,
-                jwtAccessTokenService.expiresInSeconds(),
-                accountView(account)
-        );
+        String accessToken = jwtAccessTokenService.issue(account.getId(), session.getId(), now);
+        Instant accessExpiresAt = now.plusSeconds(jwtAccessTokenService.expiresInSeconds());
+        return new Issued(session, accessToken, accessExpiresAt, refreshToken, refreshTokenExpiresAt);
     }
 
     public AuthSession activeSession(UUID sessionId, Instant now) {
@@ -129,18 +111,6 @@ public class AuthSessionIssuer {
         return account;
     }
 
-    public AccountView accountView(Account account) {
-        return new AccountView(
-                account.getId(),
-                account.getStatus(),
-                account.getDisplayName(),
-                account.getFirstName(),
-                account.getLastName(),
-                account.isProfileCompleted(),
-                account.getCreatedAt()
-        );
-    }
-
     public void revokeSession(AuthSession session, Instant now) {
         session.revoke(now);
         sessionRepository.save(session);
@@ -158,4 +128,12 @@ public class AuthSessionIssuer {
     private Instant now() {
         return clock.instant();
     }
+
+    public record Issued(
+            AuthSession session,
+            String accessToken,
+            Instant accessTokenExpiresAt,
+            String refreshToken,
+            Instant refreshTokenExpiresAt
+    ) {}
 }
