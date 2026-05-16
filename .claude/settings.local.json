@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -c user.name=\"han-878\" -c user.email=\"producerhan878@gmail.com\" cherry-pick b75a6dd dfc27f7 20322b1 1bc92b2 cda6ace 0f52878 a7951f1)",
+      "Bash(git push *)",
+      "Bash(git -c user.name=\"han-878\" -c user.email=\"producerhan878@gmail.com\" cherry-pick 5882953)"
+    ],
+    "additionalDirectories": [
+      "C:\\Projects\\Viaverse\\worktree-phase1-a",
+      "C:\\Projects\\Viaverse\\worktree-phase1-b",
+      "C:\\Projects\\Viaverse\\worktree-phase1-c",
+      "C:\\Projects\\Viaverse\\worktree-phase1-d",
+      "C:\\Projects\\Viaverse\\worktree-phase2-a",
+      "C:\\Projects\\Viaverse\\worktree-phase2-b"
+    ]
+  }
+}

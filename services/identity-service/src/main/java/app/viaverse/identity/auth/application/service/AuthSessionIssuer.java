@@ -75,7 +75,7 @@ public class AuthSessionIssuer {
                 now,
                 refreshExpiresAt
         ));
-        String accessToken = jwtAccessTokenService.issue(account.getId(), session.getId(), now);
+        String accessToken = jwtAccessTokenService.issue(account.getId(), session.getId(), account.getRoles(), now);
         Instant accessExpiresAt = now.plusSeconds(jwtAccessTokenService.expiresInSeconds());
         sessionCachePort.put(session, now);
         return new Issued(session, accessToken, accessExpiresAt, refreshToken, refreshExpiresAt);
@@ -88,7 +88,7 @@ public class AuthSessionIssuer {
             Instant refreshTokenExpiresAt,
             Instant now
     ) {
-        String accessToken = jwtAccessTokenService.issue(account.getId(), session.getId(), now);
+        String accessToken = jwtAccessTokenService.issue(account.getId(), session.getId(), account.getRoles(), now);
         Instant accessExpiresAt = now.plusSeconds(jwtAccessTokenService.expiresInSeconds());
         return new Issued(session, accessToken, accessExpiresAt, refreshToken, refreshTokenExpiresAt);
     }

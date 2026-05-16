@@ -1,9 +1,12 @@
 package app.viaverse.identity.auth.infrastructure.adapter.in.web.controller;
 
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthResponse;
+import app.viaverse.identity.account.application.port.in.GetCurrentAccountUseCase;
+import app.viaverse.identity.account.infrastructure.adapter.in.web.mapper.AccountDtoMapper;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.LogoutRequest;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.RefreshRequest;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.RegisterRequest;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.AdminRegisterRequest;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.SocialSignInRequest;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.StartAuthRequest;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.StartAuthResponse;
@@ -11,6 +14,7 @@ import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.Veri
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthCompletionResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.mapper.AuthDtoMapper;
 import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCase;
+import app.viaverse.identity.auth.application.port.in.CompleteAdminRegistrationUseCase;
 import app.viaverse.identity.auth.application.port.in.LogoutUseCase;
 import app.viaverse.identity.auth.application.port.in.RefreshTokenUseCase;
 import app.viaverse.identity.auth.application.port.in.SocialSignInUseCase;
@@ -43,9 +47,12 @@ public class AuthController {
     private final SocialSignInUseCase socialSignInUseCase;
     private final VerifyOtpUseCase verifyOtpUseCase;
     private final CompleteRegistrationUseCase completeRegistrationUseCase;
+    private final CompleteAdminRegistrationUseCase completeAdminRegistrationUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final LogoutUseCase logoutUseCase;
     private final JwtPrincipalResolver jwtPrincipalResolver;
+    private final GetCurrentAccountUseCase getCurrentAccountUseCase;
+    private final AccountDtoMapper accountDtoMapper;
     private final AuthDtoMapper authDtoMapper;
     private final AuthAbuseProtectionService abuseProtectionService;
     private final ClientIpResolver clientIpResolver;
@@ -55,9 +62,12 @@ public class AuthController {
             SocialSignInUseCase socialSignInUseCase,
             VerifyOtpUseCase verifyOtpUseCase,
             CompleteRegistrationUseCase completeRegistrationUseCase,
+            CompleteAdminRegistrationUseCase completeAdminRegistrationUseCase,
             RefreshTokenUseCase refreshTokenUseCase,
             LogoutUseCase logoutUseCase,
             JwtPrincipalResolver jwtPrincipalResolver,
+            GetCurrentAccountUseCase getCurrentAccountUseCase,
+            AccountDtoMapper accountDtoMapper,
             AuthDtoMapper authDtoMapper,
             AuthAbuseProtectionService abuseProtectionService,
             ClientIpResolver clientIpResolver
@@ -66,12 +76,42 @@ public class AuthController {
         this.socialSignInUseCase = socialSignInUseCase;
         this.verifyOtpUseCase = verifyOtpUseCase;
         this.completeRegistrationUseCase = completeRegistrationUseCase;
+        this.completeAdminRegistrationUseCase = completeAdminRegistrationUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
         this.logoutUseCase = logoutUseCase;
         this.jwtPrincipalResolver = jwtPrincipalResolver;
+        this.getCurrentAccountUseCase = getCurrentAccountUseCase;
+        this.accountDtoMapper = accountDtoMapper;
         this.authDtoMapper = authDtoMapper;
         this.abuseProtectionService = abuseProtectionService;
         this.clientIpResolver = clientIpResolver;
+    }
+
+    @PostMapping("/register-admin")
+    public ApiResponse<AuthResponse> registerAdmin(
+            @Valid @RequestBody AdminRegisterRequest request,
+            @RequestHeader(value = "User-Agent", required = false) String userAgent,
+            HttpServletRequest httpRequest
+    ) {
+        CompleteAdminRegistrationUseCase.Result result = completeAdminRegistrationUseCase.execute(
+                new CompleteAdminRegistrationUseCase.Command(
+                        request.invitationToken(),
+                        request.registrationToken(),
+                        request.displayName(),
+                        request.firstName(),
+                        request.lastName(),
+                        request.requiredConsents().stream()
+                                .map(consent -> new ConsentInput(consent.type(), consent.version()))
+                                .toList(),
+                        request.marketingConsentAccepted(),
+                        userAgent,
+                        clientIpResolver.resolve(httpRequest)
+                )
+        );
+        return ApiResponse.ok(authDtoMapper.toAuthResponse(
+                result,
+                currentAccountView(result.accountId(), result.sessionId())
+        ));
     }
 
     @PostMapping("/start")
@@ -100,6 +140,12 @@ public class AuthController {
                 userAgent,
                 clientIpResolver.resolve(httpRequest)
         ));
+        if (result.nextStep() == app.viaverse.identity.auth.domain.enums.AuthNextStepEnum.AUTHENTICATED) {
+            return ApiResponse.ok(authDtoMapper.toAuthResponse(
+                    result,
+                    currentAccountView(result.accountId(), result.sessionId())
+            ));
+        }
         return ApiResponse.ok(authDtoMapper.toResponse(result));
     }
 
@@ -119,6 +165,12 @@ public class AuthController {
                 clientIpResolver.resolve(httpRequest),
                 clientFingerprint
         ));
+        if (result.nextStep() == app.viaverse.identity.auth.domain.enums.AuthNextStepEnum.AUTHENTICATED) {
+            return ApiResponse.ok(authDtoMapper.toAuthResponse(
+                    result,
+                    currentAccountView(result.accountId(), result.sessionId())
+            ));
+        }
         return ApiResponse.ok(authDtoMapper.toResponse(result));
     }
 
@@ -142,7 +194,10 @@ public class AuthController {
                         clientIpResolver.resolve(httpRequest)
                 )
         );
-        return ApiResponse.ok(authDtoMapper.toResponse(result));
+        return ApiResponse.ok(authDtoMapper.toAuthResponse(
+                result,
+                currentAccountView(result.accountId(), result.sessionId())
+        ));
     }
 
     @PostMapping("/refresh")
@@ -180,5 +235,13 @@ public class AuthController {
                 request == null ? null : request.refreshToken()
         ));
         return ApiResponse.ok(null);
+    }
+
+    private app.viaverse.identity.account.domain.AccountView currentAccountView(
+            java.util.UUID accountId,
+            java.util.UUID sessionId
+    ) {
+        var account = getCurrentAccountUseCase.execute(new GetCurrentAccountUseCase.Command(accountId, sessionId));
+        return accountDtoMapper.toView(account);
     }
 }

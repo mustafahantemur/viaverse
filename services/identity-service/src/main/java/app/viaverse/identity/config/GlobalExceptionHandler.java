@@ -7,6 +7,7 @@ import app.viaverse.shared.kernel.error.AppErrorCode;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -33,6 +34,11 @@ public final class GlobalExceptionHandler extends GlobalProblemDetailsHandler {
         problem.setProperty("identityCode", exception.errorCode().name());
         problem.setProperty("retryAfterSeconds", exception.retryAfterSeconds());
         return problem;
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ProblemDetail handleAuthorizationDenied(AuthorizationDeniedException exception) {
+        return problem(HttpStatus.FORBIDDEN, AppErrorCode.FORBIDDEN, "Forbidden");
     }
 
     private AppErrorCode publicCode(HttpStatus status) {

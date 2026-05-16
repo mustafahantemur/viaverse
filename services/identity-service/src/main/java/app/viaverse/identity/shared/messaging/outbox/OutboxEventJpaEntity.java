@@ -88,6 +88,7 @@ public class OutboxEventJpaEntity {
     public Instant getOccurredAt() { return occurredAt; }
     public Instant getAvailableAt() { return availableAt; }
     public Instant getPublishedAt() { return publishedAt; }
+    public Instant getCreatedAt() { return createdAt; }
     public int getAttempts() { return attempts; }
     public String getLastError() { return lastError; }
 

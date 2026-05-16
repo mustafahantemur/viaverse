@@ -1,6 +1,8 @@
 package app.viaverse.identity.config;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
 import io.micrometer.core.instrument.config.MeterFilter;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
@@ -70,6 +72,11 @@ public class OpenTelemetryConfiguration {
             return Sampler.alwaysOn();
         }
         return Sampler.parentBased(Sampler.traceIdRatioBased(samplingProbability));
+    }
+
+    @Bean
+    public Tracer identityTracer() {
+        return GlobalOpenTelemetry.getTracer(SERVICE_NAME, serviceVersion);
     }
 
     /**

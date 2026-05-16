@@ -1,8 +1,11 @@
 package app.viaverse.identity.account.domain.model;
 
 import app.viaverse.identity.account.domain.AccountStatusEnum;
+import app.viaverse.identity.account.domain.AccountRoleEnum;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -18,6 +21,7 @@ public final class Account {
     private final Instant createdAt;
 
     private AccountStatusEnum status;
+    private Set<AccountRoleEnum> roles;
     private String displayName;
     private String firstName;
     private String lastName;
@@ -27,6 +31,7 @@ public final class Account {
     public Account(
             UUID id,
             AccountStatusEnum status,
+            Set<AccountRoleEnum> roles,
             String displayName,
             String firstName,
             String lastName,
@@ -36,6 +41,7 @@ public final class Account {
     ) {
         this.id = Objects.requireNonNull(id, "id");
         this.status = Objects.requireNonNull(status, "status");
+        this.roles = EnumSet.copyOf(Objects.requireNonNull(roles, "roles"));
         this.displayName = Objects.requireNonNull(displayName, "displayName");
         this.firstName = firstName;
         this.lastName = lastName;
@@ -52,6 +58,7 @@ public final class Account {
         return new Account(
                 id,
                 AccountStatusEnum.ACTIVE,
+                Set.of(AccountRoleEnum.USER),
                 displayName,
                 null,
                 null,
@@ -67,6 +74,10 @@ public final class Account {
 
     public AccountStatusEnum getStatus() {
         return status;
+    }
+
+    public Set<AccountRoleEnum> getRoles() {
+        return Set.copyOf(roles);
     }
 
     public String getDisplayName() {
@@ -127,6 +138,11 @@ public final class Account {
      */
     public void reactivate(Instant now) {
         this.status = AccountStatusEnum.ACTIVE;
+        this.updatedAt = Objects.requireNonNull(now, "now");
+    }
+
+    public void grantRole(AccountRoleEnum role, Instant now) {
+        this.roles.add(Objects.requireNonNull(role, "role"));
         this.updatedAt = Objects.requireNonNull(now, "now");
     }
 }
