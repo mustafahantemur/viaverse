@@ -88,6 +88,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/social/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/forgot-password/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/required-consents").permitAll()
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**", "/scalar", "/scalar/**", "/favicon.svg")
                         .permitAll()
@@ -151,6 +152,7 @@ public class SecurityConfiguration {
                 || "/api/v1/auth/register".equals(path)
                 || "/api/v1/auth/register-admin".equals(path)
                 || "/api/v1/auth/refresh".equals(path)
-                || path.startsWith("/api/v1/auth/social/");
+                || path.startsWith("/api/v1/auth/social/")
+                || path.startsWith("/api/v1/auth/forgot-password/");
     }
 }

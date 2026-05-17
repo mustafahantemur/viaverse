@@ -347,6 +347,126 @@ class IdentityAuthIntegrationTest {
 
     // ---------- Consent ----------
 
+    // ---------- Change password (authenticated) ----------
+
+    @Test
+    void changePasswordWithCorrectCurrentPasswordSucceeds() {
+        String email = newEmail();
+        Map<String, Object> reg = registerWithPassword(email);
+        String access = (String) reg.get("accessToken");
+
+        ResponseEntity<Map> change = post("/api/v1/me/password",
+                Map.of("currentPassword", TEST_PASSWORD, "newPassword", "Brand!New9Pass"),
+                access);
+        assertThat(change.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Old password no longer works
+        ResponseEntity<Map> oldLogin = post("/api/v1/auth/password-login",
+                Map.of("identifier", email, "password", TEST_PASSWORD));
+        assertThat(oldLogin.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+
+        // New password works
+        ResponseEntity<Map> newLogin = post("/api/v1/auth/password-login",
+                Map.of("identifier", email, "password", "Brand!New9Pass"));
+        assertThat(newLogin.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(newLogin.getBody()).containsEntry("nextStep", "AUTHENTICATED");
+    }
+
+    @Test
+    void changePasswordWithWrongCurrentPasswordFails() {
+        Map<String, Object> reg = registerWithPassword(newEmail());
+
+        ResponseEntity<Map> change = post("/api/v1/me/password",
+                Map.of("currentPassword", "Wrong!Wrong9", "newPassword", "Brand!New9Pass"),
+                (String) reg.get("accessToken"));
+        assertThat(change.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(change.getBody()).containsEntry("identityCode", "AUTH_INVALID_CREDENTIALS");
+    }
+
+    @Test
+    void changePasswordRejectsWeakNew() {
+        Map<String, Object> reg = registerWithPassword(newEmail());
+
+        ResponseEntity<Map> change = post("/api/v1/me/password",
+                Map.of("currentPassword", TEST_PASSWORD, "newPassword", "weak"),
+                (String) reg.get("accessToken"));
+        assertThat(change.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(change.getBody()).containsEntry("identityCode", "AUTH_PASSWORD_POLICY_VIOLATION");
+    }
+
+    @Test
+    void changePasswordRejectsSameAsCurrent() {
+        Map<String, Object> reg = registerWithPassword(newEmail());
+
+        ResponseEntity<Map> change = post("/api/v1/me/password",
+                Map.of("currentPassword", TEST_PASSWORD, "newPassword", TEST_PASSWORD),
+                (String) reg.get("accessToken"));
+        assertThat(change.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(change.getBody()).containsEntry("identityCode", "AUTH_PASSWORD_POLICY_VIOLATION");
+    }
+
+    // ---------- Forgot password ----------
+
+    @Test
+    void forgotPasswordEndToEnd() {
+        String email = newEmail();
+        registerWithPassword(email);
+
+        ResponseEntity<Map> start = post("/api/v1/auth/forgot-password/start",
+                Map.of("identifier", email));
+        assertThat(start.getStatusCode()).isEqualTo(HttpStatus.OK);
+        UUID flowId = UUID.fromString((String) start.getBody().get("flowId"));
+
+        String otp = otpRecorder.latestFor(IdentifierTypeEnum.EMAIL, email);
+        ResponseEntity<Map> verify = post("/api/v1/auth/forgot-password/verify-otp",
+                Map.of("flowId", flowId.toString(), "otp", otp));
+        assertThat(verify.getStatusCode()).isEqualTo(HttpStatus.OK);
+        String resetToken = (String) verify.getBody().get("resetToken");
+        assertThat(resetToken).isNotBlank();
+
+        ResponseEntity<Map> complete = post("/api/v1/auth/forgot-password/complete",
+                Map.of("resetToken", resetToken, "newPassword", "Reset!2026Pass"));
+        assertThat(complete.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Old password no longer works, new one does
+        ResponseEntity<Map> oldLogin = post("/api/v1/auth/password-login",
+                Map.of("identifier", email, "password", TEST_PASSWORD));
+        assertThat(oldLogin.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        ResponseEntity<Map> newLogin = post("/api/v1/auth/password-login",
+                Map.of("identifier", email, "password", "Reset!2026Pass"));
+        assertThat(newLogin.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void forgotPasswordForUnknownIdentifierDoesNotLeakExistence() {
+        ResponseEntity<Map> response = post("/api/v1/auth/forgot-password/start",
+                Map.of("identifier", newEmail()));
+        // Same shape as a real flow — client can't distinguish.
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).containsKey("flowId");
+        assertThat(response.getBody()).containsKey("expiresAt");
+    }
+
+    @Test
+    void forgotPasswordResetTokenIsOneShot() {
+        String email = newEmail();
+        registerWithPassword(email);
+
+        ResponseEntity<Map> start = post("/api/v1/auth/forgot-password/start",
+                Map.of("identifier", email));
+        String otp = otpRecorder.latestFor(IdentifierTypeEnum.EMAIL, email);
+        ResponseEntity<Map> verify = post("/api/v1/auth/forgot-password/verify-otp",
+                Map.of("flowId", start.getBody().get("flowId"), "otp", otp));
+        String resetToken = (String) verify.getBody().get("resetToken");
+
+        ResponseEntity<Map> first = post("/api/v1/auth/forgot-password/complete",
+                Map.of("resetToken", resetToken, "newPassword", "Once!Only9Pass"));
+        ResponseEntity<Map> second = post("/api/v1/auth/forgot-password/complete",
+                Map.of("resetToken", resetToken, "newPassword", "Twice!Bad9Pass"));
+        assertThat(first.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(second.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
     @Test
     void requiredConsentsEndpointPublishesServerOwnedVersions() {
         ResponseEntity<Map> response = get("/api/v1/auth/required-consents", null);
