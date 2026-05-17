@@ -1,21 +1,19 @@
 package app.viaverse.mobile.feature.auth
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,9 +25,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import app.viaverse.mobile.core.i18n.AppStrings
+import app.viaverse.mobile.designsystem.VvPasswordField
+import app.viaverse.mobile.designsystem.VvPhoneField
+import app.viaverse.mobile.designsystem.VvPrimaryButton
+import app.viaverse.mobile.designsystem.VvTextField
+import app.viaverse.mobile.designsystem.VvTextLink
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.jsonObject
@@ -40,11 +42,10 @@ import kotlinx.serialization.json.jsonPrimitive
  *   1. {@code FORM}      — full signup form (everything captured up front)
  *   2. {@code EMAIL_OTP} — verify email with 6-digit OTP, then account is created
  *
- * Phone number is intentionally not collected here. Asking for an SMS OTP
- * during signup hurt conversion for something most users add later;
- * phone verification has moved to the profile screen. The server-side
- * draft still holds the form data so a brief app switch mid-OTP isn't
- * fatal (within the draft TTL).
+ * Phone number is intentionally not collected here; the user adds it
+ * later from the profile screen. Keeping signup to a single OTP
+ * channel matches what the web flow does and is far better for
+ * conversion than asking for two verifications up front.
  */
 @Composable
 fun RegisterScreen(
@@ -59,8 +60,11 @@ fun RegisterScreen(
     var lastName by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
     var confirmPassword by remember { mutableStateOf("") }
+    var confirmVisible by remember { mutableStateOf(false) }
     var marketingAccepted by remember { mutableStateOf(false) }
     val requiredAccepted = remember { mutableStateMapOf<String, Boolean>() }
     var requiredDocs by remember { mutableStateOf<List<ConsentDoc>>(emptyList()) }
@@ -70,13 +74,18 @@ fun RegisterScreen(
 
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var consentsLoadError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         try {
             val body = authApi.requiredConsents()
-            requiredDocs = (body["required"] as? JsonArray).orEmptyDocs()
+            val docs = (body["required"] as? JsonArray).orEmptyDocs()
+            requiredDocs = docs
+            if (docs.isEmpty()) {
+                consentsLoadError = "Yasal belgeler boş döndü (BFF açık mı?)"
+            }
         } catch (throwable: Throwable) {
-            error = AuthError.format(throwable)
+            consentsLoadError = "Yasal belgeler yüklenemedi: ${throwable.message ?: throwable::class.simpleName}"
         }
     }
 
@@ -95,8 +104,12 @@ fun RegisterScreen(
         allConsentsAccepted
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Text(
             when (stage) {
@@ -105,223 +118,163 @@ fun RegisterScreen(
             },
             style = MaterialTheme.typography.headlineMedium,
         )
-        error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        Text(
+            when (stage) {
+                RegisterStage.FORM -> AppStrings.registerSubtitle()
+                RegisterStage.EMAIL_OTP -> AppStrings.emailOtpSubtitle(email.trim())
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        error?.let {
+            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        }
 
         when (stage) {
-            RegisterStage.FORM -> FormStage(
-                firstName = firstName,
-                onFirstNameChange = { firstName = it },
-                lastName = lastName,
-                onLastNameChange = { lastName = it },
-                displayName = displayName,
-                onDisplayNameChange = { displayName = it },
-                email = email,
-                onEmailChange = { email = it },
-                password = password,
-                onPasswordChange = { password = it },
-                confirmPassword = confirmPassword,
-                onConfirmPasswordChange = { confirmPassword = it },
-                confirmError = confirmError,
-                passwordIssues = passwordEvaluation.issues,
-                requiredDocs = requiredDocs,
-                requiredAccepted = requiredAccepted,
-                marketingAccepted = marketingAccepted,
-                onMarketingChange = { marketingAccepted = it },
-                busy = busy,
-                canSubmit = canSubmitForm,
-                onSubmit = {
-                    scope.launch {
-                        busy = true; error = null
-                        try {
-                            val result = authApi.registerStart(
-                                email = email.trim().lowercase(),
-                                phone = null,
-                                displayName = displayName.trim(),
-                                firstName = firstName.trim().ifBlank { null },
-                                lastName = lastName.trim().ifBlank { null },
-                                password = password,
-                                acceptedRequiredConsents = requiredDocs
-                                    .filter { requiredAccepted[it.type] == true }
-                                    .map { it.type },
-                                marketingConsentAccepted = marketingAccepted,
-                            )
-                            draftId = result["draftId"]?.jsonPrimitive?.content
-                            stage = RegisterStage.EMAIL_OTP
-                        } catch (throwable: Throwable) {
-                            error = AuthError.format(throwable)
-                        } finally {
-                            busy = false
-                        }
+            RegisterStage.FORM -> {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    VvTextField(
+                        value = firstName,
+                        onValueChange = { firstName = it },
+                        label = AppStrings.firstName(),
+                        modifier = Modifier.weight(1f),
+                    )
+                    VvTextField(
+                        value = lastName,
+                        onValueChange = { lastName = it },
+                        label = AppStrings.lastName(),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                VvTextField(
+                    value = displayName,
+                    onValueChange = { displayName = it },
+                    label = AppStrings.displayName(),
+                )
+                VvTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = AppStrings.email(),
+                    keyboardType = KeyboardType.Email,
+                )
+                // Phone is collected here for display continuity with the web
+                // form, but verification is deferred to the profile screen.
+                // Backend ignores the value until that flow lands.
+                VvPhoneField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = AppStrings.phoneOptional(),
+                    placeholder = "5XXXXXXXXX",
+                )
+                VvPasswordField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = AppStrings.password(),
+                    hint = AppStrings.passwordHint(),
+                    visible = passwordVisible,
+                    onVisibleChange = { passwordVisible = it },
+                    showToggleA11y = AppStrings.showPasswordA11y(),
+                    hideToggleA11y = AppStrings.hidePasswordA11y(),
+                )
+                VvPasswordField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = AppStrings.confirmPassword(),
+                    error = confirmError,
+                    visible = confirmVisible,
+                    onVisibleChange = { confirmVisible = it },
+                    showToggleA11y = AppStrings.showPasswordA11y(),
+                    hideToggleA11y = AppStrings.hidePasswordA11y(),
+                )
+
+                consentsLoadError?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+                requiredDocs.forEach { doc ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = requiredAccepted[doc.type] == true,
+                            onCheckedChange = { requiredAccepted[doc.type] = it },
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            ConsentLabels.labelFor(doc.type),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
                     }
-                },
-            )
-
-            RegisterStage.EMAIL_OTP -> OtpStage(
-                subtitle = AppStrings.emailOtpSubtitle(email.trim()),
-                showMailpitHint = true,
-                otp = emailOtp,
-                onOtpChange = { emailOtp = it },
-                busy = busy,
-                onSubmit = {
-                    val id = draftId ?: return@OtpStage
-                    scope.launch {
-                        busy = true; error = null
-                        try {
-                            authApi.registerVerifyEmail(id, emailOtp)
-                            onRegistered()
-                        } catch (throwable: Throwable) {
-                            error = AuthError.format(throwable)
-                        } finally {
-                            busy = false
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = marketingAccepted, onCheckedChange = { marketingAccepted = it })
+                    Spacer(Modifier.width(4.dp))
+                    Text(AppStrings.optionalMarketing(), style = MaterialTheme.typography.bodySmall)
+                }
+                Spacer(Modifier.height(4.dp))
+                VvPrimaryButton(
+                    text = if (busy) AppStrings.creatingAccount() else AppStrings.continueLabel(),
+                    enabled = canSubmitForm,
+                    onClick = {
+                        scope.launch {
+                            busy = true; error = null
+                            try {
+                                val result = authApi.registerStart(
+                                    email = email.trim().lowercase(),
+                                    phone = null,
+                                    displayName = displayName.trim(),
+                                    firstName = firstName.trim().ifBlank { null },
+                                    lastName = lastName.trim().ifBlank { null },
+                                    password = password,
+                                    acceptedRequiredConsents = requiredDocs
+                                        .filter { requiredAccepted[it.type] == true }
+                                        .map { it.type },
+                                    marketingConsentAccepted = marketingAccepted,
+                                )
+                                draftId = result["draftId"]?.jsonPrimitive?.content
+                                stage = RegisterStage.EMAIL_OTP
+                            } catch (throwable: Throwable) {
+                                error = AuthError.format(throwable)
+                            } finally {
+                                busy = false
+                            }
                         }
-                    }
-                },
-            )
-        }
-
-        TextButton(onClick = onSwitchToLogin) {
-            Text(AppStrings.alreadyHaveAccountSignIn())
-        }
-    }
-}
-
-@Composable
-private fun FormStage(
-    firstName: String,
-    onFirstNameChange: (String) -> Unit,
-    lastName: String,
-    onLastNameChange: (String) -> Unit,
-    displayName: String,
-    onDisplayNameChange: (String) -> Unit,
-    email: String,
-    onEmailChange: (String) -> Unit,
-    password: String,
-    onPasswordChange: (String) -> Unit,
-    confirmPassword: String,
-    onConfirmPasswordChange: (String) -> Unit,
-    confirmError: String?,
-    passwordIssues: List<PasswordPolicy.Issue>,
-    requiredDocs: List<ConsentDoc>,
-    requiredAccepted: MutableMap<String, Boolean>,
-    marketingAccepted: Boolean,
-    onMarketingChange: (Boolean) -> Unit,
-    busy: Boolean,
-    canSubmit: Boolean,
-    onSubmit: () -> Unit,
-) {
-    OutlinedTextField(
-        value = firstName,
-        onValueChange = onFirstNameChange,
-        label = { Text(AppStrings.firstName()) },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = lastName,
-        onValueChange = onLastNameChange,
-        label = { Text(AppStrings.lastName()) },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = displayName,
-        onValueChange = onDisplayNameChange,
-        label = { Text(AppStrings.displayName()) },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = email,
-        onValueChange = onEmailChange,
-        label = { Text(AppStrings.email()) },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = password,
-        onValueChange = onPasswordChange,
-        label = { Text(AppStrings.password()) },
-        singleLine = true,
-        visualTransformation = PasswordVisualTransformation(),
-        supportingText = if (password.isNotEmpty() && passwordIssues.isNotEmpty()) {
-            {
-                Text(
-                    "Needs: " + passwordIssues.joinToString(" · ") { PasswordPolicy.describe(it) },
-                    style = MaterialTheme.typography.bodySmall,
+                    },
                 )
             }
-        } else {
-            { Text(AppStrings.passwordHint(), style = MaterialTheme.typography.bodySmall) }
-        },
-        isError = password.isNotEmpty() && passwordIssues.isNotEmpty(),
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = confirmPassword,
-        onValueChange = onConfirmPasswordChange,
-        label = { Text(AppStrings.confirmPassword()) },
-        singleLine = true,
-        visualTransformation = PasswordVisualTransformation(),
-        isError = confirmError != null,
-        supportingText = confirmError?.let { msg ->
-            { Text(msg, style = MaterialTheme.typography.bodySmall) }
-        },
-        modifier = Modifier.fillMaxWidth(),
-    )
 
-    requiredDocs.forEach { doc ->
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = requiredAccepted[doc.type] == true,
-                onCheckedChange = { requiredAccepted[doc.type] = it },
-            )
-            Text(ConsentLabels.labelFor(doc.type))
+            RegisterStage.EMAIL_OTP -> {
+                Text(
+                    AppStrings.mailpitDevHint(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                VvTextField(
+                    value = emailOtp,
+                    onValueChange = { if (it.length <= 6 && it.all(Char::isDigit)) emailOtp = it },
+                    label = AppStrings.verificationCode(),
+                    keyboardType = KeyboardType.NumberPassword,
+                )
+                VvPrimaryButton(
+                    text = if (busy) AppStrings.verifying() else AppStrings.verify(),
+                    enabled = !busy && emailOtp.length == 6,
+                    onClick = {
+                        val id = draftId ?: return@VvPrimaryButton
+                        scope.launch {
+                            busy = true; error = null
+                            try {
+                                authApi.registerVerifyEmail(id, emailOtp)
+                                onRegistered()
+                            } catch (throwable: Throwable) {
+                                error = AuthError.format(throwable)
+                            } finally {
+                                busy = false
+                            }
+                        }
+                    },
+                )
+            }
         }
-    }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Checkbox(checked = marketingAccepted, onCheckedChange = onMarketingChange)
-        Text(AppStrings.optionalMarketing())
-    }
-    Button(
-        onClick = onSubmit,
-        enabled = canSubmit,
-        modifier = Modifier.fillMaxWidth().height(48.dp),
-    ) {
-        Text(if (busy) AppStrings.creatingAccount() else AppStrings.continueLabel())
-    }
-}
 
-@Composable
-private fun OtpStage(
-    subtitle: String,
-    showMailpitHint: Boolean,
-    otp: String,
-    onOtpChange: (String) -> Unit,
-    busy: Boolean,
-    onSubmit: () -> Unit,
-) {
-    Text(subtitle, style = MaterialTheme.typography.bodyMedium)
-    if (showMailpitHint) {
-        Text(
-            AppStrings.mailpitDevHint(),
-            style = MaterialTheme.typography.bodySmall,
-        )
-    }
-    OutlinedTextField(
-        value = otp,
-        onValueChange = { if (it.length <= 6 && it.all(Char::isDigit)) onOtpChange(it) },
-        label = { Text(AppStrings.verificationCode()) },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-        modifier = Modifier.fillMaxWidth(),
-    )
-    Button(
-        onClick = onSubmit,
-        enabled = !busy && otp.length == 6,
-        modifier = Modifier.fillMaxWidth().height(48.dp),
-    ) {
-        Text(if (busy) AppStrings.verifying() else AppStrings.verify())
+        Spacer(Modifier.height(8.dp))
+        VvTextLink(text = AppStrings.alreadyHaveAccountSignIn(), onClick = onSwitchToLogin)
     }
 }
 

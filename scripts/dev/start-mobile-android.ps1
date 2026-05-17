@@ -39,6 +39,22 @@ function Wait-AndroidDevice($adb) {
     Fail "No Android emulator/device became ready in time."
 }
 
+function Wait-AndroidBoot($adb) {
+    $deadline = (Get-Date).AddSeconds(180)
+    do {
+        $bootCompleted = (& $adb shell getprop sys.boot_completed 2>$null).Trim()
+        if ($bootCompleted -eq "1") {
+            Write-Host "Android system boot is complete."
+            return
+        }
+
+        Write-Host "Waiting for Android system boot..."
+        Start-Sleep -Seconds 3
+    } while ((Get-Date) -lt $deadline)
+
+    Fail "Android emulator/device connected but did not finish booting in time."
+}
+
 $adb = Find-AndroidTool "platform-tools\adb.exe"
 $emulator = Find-AndroidTool "emulator\emulator.exe"
 
@@ -68,10 +84,17 @@ if (-not $hasDevice) {
 }
 
 Wait-AndroidDevice $adb
+Wait-AndroidBoot $adb
 
 $repoRoot = Join-Path $PSScriptRoot "..\.."
 $repoRoot = (Resolve-Path $repoRoot).Path
 $gradlew = Join-Path $repoRoot "gradlew.bat"
+
+# Self-heal the build-logic plugin jar before invoking Gradle. An earlier
+# interrupted build can leave Gradle caching an empty viaverse-build-logic.jar,
+# which then makes every `apply id("viaverse.…")` fail. Same preflight the
+# web-bff and identity debug scripts use.
+& "$PSScriptRoot\verify-build-logic.ps1" -RepoRoot $repoRoot
 
 Push-Location $repoRoot
 try {
@@ -84,9 +107,9 @@ try {
         Fail "The Android app module does not expose installDebug."
     }
 
-    & $gradlew ":apps:mobile-android:installDebug"
+    & $gradlew ":apps:mobile-android:installDebug" "--stacktrace"
     if ($LASTEXITCODE -ne 0) {
-        Fail "Android APK install failed."
+        Fail "Android APK install failed. See the Gradle error above for the actual cause."
     }
 
     & $adb shell am start -n "app.viaverse.mobile/.MainActivity"

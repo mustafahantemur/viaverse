@@ -16,6 +16,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.21")
     implementation("org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:2.3.21")
     implementation("org.jetbrains.compose:compose-gradle-plugin:1.9.3")
+    // Android Gradle plugin — needed by the KMP convention plugin to declare
+    // an Android target on shared modules consumed by Android apps.
+    implementation("com.android.tools.build:gradle:9.0.0")
 }
 
 // Gradle 9.4 can otherwise schedule the Kotlin compile before all generated

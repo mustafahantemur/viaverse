@@ -7,6 +7,7 @@ import { Field } from "./Field";
 import { FormError } from "./FormError";
 import { OtpInput } from "./OtpInput";
 import { PasswordField } from "./PasswordField";
+import { PhoneField } from "./PhoneField";
 import { SocialButtons } from "./SocialButtons";
 import { useAsyncCallback } from "@/hooks/useAsyncCallback";
 import { useRequiredConsents } from "@/hooks/useRequiredConsents";
@@ -43,6 +44,7 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
     const [lastName, setLastName] = useState("");
     const [displayName, setDisplayName] = useState("");
     const [email, setEmail] = useState("");
+    const [phoneLocal, setPhoneLocal] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [requiredAccepted, setRequiredAccepted] = useState<Record<string, boolean>>({});
@@ -165,6 +167,18 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
                         onChange={(event) => setEmail(event.target.value)}
                         autoComplete="email"
                         required
+                    />
+                    {/* Phone is collected here for parity with the web brief;
+                        verification happens later from the profile screen. The
+                        value is currently stashed locally only — the backend
+                        call stays phoneless until that flow ships. */}
+                    <PhoneField
+                        label={t.auth.register.phoneLabel}
+                        hint={t.auth.register.phoneHint}
+                        placeholder="5XXXXXXXXX"
+                        value={phoneLocal}
+                        onChange={setPhoneLocal}
+                        autoComplete="tel"
                     />
                     <PasswordField
                         label={t.auth.register.passwordLabel}

@@ -3,10 +3,10 @@ package app.viaverse.mobile
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import app.viaverse.mobile.core.config.ApiConfig
+import app.viaverse.mobile.core.network.newHttpClient
 import app.viaverse.mobile.designsystem.ViaverseTheme
 import app.viaverse.mobile.feature.auth.AuthApi
 import app.viaverse.mobile.feature.auth.AuthShell
-import io.ktor.client.HttpClient
 
 /**
  * Hosts the auth scaffolding. Once the home / signed-in surface is real,
@@ -15,7 +15,7 @@ import io.ktor.client.HttpClient
  */
 @Composable
 fun ViaverseApp() {
-    val httpClient = remember { HttpClient() }
+    val httpClient = remember { newHttpClient() }
     val apiConfig = remember { ApiConfig.local() }
     val authApi = remember { AuthApi(httpClient, apiConfig) }
 

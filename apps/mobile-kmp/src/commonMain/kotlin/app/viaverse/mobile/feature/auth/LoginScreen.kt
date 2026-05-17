@@ -1,18 +1,14 @@
 package app.viaverse.mobile.feature.auth
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,16 +18,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import app.viaverse.mobile.core.i18n.AppStrings
+import app.viaverse.mobile.designsystem.VvIdentifierField
+import app.viaverse.mobile.designsystem.VvPasswordField
+import app.viaverse.mobile.designsystem.VvPrimaryButton
+import app.viaverse.mobile.designsystem.VvTextField
+import app.viaverse.mobile.designsystem.VvTextLink
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Single-step login: identifier + password together. If 2FA is on, the
  * server returns a partial-auth token and the user advances to a TOTP
- * stage. The identifier is auto-normalized to E.164 (+90 prefix) when
- * it looks like a phone number, matching the web flow exactly.
+ * stage. Identifier is auto-normalized to E.164 (+90 prefix) when it
+ * looks phone-shaped, matching the web flow exactly.
  */
 @Composable
 fun LoginScreen(
@@ -45,36 +47,49 @@ fun LoginScreen(
     var stage by remember { mutableStateOf(LoginStage.CREDENTIALS) }
     var identifier by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
     var partialAuthToken by remember { mutableStateOf<String?>(null) }
     var totpCode by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Text(AppStrings.signIn(), style = MaterialTheme.typography.headlineMedium)
-        error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        Text(
+            AppStrings.loginSubtitle(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        error?.let {
+            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        }
 
         when (stage) {
             LoginStage.CREDENTIALS -> {
-                OutlinedTextField(
+                VvIdentifierField(
                     value = identifier,
                     onValueChange = { identifier = it },
-                    label = { Text(AppStrings.emailOrPhone()) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    label = AppStrings.emailOrPhone(),
+                    placeholder = AppStrings.emailOrPhonePlaceholder(),
                 )
-                OutlinedTextField(
+                VvPasswordField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text(AppStrings.password()) },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
+                    label = AppStrings.password(),
+                    visible = passwordVisible,
+                    onVisibleChange = { passwordVisible = it },
+                    showToggleA11y = AppStrings.showPasswordA11y(),
+                    hideToggleA11y = AppStrings.hidePasswordA11y(),
                 )
-                Button(
+                Spacer(Modifier.height(2.dp))
+                VvPrimaryButton(
+                    text = if (busy) AppStrings.signingIn() else AppStrings.signIn(),
                     onClick = {
                         scope.launch {
                             busy = true; error = null
@@ -97,28 +112,27 @@ fun LoginScreen(
                         }
                     },
                     enabled = !busy && identifier.isNotBlank() && password.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) {
-                    Text(if (busy) AppStrings.signingIn() else AppStrings.signIn())
-                }
-                TextButton(onClick = { onForgotPassword(identifier.trim()) }) {
-                    Text(AppStrings.forgotPassword())
-                }
+                )
+                VvTextLink(text = AppStrings.forgotPassword(), onClick = { onForgotPassword(identifier.trim()) })
             }
 
             LoginStage.TOTP -> {
-                Text(AppStrings.totpHelp(), style = MaterialTheme.typography.bodyMedium)
-                OutlinedTextField(
+                Text(
+                    AppStrings.totpHelp(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                VvTextField(
                     value = totpCode,
                     onValueChange = { if (it.length <= 6 && it.all(Char::isDigit)) totpCode = it },
-                    label = { Text(AppStrings.verificationCode()) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                    modifier = Modifier.fillMaxWidth(),
+                    label = AppStrings.verificationCode(),
+                    keyboardType = KeyboardType.NumberPassword,
+                    visualTransformation = VisualTransformation.None,
                 )
-                Button(
+                VvPrimaryButton(
+                    text = if (busy) AppStrings.verifying() else AppStrings.verify(),
                     onClick = {
-                        val token = partialAuthToken ?: return@Button
+                        val token = partialAuthToken ?: return@VvPrimaryButton
                         scope.launch {
                             busy = true; error = null
                             try {
@@ -132,17 +146,12 @@ fun LoginScreen(
                         }
                     },
                     enabled = !busy && totpCode.length == 6,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) {
-                    Text(if (busy) AppStrings.verifying() else AppStrings.verify())
-                }
+                )
             }
         }
 
-        Spacer(Modifier.height(24.dp))
-        TextButton(onClick = onSwitchToRegister) {
-            Text(AppStrings.noAccountCreateOne())
-        }
+        Spacer(Modifier.height(8.dp))
+        VvTextLink(text = AppStrings.noAccountCreateOne(), onClick = onSwitchToRegister)
     }
 }
 

@@ -135,6 +135,41 @@ object AppStrings {
     fun toggleLanguage(): String = pick("English", "Türkçe")
 
     @Composable @ReadOnlyComposable
+    fun toggleTheme(): String = pick("Tema değiştir", "Toggle theme")
+
+    @Composable @ReadOnlyComposable
+    fun splashTapToContinue(): String =
+        pick("Devam etmek için dokun", "Tap to continue")
+
+    @Composable @ReadOnlyComposable
+    fun loginSubtitle(): String =
+        pick("E-posta veya telefonun ve parolanla devam et.",
+             "Continue with your email or phone and password.")
+
+    @Composable @ReadOnlyComposable
+    fun registerSubtitle(): String =
+        pick("Bilgilerini gir; ardından e-posta ile doğrulayacağız.",
+             "Fill in your details; we'll verify your email next.")
+
+    @Composable @ReadOnlyComposable
+    fun forgotSubtitle(): String =
+        pick("E-posta veya telefonunu gir; doğrulama kodu gönderelim.",
+             "Enter your email or phone; we'll send a code.")
+
+    @Composable @ReadOnlyComposable
+    fun emailOrPhonePlaceholder(): String =
+        pick("ornek@viaverse.app veya 5XXXXXXXXX",
+             "you@example.com or 5XXXXXXXXX")
+
+    @Composable @ReadOnlyComposable
+    fun showPasswordA11y(): String =
+        pick("Parolayı göster", "Show password")
+
+    @Composable @ReadOnlyComposable
+    fun hidePasswordA11y(): String =
+        pick("Parolayı gizle", "Hide password")
+
+    @Composable @ReadOnlyComposable
     private fun pick(tr: String, en: String): String =
         if (LocalAppLanguage.current.value == AppLanguage.TR) tr else en
 }

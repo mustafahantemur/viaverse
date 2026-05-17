@@ -1,9 +1,13 @@
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.compose.ComposeExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
+    // AGP 9 requires the new com.android.kotlin.multiplatform.library
+    // plugin when paired with org.jetbrains.kotlin.multiplatform.
     id("org.jetbrains.kotlin.multiplatform")
+    id("com.android.kotlin.multiplatform.library")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.compose")
     id("viaverse.code-quality")
@@ -12,7 +16,20 @@ plugins {
 val composeDependencies = extensions.getByType(ComposeExtension::class.java).dependencies
 
 extensions.configure<KotlinMultiplatformExtension> {
-    jvm("desktop")
+    jvm("desktop") {
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_21) }
+    }
+    // AGP's new built-in target — replaces the legacy `androidTarget {}`
+    // and integrates with `com.android.kotlin.multiplatform.library`.
+    @Suppress("UnstableApiUsage")
+    androidLibrary {
+        namespace = "app.viaverse.mobile.shared"
+        compileSdk = 36
+        minSdk = 26
+        withDeviceTestBuilder {
+            sourceSetTreeName = "test"
+        }.configure {}
+    }
 
     sourceSets {
         val commonMain by getting {
@@ -36,6 +53,14 @@ extensions.configure<KotlinMultiplatformExtension> {
             }
         }
 
+        // The new `androidLibrary` target exposes the source set as
+        // `androidMain` (same naming as androidTarget did).
+        val androidMain by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-okhttp:3.4.3")
+            }
+        }
+
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
@@ -43,3 +68,5 @@ extensions.configure<KotlinMultiplatformExtension> {
         }
     }
 }
+
+// Android namespace / SDK live on the `androidLibrary` target above.
