@@ -22,4 +22,12 @@ public final class ValkeyKeyScheme {
     public static String session(UUID sessionId) {
         return "session:" + sessionId;
     }
+
+    public static String partialAuthToken(String tokenHash) {
+        return "partial-auth:" + tokenHash;
+    }
+
+    public static String twoFactorPendingSecret(UUID accountId) {
+        return "2fa-pending:" + accountId;
+    }
 }

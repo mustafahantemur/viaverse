@@ -118,6 +118,66 @@ public final class IdentityErrors {
         );
     }
 
+    public static IdentityException passwordPolicyViolation(Map<String, String> fieldErrors) {
+        return badRequest(
+                AppErrorCode.AUTH_PASSWORD_POLICY_VIOLATION,
+                "Password does not meet policy requirements",
+                fieldErrors
+        );
+    }
+
+    public static IdentityException passwordRequired() {
+        return badRequest(
+                AppErrorCode.AUTH_PASSWORD_REQUIRED,
+                "Password is required",
+                Map.of("password", "must not be blank")
+        );
+    }
+
+    public static IdentityException invalidCredentials() {
+        return unauthorized(AppErrorCode.AUTH_INVALID_CREDENTIALS, "Invalid identifier or password");
+    }
+
+    public static IdentityException identifierAlreadyRegistered() {
+        return badRequest(
+                AppErrorCode.AUTH_IDENTIFIER_ALREADY_REGISTERED,
+                "Identifier is already registered",
+                Map.of("identifier", "is already in use")
+        );
+    }
+
+    public static IdentityException totpRequired(String partialAuthToken) {
+        return badRequest(
+                AppErrorCode.AUTH_TOTP_REQUIRED,
+                "TOTP verification is required to complete sign-in",
+                Map.of("partialAuthToken", partialAuthToken)
+        );
+    }
+
+    public static IdentityException invalidTotp() {
+        return unauthorized(AppErrorCode.AUTH_TOTP_INVALID, "Invalid TOTP code");
+    }
+
+    public static IdentityException invalidPartialAuthToken() {
+        return unauthorized(AppErrorCode.AUTH_PARTIAL_AUTH_TOKEN_INVALID, "Partial-auth token is invalid or expired");
+    }
+
+    public static IdentityException twoFactorAlreadyEnabled() {
+        return badRequest(
+                AppErrorCode.AUTH_TWO_FACTOR_ALREADY_ENABLED,
+                "Two-factor authentication is already enabled",
+                Map.of("twoFactor", "already enabled")
+        );
+    }
+
+    public static IdentityException twoFactorNotEnabled() {
+        return badRequest(
+                AppErrorCode.AUTH_TWO_FACTOR_NOT_ENABLED,
+                "Two-factor authentication is not enabled",
+                Map.of("twoFactor", "not enabled")
+        );
+    }
+
     public static ValidationException identifierRequired() {
         return new ValidationException("Identifier is required", Map.of("identifier", "must not be blank"));
     }
@@ -146,9 +206,6 @@ public final class IdentityErrors {
         return technicalConfiguration("Debug seed users can only be enabled in local or test profiles");
     }
 
-    public static TechnicalException debugOtpFixedValueRequired() {
-        return technicalConfiguration("Debug OTP is enabled but no fixed OTP is configured");
-    }
 
     public static TechnicalException smsProviderDisabled() {
         return new TechnicalException(
@@ -172,6 +229,22 @@ public final class IdentityErrors {
         return new TechnicalException(
                 AppErrorCode.TECHNICAL_EMAIL_DELIVERY_FAILED,
                 "Unable to deliver email OTP",
+                cause
+        );
+    }
+
+    public static TechnicalException totpComputationFailed(Throwable cause) {
+        return new TechnicalException(
+                AppErrorCode.TECHNICAL_TOTP_FAILED,
+                "Unable to compute TOTP",
+                cause
+        );
+    }
+
+    public static TechnicalException secretEncryptionFailed(Throwable cause) {
+        return new TechnicalException(
+                AppErrorCode.TECHNICAL_SECRET_ENCRYPTION_FAILED,
+                "Unable to encrypt or decrypt account secret",
                 cause
         );
     }

@@ -6,6 +6,7 @@ import app.viaverse.identity.auth.application.port.out.IdentifierRepository;
 import app.viaverse.identity.auth.application.service.AuthAbuseProtectionService;
 import app.viaverse.identity.auth.application.service.OtpChallengeService;
 import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
+import app.viaverse.identity.auth.domain.enums.LoginFlowPurposeEnum;
 import app.viaverse.identity.auth.domain.model.AuthLoginFlow;
 import app.viaverse.identity.auth.domain.value.NormalizedIdentifier;
 import app.viaverse.identity.config.AuthProperties;
@@ -16,6 +17,19 @@ import java.time.Instant;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
+/**
+ * Identifier triage:
+ *
+ * <ul>
+ *   <li><b>Known identifier</b> → {@link AuthNextStepEnum#PASSWORD_REQUIRED}.
+ *       No OTP is sent — login is now password-first.</li>
+ *   <li><b>Unknown identifier</b> → start a {@link LoginFlowPurposeEnum#REGISTRATION}
+ *       flow, dispatch an OTP to prove ownership, return
+ *       {@link AuthNextStepEnum#OTP_REQUIRED}. The OTP is consumed by
+ *       {@code POST /auth/register/verify-otp}, which then hands back a
+ *       registration token for {@code POST /auth/register/complete}.</li>
+ * </ul>
+ */
 @Service
 public class StartAuthUseCaseImpl implements StartAuthUseCase {
 
@@ -52,17 +66,25 @@ public class StartAuthUseCaseImpl implements StartAuthUseCase {
         NormalizedIdentifier normalized = identifierNormalizer.normalize(command.identifier());
         abuseProtectionService.enforceStart(normalized, command.clientIp(), command.clientFingerprint());
 
-        UUID accountId = identifierRepository
+        boolean known = identifierRepository
                 .findByTypeAndValue(normalized.type(), normalized.value())
-                .map(identifier -> identifier.accountId())
-                .orElse(null);
+                .isPresent();
+        if (known) {
+            return new Result(
+                    null,
+                    normalized.type(),
+                    AuthNextStepEnum.PASSWORD_REQUIRED,
+                    null
+            );
+        }
 
         Instant expiresAt = now.plus(properties.getOtp().getTtl());
         AuthLoginFlow flow = flowRepository.save(AuthLoginFlow.issue(
                 UUID.randomUUID(),
+                LoginFlowPurposeEnum.REGISTRATION,
                 normalized.type(),
                 normalized.value(),
-                accountId,
+                null,
                 expiresAt,
                 now
         ));

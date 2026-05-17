@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.env.Environment;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class LocalTestUserSeeder implements ApplicationRunner {
     public static final String EMAIL_IDENTIFIER = "test.user@viaverse.local";
     public static final String PHONE_IDENTIFIER = "+905551110000";
+    public static final String SEED_PASSWORD = "TestUser!123";
 
     private static final Set<ConsentTypeEnum> REQUIRED_CONSENTS = Set.of(
             ConsentTypeEnum.TERMS_OF_SERVICE,
@@ -41,6 +43,7 @@ public class LocalTestUserSeeder implements ApplicationRunner {
     private final IdentityAccountJpaRepository accountRepository;
     private final IdentityIdentifierJpaRepository identifierRepository;
     private final ConsentRecordJpaRepository consentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public LocalTestUserSeeder(
             Clock clock,
@@ -49,7 +52,8 @@ public class LocalTestUserSeeder implements ApplicationRunner {
             IdentifierNormalizer identifierNormalizer,
             IdentityAccountJpaRepository accountRepository,
             IdentityIdentifierJpaRepository identifierRepository,
-            ConsentRecordJpaRepository consentRepository
+            ConsentRecordJpaRepository consentRepository,
+            PasswordEncoder passwordEncoder
     ) {
         this.clock = clock;
         this.properties = properties;
@@ -58,6 +62,7 @@ public class LocalTestUserSeeder implements ApplicationRunner {
         this.accountRepository = accountRepository;
         this.identifierRepository = identifierRepository;
         this.consentRepository = consentRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -104,6 +109,11 @@ public class LocalTestUserSeeder implements ApplicationRunner {
                 firstName,
                 lastName,
                 true,
+                passwordEncoder.encode(SEED_PASSWORD),
+                now,
+                false,
+                null,
+                null,
                 now,
                 now
         ));

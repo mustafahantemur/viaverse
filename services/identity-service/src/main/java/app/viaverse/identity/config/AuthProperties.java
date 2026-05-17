@@ -367,9 +367,17 @@ public class AuthProperties {
         }
     }
 
+    /**
+     * Local/test convenience flags. {@code enabled} wires the dev OTP delivery
+     * adapter that logs OTPs to the console and forwards SMS OTPs to Mailpit
+     * so developers can copy them from a single inbox; OTPs are always
+     * cryptographically random regardless of this flag. {@code seedTestUsers}
+     * pre-populates two known accounts so integration tests can sign in
+     * without going through the registration flow. Both are blocked outside
+     * the {@code local}/{@code test} profiles by AuthConfiguration.
+     */
     public static class Debug {
         private boolean enabled;
-        private String fixedOtp = "";
         private boolean seedTestUsers;
 
         public boolean isEnabled() {
@@ -378,14 +386,6 @@ public class AuthProperties {
 
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
-        }
-
-        public String getFixedOtp() {
-            return fixedOtp;
-        }
-
-        public void setFixedOtp(String fixedOtp) {
-            this.fixedOtp = fixedOtp;
         }
 
         public boolean isSeedTestUsers() {
@@ -401,6 +401,7 @@ public class AuthProperties {
         private boolean enabled = true;
         private final AuthStart authStart = new AuthStart();
         private final OtpVerify otpVerify = new OtpVerify();
+        private final PasswordLogin passwordLogin = new PasswordLogin();
         private final Resend resend = new Resend();
         private final Lockout lockout = new Lockout();
 
@@ -420,6 +421,10 @@ public class AuthProperties {
             return otpVerify;
         }
 
+        public PasswordLogin getPasswordLogin() {
+            return passwordLogin;
+        }
+
         public Resend getResend() {
             return resend;
         }
@@ -427,6 +432,26 @@ public class AuthProperties {
         public Lockout getLockout() {
             return lockout;
         }
+    }
+
+    public static class PasswordLogin {
+        // Per-identifier window protects the targeted account; per-IP window
+        // protects everyone else from one noisy host. Values default to the
+        // OWASP-recommended 5 attempts in 5 minutes per identifier; per-IP is
+        // wider because a single corporate NAT can have many users.
+        private long identifierWindowSeconds = 300;
+        private int identifierMaxAttempts = 5;
+        private long ipWindowSeconds = 60;
+        private int ipMaxAttempts = 30;
+
+        public long getIdentifierWindowSeconds() { return identifierWindowSeconds; }
+        public void setIdentifierWindowSeconds(long v) { this.identifierWindowSeconds = v; }
+        public int getIdentifierMaxAttempts() { return identifierMaxAttempts; }
+        public void setIdentifierMaxAttempts(int v) { this.identifierMaxAttempts = v; }
+        public long getIpWindowSeconds() { return ipWindowSeconds; }
+        public void setIpWindowSeconds(long v) { this.ipWindowSeconds = v; }
+        public int getIpMaxAttempts() { return ipMaxAttempts; }
+        public void setIpMaxAttempts(int v) { this.ipMaxAttempts = v; }
     }
 
     public static class AuthStart {

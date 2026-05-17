@@ -11,6 +11,7 @@ public record AdminRegisterRequest(
         @NotBlank String displayName,
         String firstName,
         String lastName,
+        String password,
         @NotEmpty List<ConsentTypeEnum> acceptedRequiredConsents,
         boolean marketingConsentAccepted
 ) {

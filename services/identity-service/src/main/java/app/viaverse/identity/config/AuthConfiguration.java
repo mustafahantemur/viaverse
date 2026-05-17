@@ -1,5 +1,6 @@
 package app.viaverse.identity.config;
 
+import app.viaverse.identity.auth.infrastructure.security.AccountSecretCipher;
 import app.viaverse.identity.auth.infrastructure.security.JwtAccessTokenService;
 import app.viaverse.identity.auth.infrastructure.security.IdentityJwtValidator;
 import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
@@ -65,6 +66,11 @@ public class AuthConfiguration {
     @Bean
     TokenHasher tokenHasher(AuthProperties properties) {
         return new TokenHasher(properties.getJwt().getSecret());
+    }
+
+    @Bean
+    AccountSecretCipher accountSecretCipher(AuthProperties properties) {
+        return new AccountSecretCipher(properties.getJwt().getSecret());
     }
 
     @Bean
@@ -139,10 +145,6 @@ public class AuthConfiguration {
         }
         if (properties.getDebug().isSeedTestUsers() && !hasLocalOrTestProfile(activeProfiles)) {
             throw IdentityErrors.debugSeedUsersProfileInvalid();
-        }
-        if (properties.getDebug().isEnabled()
-                && (properties.getDebug().getFixedOtp() == null || properties.getDebug().getFixedOtp().isBlank())) {
-            throw IdentityErrors.debugOtpFixedValueRequired();
         }
         if (properties.getSms().getProvider() == SmsProviderEnum.NETGSM) {
             AuthProperties.Netgsm netgsm = properties.getSms().getNetgsm();

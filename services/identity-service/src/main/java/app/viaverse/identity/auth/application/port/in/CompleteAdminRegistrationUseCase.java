@@ -15,6 +15,7 @@ public interface CompleteAdminRegistrationUseCase {
             String displayName,
             String firstName,
             String lastName,
+            String password,
             List<ConsentTypeEnum> acceptedRequiredConsents,
             boolean marketingConsentAccepted,
             String userAgent,

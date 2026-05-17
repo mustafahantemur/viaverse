@@ -1,61 +1,62 @@
 package app.viaverse.identity.auth.infrastructure.adapter.in.web.mapper;
 
 import app.viaverse.identity.account.domain.AccountView;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthResponse;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.RegistrationRequiredResponse;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.StartAuthResponse;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthCompletionResponse;
-import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCase;
 import app.viaverse.identity.auth.application.port.in.CompleteAdminRegistrationUseCase;
+import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCase;
+import app.viaverse.identity.auth.application.port.in.PasswordLoginUseCase;
 import app.viaverse.identity.auth.application.port.in.RefreshTokenUseCase;
 import app.viaverse.identity.auth.application.port.in.SocialSignInUseCase;
 import app.viaverse.identity.auth.application.port.in.StartAuthUseCase;
 import app.viaverse.identity.auth.application.port.in.VerifyOtpUseCase;
+import app.viaverse.identity.auth.application.port.in.VerifyTotpUseCase;
 import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthCompletionResponse;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthResponse;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.RegistrationRequiredResponse;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.StartAuthResponse;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.TotpRequiredResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * Maps inbound port {@code Result} records to outbound API DTOs. Mapping is
- * intentionally one-way (port -> DTO) so transport concerns never leak into the
- * application layer.
+ * Inbound port → outbound DTO mapping. One-way (port → DTO) so transport
+ * concerns stay out of the application layer. The verbose {@code default}
+ * methods exist because MapStruct cannot synthesise sealed-interface
+ * polymorphism from a single {@code nextStep} field.
  */
 @Mapper(componentModel = "spring")
 public interface AuthDtoMapper {
 
     StartAuthResponse toResponse(StartAuthUseCase.Result result);
 
-    /**
-     * Dispatches on {@code nextStep}: the AUTHENTICATED branch maps to an
-     * {@link AuthResponse} (with no account info — use cases that need account
-     * details should call the richer {@link #toAuthResponse} overload), and
-     * REGISTRATION_REQUIRED maps to {@link RegistrationRequiredResponse}.
-     */
     default AuthCompletionResponse toResponse(VerifyOtpUseCase.Result result) {
-        if (result.nextStep() == AuthNextStepEnum.REGISTRATION_REQUIRED) {
-            return new RegistrationRequiredResponse(
-                    result.nextStep(),
-                    result.registrationToken(),
-                    result.registrationExpiresAt()
-            );
-        }
-        return new AuthResponse(
+        return new RegistrationRequiredResponse(
                 result.nextStep(),
-                result.accessToken(),
-                result.accessTokenExpiresAt(),
-                result.refreshToken(),
-                result.refreshTokenExpiresAt(),
-                null
+                result.registrationToken(),
+                result.registrationExpiresAt()
         );
     }
 
     default AuthCompletionResponse toResponse(SocialSignInUseCase.Result result) {
-        if (result.nextStep() == AuthNextStepEnum.REGISTRATION_REQUIRED) {
-            return new RegistrationRequiredResponse(
+        return switch (result.nextStep()) {
+            case REGISTRATION_REQUIRED -> new RegistrationRequiredResponse(
+                    result.nextStep(), result.registrationToken(), result.registrationExpiresAt());
+            case TOTP_REQUIRED -> new TotpRequiredResponse(
+                    result.nextStep(), result.partialAuthToken(), result.partialAuthExpiresAt());
+            default -> new AuthResponse(
                     result.nextStep(),
-                    result.registrationToken(),
-                    result.registrationExpiresAt()
-            );
+                    result.accessToken(),
+                    result.accessTokenExpiresAt(),
+                    result.refreshToken(),
+                    result.refreshTokenExpiresAt(),
+                    null);
+        };
+    }
+
+    default AuthCompletionResponse toResponse(PasswordLoginUseCase.Result result) {
+        if (result.nextStep() == AuthNextStepEnum.TOTP_REQUIRED) {
+            return new TotpRequiredResponse(
+                    result.nextStep(), result.partialAuthToken(), result.partialAuthExpiresAt());
         }
         return new AuthResponse(
                 result.nextStep(),
@@ -79,12 +80,12 @@ public interface AuthDtoMapper {
     @Mapping(target = "account", ignore = true)
     AuthResponse toResponse(RefreshTokenUseCase.Result result);
 
-    /**
-     * Variant used when the caller has already fetched the {@link AccountView}
-     * (e.g. controllers that combine session issuance with current-account
-     * lookup) and wants it embedded in the response.
-     */
-    default AuthResponse toAuthResponse(VerifyOtpUseCase.Result result, AccountView account) {
+    @Mapping(target = "nextStep", expression = "java(app.viaverse.identity.auth.domain.enums.AuthNextStepEnum.AUTHENTICATED)")
+    @Mapping(target = "account", ignore = true)
+    AuthResponse toResponse(VerifyTotpUseCase.Result result);
+
+    /** Variant for flows that already loaded {@link AccountView}. */
+    default AuthResponse toAuthResponse(SocialSignInUseCase.Result result, AccountView account) {
         return new AuthResponse(
                 result.nextStep(),
                 result.accessToken(),
@@ -95,7 +96,18 @@ public interface AuthDtoMapper {
         );
     }
 
-    default AuthResponse toAuthResponse(SocialSignInUseCase.Result result, AccountView account) {
+    default AuthResponse toAuthResponse(PasswordLoginUseCase.Result result, AccountView account) {
+        return new AuthResponse(
+                result.nextStep(),
+                result.accessToken(),
+                result.accessTokenExpiresAt(),
+                result.refreshToken(),
+                result.refreshTokenExpiresAt(),
+                account
+        );
+    }
+
+    default AuthResponse toAuthResponse(VerifyTotpUseCase.Result result, AccountView account) {
         return new AuthResponse(
                 result.nextStep(),
                 result.accessToken(),

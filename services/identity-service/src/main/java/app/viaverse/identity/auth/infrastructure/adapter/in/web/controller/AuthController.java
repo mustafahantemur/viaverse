@@ -1,28 +1,33 @@
 package app.viaverse.identity.auth.infrastructure.adapter.in.web.controller;
 
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthResponse;
 import app.viaverse.identity.account.application.port.in.GetCurrentAccountUseCase;
 import app.viaverse.identity.account.infrastructure.adapter.in.web.mapper.AccountDtoMapper;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.LogoutRequest;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.RefreshRequest;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.RegisterRequest;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.AdminRegisterRequest;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.SocialSignInRequest;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.StartAuthRequest;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.StartAuthResponse;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.VerifyOtpRequest;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthCompletionResponse;
-import app.viaverse.identity.auth.infrastructure.adapter.in.web.mapper.AuthDtoMapper;
-import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCase;
 import app.viaverse.identity.auth.application.port.in.CompleteAdminRegistrationUseCase;
+import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCase;
 import app.viaverse.identity.auth.application.port.in.LogoutUseCase;
+import app.viaverse.identity.auth.application.port.in.PasswordLoginUseCase;
 import app.viaverse.identity.auth.application.port.in.RefreshTokenUseCase;
 import app.viaverse.identity.auth.application.port.in.SocialSignInUseCase;
 import app.viaverse.identity.auth.application.port.in.StartAuthUseCase;
 import app.viaverse.identity.auth.application.port.in.VerifyOtpUseCase;
+import app.viaverse.identity.auth.application.port.in.VerifyTotpUseCase;
 import app.viaverse.identity.auth.application.service.AuthAbuseProtectionService;
+import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
 import app.viaverse.identity.auth.domain.enums.SocialAuthProviderEnum;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.AdminRegisterRequest;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.LogoutRequest;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.PasswordLoginRequest;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.RefreshRequest;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.RegisterRequest;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.SocialSignInRequest;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.StartAuthRequest;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.VerifyOtpRequest;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.VerifyTotpRequest;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthCompletionResponse;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.RequiredConsentsResponse;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.StartAuthResponse;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.mapper.AuthDtoMapper;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
 import app.viaverse.identity.consent.application.ConsentPolicy;
@@ -34,37 +39,35 @@ import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Bootstrap authentication endpoints. The intended client flow is:
+ * Auth endpoints. Intended client flow:
  *
  * <ol>
- *   <li><b>First-ever sign-in on a device</b>: {@code POST /start} → out-of-band
- *       OTP → {@code POST /verify-otp}. New identifier → {@code POST /register}
- *       (after fetching {@code GET /required-consents}); existing identifier →
- *       session tokens come back directly from {@code verify-otp}.</li>
- *   <li><b>Subsequent app opens / page loads</b>: the client persists the
- *       refresh token (30-day default TTL) from the previous step and calls
- *       {@code POST /refresh} on launch. This is the rotation point — the
- *       server returns a new access + refresh token pair and the client
- *       <em>never</em> goes through OTP again until the refresh token expires
- *       or is revoked. Mobile clients that prompt for OTP on every cold start
- *       are buggy clients, not a missing server feature.</li>
- *   <li><b>Social sign-in</b>: {@code POST /social/{provider}} replaces both
- *       {@code start} and {@code verify-otp} when the user authenticates via
- *       Google / Apple — same downstream behaviour (register if new, else
- *       session tokens).</li>
+ *   <li><b>First touch on an identifier</b> → {@code POST /start} returns
+ *       {@code PASSWORD_REQUIRED} (known account) or {@code OTP_REQUIRED}
+ *       (new account; OTP dispatched out-of-band).</li>
+ *   <li><b>Known account</b> → {@code POST /password-login} with email +
+ *       password. Returns {@code AUTHENTICATED}, or {@code TOTP_REQUIRED}
+ *       when 2FA is on (closed by {@code POST /verify-totp}).</li>
+ *   <li><b>New account</b> → {@code POST /verify-otp} consumes the OTP and
+ *       returns a registration token. {@code POST /register} accepts the
+ *       token plus display name, password (required for OTP flow, optional
+ *       on social flow), and consents.</li>
+ *   <li><b>Social sign-in</b> → {@code POST /social/{provider}} replaces
+ *       start + password-login for users who registered via Google / Apple.
+ *       Returns the same {@code TOTP_REQUIRED} branch when 2FA is enabled.</li>
+ *   <li><b>Subsequent app launches</b> → {@code POST /refresh}. Clients
+ *       persist the refresh token (30-day TTL) and exchange it for a new
+ *       access + refresh pair on every cold start — no OTP, no password,
+ *       no TOTP.</li>
  * </ol>
- *
- * <p>2FA (TOTP / WebAuthn) is intentionally not implemented yet; when it lands
- * it slots in between {@code verify-otp}/{@code social} and session issuance
- * for accounts that opt in. Today every account is single-factor passwordless.
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -73,6 +76,8 @@ public class AuthController {
     private final StartAuthUseCase startAuthUseCase;
     private final SocialSignInUseCase socialSignInUseCase;
     private final VerifyOtpUseCase verifyOtpUseCase;
+    private final PasswordLoginUseCase passwordLoginUseCase;
+    private final VerifyTotpUseCase verifyTotpUseCase;
     private final CompleteRegistrationUseCase completeRegistrationUseCase;
     private final CompleteAdminRegistrationUseCase completeAdminRegistrationUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
@@ -89,6 +94,8 @@ public class AuthController {
             StartAuthUseCase startAuthUseCase,
             SocialSignInUseCase socialSignInUseCase,
             VerifyOtpUseCase verifyOtpUseCase,
+            PasswordLoginUseCase passwordLoginUseCase,
+            VerifyTotpUseCase verifyTotpUseCase,
             CompleteRegistrationUseCase completeRegistrationUseCase,
             CompleteAdminRegistrationUseCase completeAdminRegistrationUseCase,
             RefreshTokenUseCase refreshTokenUseCase,
@@ -104,6 +111,8 @@ public class AuthController {
         this.startAuthUseCase = startAuthUseCase;
         this.socialSignInUseCase = socialSignInUseCase;
         this.verifyOtpUseCase = verifyOtpUseCase;
+        this.passwordLoginUseCase = passwordLoginUseCase;
+        this.verifyTotpUseCase = verifyTotpUseCase;
         this.completeRegistrationUseCase = completeRegistrationUseCase;
         this.completeAdminRegistrationUseCase = completeAdminRegistrationUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
@@ -117,44 +126,11 @@ public class AuthController {
         this.consentPolicy = consentPolicy;
     }
 
-    /**
-     * Server-published consent registry. Clients hit this on first registration
-     * (or whenever they need to re-prompt) to discover which documents are
-     * required and what version to display. They then echo back the accepted
-     * {@code type}s in {@code POST /auth/register} — versions are server-owned
-     * and stamped at acceptance time, so this is the only place the version
-     * is ever wire-visible.
-     */
     @GetMapping("/required-consents")
     public ApiResponse<RequiredConsentsResponse> requiredConsents() {
         return ApiResponse.ok(new RequiredConsentsResponse(
                 consentPolicy.requiredDocuments(),
                 consentPolicy.marketingDocument()
-        ));
-    }
-
-    @PostMapping("/register-admin")
-    public ApiResponse<AuthResponse> registerAdmin(
-            @Valid @RequestBody AdminRegisterRequest request,
-            @RequestHeader(value = "User-Agent", required = false) String userAgent,
-            HttpServletRequest httpRequest
-    ) {
-        CompleteAdminRegistrationUseCase.Result result = completeAdminRegistrationUseCase.execute(
-                new CompleteAdminRegistrationUseCase.Command(
-                        request.invitationToken(),
-                        request.registrationToken(),
-                        request.displayName(),
-                        request.firstName(),
-                        request.lastName(),
-                        request.acceptedRequiredConsents(),
-                        request.marketingConsentAccepted(),
-                        userAgent,
-                        clientIpResolver.resolve(httpRequest)
-                )
-        );
-        return ApiResponse.ok(authDtoMapper.toAuthResponse(
-                result,
-                currentAccountView(result.accountId(), result.sessionId())
         ));
     }
 
@@ -172,24 +148,59 @@ public class AuthController {
         return ApiResponse.ok(authDtoMapper.toResponse(result));
     }
 
-    @PostMapping("/verify-otp")
-    public ApiResponse<AuthCompletionResponse> verifyOtp(
-            @Valid @RequestBody VerifyOtpRequest request,
+    @PostMapping("/password-login")
+    public ApiResponse<AuthCompletionResponse> passwordLogin(
+            @Valid @RequestBody PasswordLoginRequest request,
             @RequestHeader(value = "User-Agent", required = false) String userAgent,
             HttpServletRequest httpRequest
     ) {
-        VerifyOtpUseCase.Result result = verifyOtpUseCase.execute(new VerifyOtpUseCase.Command(
-                request.flowId(),
-                request.otp(),
-                userAgent,
-                clientIpResolver.resolve(httpRequest)
-        ));
-        if (result.nextStep() == app.viaverse.identity.auth.domain.enums.AuthNextStepEnum.AUTHENTICATED) {
+        PasswordLoginUseCase.Result result = passwordLoginUseCase.execute(
+                new PasswordLoginUseCase.Command(
+                        request.identifier(),
+                        request.password(),
+                        userAgent,
+                        clientIpResolver.resolve(httpRequest)
+                )
+        );
+        if (result.nextStep() == AuthNextStepEnum.AUTHENTICATED) {
             return ApiResponse.ok(authDtoMapper.toAuthResponse(
                     result,
                     currentAccountView(result.accountId(), result.sessionId())
             ));
         }
+        return ApiResponse.ok(authDtoMapper.toResponse(result));
+    }
+
+    @PostMapping("/verify-totp")
+    public ApiResponse<AuthResponse> verifyTotp(
+            @Valid @RequestBody VerifyTotpRequest request,
+            @RequestHeader(value = "User-Agent", required = false) String userAgent,
+            HttpServletRequest httpRequest
+    ) {
+        VerifyTotpUseCase.Result result = verifyTotpUseCase.execute(
+                new VerifyTotpUseCase.Command(
+                        request.partialAuthToken(),
+                        request.totpCode(),
+                        userAgent,
+                        clientIpResolver.resolve(httpRequest)
+                )
+        );
+        return ApiResponse.ok(authDtoMapper.toAuthResponse(
+                result,
+                currentAccountView(result.accountId(), result.sessionId())
+        ));
+    }
+
+    @PostMapping("/verify-otp")
+    public ApiResponse<AuthCompletionResponse> verifyOtp(
+            @Valid @RequestBody VerifyOtpRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        VerifyOtpUseCase.Result result = verifyOtpUseCase.execute(new VerifyOtpUseCase.Command(
+                request.flowId(),
+                request.otp(),
+                clientIpResolver.resolve(httpRequest)
+        ));
         return ApiResponse.ok(authDtoMapper.toResponse(result));
     }
 
@@ -209,7 +220,7 @@ public class AuthController {
                 clientIpResolver.resolve(httpRequest),
                 clientFingerprint
         ));
-        if (result.nextStep() == app.viaverse.identity.auth.domain.enums.AuthNextStepEnum.AUTHENTICATED) {
+        if (result.nextStep() == AuthNextStepEnum.AUTHENTICATED) {
             return ApiResponse.ok(authDtoMapper.toAuthResponse(
                     result,
                     currentAccountView(result.accountId(), result.sessionId())
@@ -230,6 +241,33 @@ public class AuthController {
                         request.displayName(),
                         request.firstName(),
                         request.lastName(),
+                        request.password(),
+                        request.acceptedRequiredConsents(),
+                        request.marketingConsentAccepted(),
+                        userAgent,
+                        clientIpResolver.resolve(httpRequest)
+                )
+        );
+        return ApiResponse.ok(authDtoMapper.toAuthResponse(
+                result,
+                currentAccountView(result.accountId(), result.sessionId())
+        ));
+    }
+
+    @PostMapping("/register-admin")
+    public ApiResponse<AuthResponse> registerAdmin(
+            @Valid @RequestBody AdminRegisterRequest request,
+            @RequestHeader(value = "User-Agent", required = false) String userAgent,
+            HttpServletRequest httpRequest
+    ) {
+        CompleteAdminRegistrationUseCase.Result result = completeAdminRegistrationUseCase.execute(
+                new CompleteAdminRegistrationUseCase.Command(
+                        request.invitationToken(),
+                        request.registrationToken(),
+                        request.displayName(),
+                        request.firstName(),
+                        request.lastName(),
+                        request.password(),
                         request.acceptedRequiredConsents(),
                         request.marketingConsentAccepted(),
                         userAgent,

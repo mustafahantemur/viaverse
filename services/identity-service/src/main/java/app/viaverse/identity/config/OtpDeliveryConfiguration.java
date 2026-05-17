@@ -2,6 +2,7 @@ package app.viaverse.identity.config;
 
 import app.viaverse.identity.auth.application.port.out.OtpDeliveryPort;
 import app.viaverse.identity.auth.infrastructure.adapter.out.otp.DebugOtpDeliveryAdapter;
+import app.viaverse.identity.auth.infrastructure.adapter.out.otp.MailpitPhoneOtpDeliveryAdapter;
 import app.viaverse.identity.auth.infrastructure.adapter.out.otp.NetgsmSmsOtpDeliveryAdapter;
 import app.viaverse.identity.auth.infrastructure.adapter.out.otp.SmtpEmailOtpDeliveryAdapter;
 import java.net.http.HttpClient;
@@ -20,15 +21,12 @@ import org.springframework.web.client.RestClient;
  * Declares the configured {@link OtpDeliveryPort} beans. Multiple adapters may
  * coexist — {@code OtpChallengeService} dispatches by
  * {@link OtpDeliveryPort#supports} and picks the first match. Real adapters
- * (NetGSM, SMTP) are ordered before the Debug adapter so they win for their
- * channel; Debug only fires for an identifier type when no real adapter claims
- * it (e.g. SOCIAL flows, or local where SMS/email are not configured).
+ * (NetGSM, SMTP) are ordered ahead of dev fallbacks (Mailpit phone bridge,
+ * Debug log) so they win in production environments where they're enabled.
  *
  * <p>The NetGSM client is built with the static {@link RestClient#builder()}
- * (not the auto-instrumented {@code RestClient.Builder} bean) so that
- * credentials carried in the request URL are never captured into HTTP span
- * attributes or metrics. See {@link NetgsmSmsOtpDeliveryAdapter} for the
- * security rationale.
+ * (not the auto-instrumented {@code RestClient.Builder} bean) so credentials
+ * carried in the URL never leak into HTTP span attributes or metrics.
  */
 @Configuration
 public class OtpDeliveryConfiguration {
@@ -76,6 +74,27 @@ public class OtpDeliveryConfiguration {
         return sender;
     }
 
+    /**
+     * Local-only convenience: when there's no real SMS gateway but Mailpit
+     * SMTP is wired up (the typical dev setup), forward phone OTPs to Mailpit
+     * too. Sits below the real NetGSM adapter via {@code @Order(50)} so it
+     * never wins in production.
+     */
+    @Bean
+    @Order(50)
+    @ConditionalOnExpression(
+            "'${viaverse.auth.email.provider:none}'.equalsIgnoreCase('smtp') "
+                    + "&& '${viaverse.auth.sms.provider:none}'.equalsIgnoreCase('none') "
+                    + "&& '${viaverse.auth.debug.enabled:false}'.equalsIgnoreCase('true')"
+    )
+    MailpitPhoneOtpDeliveryAdapter mailpitPhoneOtpDeliveryAdapter(
+            AuthProperties properties,
+            JavaMailSender javaMailSender
+    ) {
+        return new MailpitPhoneOtpDeliveryAdapter(properties.getEmail().getSmtp(), javaMailSender);
+    }
+
+    /** Final fallback: log the OTP. Only active when debug is on. */
     @Bean
     @Order(100)
     @ConditionalOnExpression("'${viaverse.auth.debug.enabled:false}'.equalsIgnoreCase('true')")

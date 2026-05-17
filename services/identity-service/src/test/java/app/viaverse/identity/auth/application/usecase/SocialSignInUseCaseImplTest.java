@@ -19,6 +19,7 @@ import app.viaverse.identity.auth.application.port.out.IdentifierRepository;
 import app.viaverse.identity.auth.application.port.out.SocialAuthPort;
 import app.viaverse.identity.auth.application.service.AuthAbuseProtectionService;
 import app.viaverse.identity.auth.application.service.AuthSessionIssuer;
+import app.viaverse.identity.auth.application.service.PartialAuthTokenService;
 import app.viaverse.identity.auth.application.service.RegistrationTokenService;
 import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
 import app.viaverse.identity.auth.domain.enums.IdentifierTypeEnum;
@@ -55,6 +56,7 @@ class SocialSignInUseCaseImplTest {
     private RegistrationTokenService registrationTokenService;
     private AuthSessionIssuer sessionIssuer;
     private AuthAbuseProtectionService abuseProtectionService;
+    private PartialAuthTokenService partialAuthTokenService;
     private AuthProperties properties;
 
     private SocialSignInUseCaseImpl useCase;
@@ -67,6 +69,7 @@ class SocialSignInUseCaseImplTest {
         registrationTokenService = org.mockito.Mockito.mock(RegistrationTokenService.class);
         sessionIssuer = org.mockito.Mockito.mock(AuthSessionIssuer.class);
         abuseProtectionService = org.mockito.Mockito.mock(AuthAbuseProtectionService.class);
+        partialAuthTokenService = org.mockito.Mockito.mock(PartialAuthTokenService.class);
 
         properties = new AuthProperties();
         properties.getSocial().getGoogle().setEnabled(true);
@@ -84,7 +87,8 @@ class SocialSignInUseCaseImplTest {
                 flowRepository,
                 registrationTokenService,
                 sessionIssuer,
-                abuseProtectionService
+                abuseProtectionService,
+                partialAuthTokenService
         );
     }
 
@@ -163,6 +167,11 @@ class SocialSignInUseCaseImplTest {
                 "First",
                 "Last",
                 true,
+                null,
+                null,
+                false,
+                null,
+                null,
                 NOW,
                 NOW
         );

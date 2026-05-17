@@ -12,8 +12,14 @@ import java.util.UUID;
  * Domain model representing a user account in the identity context.
  * <p>
  * Pure Java class — no JPA / Spring annotations. Mostly a data carrier, but encapsulates
- * profile-completion state and lifecycle transitions (suspend / reactivate) so that
- * persistence adapters and use cases never mutate fields directly.
+ * profile-completion state, password lifecycle, 2FA state and lifecycle transitions
+ * (suspend / reactivate) so that persistence adapters and use cases never mutate fields
+ * directly.
+ *
+ * <p>{@code passwordHash} may be {@code null} for social-only accounts (registered via
+ * Google / Apple). Such accounts can later add a password via the {@code /me/password}
+ * endpoint. {@code twoFactorSecret} is the AES-GCM-encrypted TOTP shared secret; only
+ * the identity-service holds the decryption key.
  */
 public final class Account {
 
@@ -26,6 +32,11 @@ public final class Account {
     private String firstName;
     private String lastName;
     private boolean profileCompleted;
+    private String passwordHash;
+    private Instant passwordUpdatedAt;
+    private boolean twoFactorEnabled;
+    private byte[] twoFactorSecret;
+    private Instant twoFactorEnrolledAt;
     private Instant updatedAt;
 
     public Account(
@@ -36,6 +47,11 @@ public final class Account {
             String firstName,
             String lastName,
             boolean profileCompleted,
+            String passwordHash,
+            Instant passwordUpdatedAt,
+            boolean twoFactorEnabled,
+            byte[] twoFactorSecret,
+            Instant twoFactorEnrolledAt,
             Instant createdAt,
             Instant updatedAt
     ) {
@@ -46,13 +62,20 @@ public final class Account {
         this.firstName = firstName;
         this.lastName = lastName;
         this.profileCompleted = profileCompleted;
+        this.passwordHash = passwordHash;
+        this.passwordUpdatedAt = passwordUpdatedAt;
+        this.twoFactorEnabled = twoFactorEnabled;
+        this.twoFactorSecret = twoFactorSecret == null ? null : twoFactorSecret.clone();
+        this.twoFactorEnrolledAt = twoFactorEnrolledAt;
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt");
     }
 
     /**
      * Factory for newly-registered accounts. Starts in {@link AccountStatusEnum#ACTIVE}
-     * with {@code profileCompleted=false} and no first/last name set.
+     * with {@code profileCompleted=false}, USER role, no password, no 2FA. Use
+     * {@link #setPassword(String, Instant)} immediately after if the registration flow
+     * required one.
      */
     public static Account register(UUID id, String displayName, Instant now) {
         return new Account(
@@ -63,6 +86,11 @@ public final class Account {
                 null,
                 null,
                 false,
+                null,
+                null,
+                false,
+                null,
+                null,
                 now,
                 now
         );
@@ -94,6 +122,30 @@ public final class Account {
 
     public boolean isProfileCompleted() {
         return profileCompleted;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public Instant getPasswordUpdatedAt() {
+        return passwordUpdatedAt;
+    }
+
+    public boolean hasPassword() {
+        return passwordHash != null && !passwordHash.isBlank();
+    }
+
+    public boolean isTwoFactorEnabled() {
+        return twoFactorEnabled;
+    }
+
+    public byte[] getTwoFactorSecret() {
+        return twoFactorSecret == null ? null : twoFactorSecret.clone();
+    }
+
+    public Instant getTwoFactorEnrolledAt() {
+        return twoFactorEnrolledAt;
     }
 
     public Instant getCreatedAt() {
@@ -143,6 +195,44 @@ public final class Account {
 
     public void grantRole(AccountRoleEnum role, Instant now) {
         this.roles.add(Objects.requireNonNull(role, "role"));
+        this.updatedAt = Objects.requireNonNull(now, "now");
+    }
+
+    /**
+     * Set or rotate the password hash. The hash format (Argon2id) is encoded in the
+     * string itself so we can rotate algorithm parameters without a schema change.
+     */
+    public void setPassword(String passwordHash, Instant now) {
+        if (passwordHash == null || passwordHash.isBlank()) {
+            throw new IllegalArgumentException("passwordHash must not be blank");
+        }
+        this.passwordHash = passwordHash;
+        this.passwordUpdatedAt = Objects.requireNonNull(now, "now");
+        this.updatedAt = now;
+    }
+
+    /**
+     * Enable TOTP-based 2FA with the supplied encrypted shared secret. The caller
+     * is responsible for encrypting the secret with the identity-service key.
+     */
+    public void enableTwoFactor(byte[] encryptedSecret, Instant now) {
+        if (encryptedSecret == null || encryptedSecret.length == 0) {
+            throw new IllegalArgumentException("encryptedSecret must not be empty");
+        }
+        this.twoFactorSecret = encryptedSecret.clone();
+        this.twoFactorEnabled = true;
+        this.twoFactorEnrolledAt = Objects.requireNonNull(now, "now");
+        this.updatedAt = now;
+    }
+
+    /**
+     * Disable 2FA and clear the stored secret. Called by {@code DELETE /me/2fa} after
+     * proof-of-ownership checks succeed.
+     */
+    public void disableTwoFactor(Instant now) {
+        this.twoFactorEnabled = false;
+        this.twoFactorSecret = null;
+        this.twoFactorEnrolledAt = null;
         this.updatedAt = Objects.requireNonNull(now, "now");
     }
 }

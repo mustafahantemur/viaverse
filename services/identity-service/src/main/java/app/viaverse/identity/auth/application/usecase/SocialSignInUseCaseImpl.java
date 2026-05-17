@@ -7,6 +7,7 @@ import app.viaverse.identity.auth.application.port.out.IdentifierRepository;
 import app.viaverse.identity.auth.application.port.out.SocialAuthPort;
 import app.viaverse.identity.auth.application.service.AuthAbuseProtectionService;
 import app.viaverse.identity.auth.application.service.AuthSessionIssuer;
+import app.viaverse.identity.auth.application.service.PartialAuthTokenService;
 import app.viaverse.identity.auth.application.service.RegistrationTokenService;
 import app.viaverse.identity.auth.domain.enums.AuthNextStepEnum;
 import app.viaverse.identity.auth.domain.enums.IdentifierTypeEnum;
@@ -39,6 +40,7 @@ public class SocialSignInUseCaseImpl implements SocialSignInUseCase {
     private final RegistrationTokenService registrationTokenService;
     private final AuthSessionIssuer sessionIssuer;
     private final AuthAbuseProtectionService abuseProtectionService;
+    private final PartialAuthTokenService partialAuthTokenService;
 
     public SocialSignInUseCaseImpl(
             Clock clock,
@@ -49,7 +51,8 @@ public class SocialSignInUseCaseImpl implements SocialSignInUseCase {
             AuthLoginFlowRepository flowRepository,
             RegistrationTokenService registrationTokenService,
             AuthSessionIssuer sessionIssuer,
-            AuthAbuseProtectionService abuseProtectionService
+            AuthAbuseProtectionService abuseProtectionService,
+            PartialAuthTokenService partialAuthTokenService
     ) {
         this.clock = clock;
         this.properties = properties;
@@ -60,6 +63,7 @@ public class SocialSignInUseCaseImpl implements SocialSignInUseCase {
         this.registrationTokenService = registrationTokenService;
         this.sessionIssuer = sessionIssuer;
         this.abuseProtectionService = abuseProtectionService;
+        this.partialAuthTokenService = partialAuthTokenService;
     }
 
     @Override
@@ -132,12 +136,30 @@ public class SocialSignInUseCaseImpl implements SocialSignInUseCase {
                 null,
                 null,
                 null,
+                null,
+                null,
                 null
         );
     }
 
     private Result authenticate(UUID accountId, Command command, Instant now) {
         Account account = sessionIssuer.activeAccount(accountId);
+        if (account.isTwoFactorEnabled()) {
+            PartialAuthTokenService.Issued partial = partialAuthTokenService.issue(account.getId(), now);
+            return new Result(
+                    AuthNextStepEnum.TOTP_REQUIRED,
+                    null,
+                    null,
+                    account.getId(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    partial.token(),
+                    partial.expiresAt()
+            );
+        }
         AuthSessionIssuer.Issued issued = sessionIssuer.issue(
                 account,
                 command.userAgent(),
@@ -153,7 +175,9 @@ public class SocialSignInUseCaseImpl implements SocialSignInUseCase {
                 issued.accessToken(),
                 issued.accessTokenExpiresAt(),
                 issued.refreshToken(),
-                issued.refreshTokenExpiresAt()
+                issued.refreshTokenExpiresAt(),
+                null,
+                null
         );
     }
 

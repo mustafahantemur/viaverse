@@ -1,6 +1,7 @@
 package app.viaverse.identity.auth.infrastructure.adapter.out.persistence.entity;
 
 import app.viaverse.identity.auth.domain.enums.IdentifierTypeEnum;
+import app.viaverse.identity.auth.domain.enums.LoginFlowPurposeEnum;
 import app.viaverse.identity.auth.domain.enums.LoginFlowStatusEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,6 +19,10 @@ public class AuthLoginFlowJpaEntity {
     private UUID id;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "purpose", nullable = false, length = 32)
+    private LoginFlowPurposeEnum purpose;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "identifier_type", nullable = false, length = 16)
     private IdentifierTypeEnum identifierType;
 
@@ -30,6 +35,9 @@ public class AuthLoginFlowJpaEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 32)
     private LoginFlowStatusEnum status;
+
+    @Column(name = "external_verified", nullable = false)
+    private boolean externalVerified;
 
     @Column(name = "registration_token_hash", length = 128)
     private String registrationTokenHash;
@@ -54,10 +62,12 @@ public class AuthLoginFlowJpaEntity {
 
     public AuthLoginFlowJpaEntity(
             UUID id,
+            LoginFlowPurposeEnum purpose,
             IdentifierTypeEnum identifierType,
             String normalizedIdentifier,
             UUID accountId,
             LoginFlowStatusEnum status,
+            boolean externalVerified,
             String registrationTokenHash,
             Instant registrationExpiresAt,
             Instant expiresAt,
@@ -66,10 +76,12 @@ public class AuthLoginFlowJpaEntity {
             Instant updatedAt
     ) {
         this.id = id;
+        this.purpose = purpose;
         this.identifierType = identifierType;
         this.normalizedIdentifier = normalizedIdentifier;
         this.accountId = accountId;
         this.status = status;
+        this.externalVerified = externalVerified;
         this.registrationTokenHash = registrationTokenHash;
         this.registrationExpiresAt = registrationExpiresAt;
         this.expiresAt = expiresAt;
@@ -79,10 +91,12 @@ public class AuthLoginFlowJpaEntity {
     }
 
     public UUID getId() { return id; }
+    public LoginFlowPurposeEnum getPurpose() { return purpose; }
     public IdentifierTypeEnum getIdentifierType() { return identifierType; }
     public String getNormalizedIdentifier() { return normalizedIdentifier; }
     public UUID getAccountId() { return accountId; }
     public LoginFlowStatusEnum getStatus() { return status; }
+    public boolean isExternalVerified() { return externalVerified; }
     public String getRegistrationTokenHash() { return registrationTokenHash; }
     public Instant getRegistrationExpiresAt() { return registrationExpiresAt; }
     public Instant getExpiresAt() { return expiresAt; }

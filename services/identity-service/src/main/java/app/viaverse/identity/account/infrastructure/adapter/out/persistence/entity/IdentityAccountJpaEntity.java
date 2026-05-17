@@ -43,6 +43,21 @@ public class IdentityAccountJpaEntity {
     @Column(name = "profile_completed", nullable = false)
     private boolean profileCompleted;
 
+    @Column(name = "password_hash", length = 255)
+    private String passwordHash;
+
+    @Column(name = "password_updated_at")
+    private Instant passwordUpdatedAt;
+
+    @Column(name = "two_factor_enabled", nullable = false)
+    private boolean twoFactorEnabled;
+
+    @Column(name = "two_factor_secret")
+    private byte[] twoFactorSecret;
+
+    @Column(name = "two_factor_enrolled_at")
+    private Instant twoFactorEnrolledAt;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -60,6 +75,11 @@ public class IdentityAccountJpaEntity {
             String firstName,
             String lastName,
             boolean profileCompleted,
+            String passwordHash,
+            Instant passwordUpdatedAt,
+            boolean twoFactorEnabled,
+            byte[] twoFactorSecret,
+            Instant twoFactorEnrolledAt,
             Instant createdAt,
             Instant updatedAt
     ) {
@@ -70,6 +90,11 @@ public class IdentityAccountJpaEntity {
         this.firstName = firstName;
         this.lastName = lastName;
         this.profileCompleted = profileCompleted;
+        this.passwordHash = passwordHash;
+        this.passwordUpdatedAt = passwordUpdatedAt;
+        this.twoFactorEnabled = twoFactorEnabled;
+        this.twoFactorSecret = twoFactorSecret;
+        this.twoFactorEnrolledAt = twoFactorEnrolledAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -81,6 +106,11 @@ public class IdentityAccountJpaEntity {
     public String getFirstName() { return firstName; }
     public String getLastName() { return lastName; }
     public boolean isProfileCompleted() { return profileCompleted; }
+    public String getPasswordHash() { return passwordHash; }
+    public Instant getPasswordUpdatedAt() { return passwordUpdatedAt; }
+    public boolean isTwoFactorEnabled() { return twoFactorEnabled; }
+    public byte[] getTwoFactorSecret() { return twoFactorSecret; }
+    public Instant getTwoFactorEnrolledAt() { return twoFactorEnrolledAt; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

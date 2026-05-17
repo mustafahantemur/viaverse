@@ -80,6 +80,8 @@ public class SecurityConfiguration {
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/start").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/password-login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/verify-totp").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/verify-otp").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register-admin").permitAll()
@@ -143,6 +145,8 @@ public class SecurityConfiguration {
         }
         String path = request.getRequestURI();
         return "/api/v1/auth/start".equals(path)
+                || "/api/v1/auth/password-login".equals(path)
+                || "/api/v1/auth/verify-totp".equals(path)
                 || "/api/v1/auth/verify-otp".equals(path)
                 || "/api/v1/auth/register".equals(path)
                 || "/api/v1/auth/register-admin".equals(path)

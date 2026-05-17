@@ -29,7 +29,9 @@ public interface SocialSignInUseCase {
             String accessToken,
             Instant accessTokenExpiresAt,
             String refreshToken,
-            Instant refreshTokenExpiresAt
+            Instant refreshTokenExpiresAt,
+            String partialAuthToken,
+            Instant partialAuthExpiresAt
     ) implements AuditableResult {
     }
 }

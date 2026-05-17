@@ -53,6 +53,18 @@ CREATE TABLE identity_account (
     first_name VARCHAR(80),
     last_name VARCHAR(80),
     profile_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    -- Argon2id-encoded password. NULL means social-only account; the user can
+    -- always add a password later via /me/password/set. Stored opaquely; the
+    -- algorithm and parameters are encoded in the hash string itself, so we
+    -- can rotate parameters without a schema change.
+    password_hash VARCHAR(255),
+    password_updated_at TIMESTAMPTZ,
+    -- TOTP-based 2FA state. two_factor_secret is the raw 20-byte HMAC-SHA1
+    -- secret encrypted at rest (AES-GCM, key derived from KMS / config). The
+    -- secret is only readable inside the identity-service.
+    two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    two_factor_secret BYTEA,
+    two_factor_enrolled_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL
 );
@@ -64,6 +76,20 @@ CREATE TABLE identity_account_role (
     role VARCHAR(32) NOT NULL,
     PRIMARY KEY (account_id, role)
 );
+
+-- Single-use recovery codes for 2FA. Hashed with the same TokenHasher as
+-- refresh / registration tokens. used_at is stamped when consumed; rows are
+-- never deleted so we can show "X of N backup codes used" in profile UI.
+CREATE TABLE account_backup_code (
+    id UUID PRIMARY KEY,
+    account_id UUID NOT NULL REFERENCES identity_account (id),
+    code_hash VARCHAR(128) NOT NULL,
+    used_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL,
+    CONSTRAINT uq_account_backup_code_hash UNIQUE (code_hash)
+);
+
+CREATE INDEX idx_account_backup_code_account_id ON account_backup_code (account_id);
 
 CREATE TABLE identity_identifier (
     id UUID PRIMARY KEY,
@@ -79,12 +105,27 @@ CREATE INDEX idx_identity_identifier_account_id ON identity_identifier (account_
 
 -- ---- Auth login flow -----------------------------
 
+-- A login flow is a short-lived state machine. `purpose` distinguishes what
+-- the OTP is being used for so we never accidentally cross flows:
+--   REGISTRATION         — new account, identifier ownership proof
+--   IDENTIFIER_VERIFY    — existing account adding a new email/phone
+--   PASSWORD_RESET       — recover access via OTP to known identifier
+--   TWO_FACTOR_SETUP     — proof-of-ownership for /me/2fa/* operations
+-- Password-based login does NOT create a login flow row; it goes through
+-- AuthSession directly. TOTP for 2FA login uses a short-lived partial-auth
+-- token issued from JWT, not this table.
 CREATE TABLE auth_login_flow (
     id UUID PRIMARY KEY,
+    purpose VARCHAR(32) NOT NULL,
     identifier_type VARCHAR(16) NOT NULL,
     normalized_identifier VARCHAR(320) NOT NULL,
     account_id UUID REFERENCES identity_account (id),
     status VARCHAR(32) NOT NULL,
+    -- Sticky bit: true when the flow was bootstrapped by an external IdP
+    -- (Google / Apple) rather than an OTP. /auth/register uses this to
+    -- decide whether the user must provide a password (OTP path = yes,
+    -- social path = no, since the IdP already proved identifier ownership).
+    external_verified BOOLEAN NOT NULL DEFAULT FALSE,
     registration_token_hash VARCHAR(128),
     registration_expires_at TIMESTAMPTZ,
     expires_at TIMESTAMPTZ NOT NULL,
@@ -96,6 +137,7 @@ CREATE TABLE auth_login_flow (
 CREATE INDEX idx_auth_login_flow_identifier ON auth_login_flow (identifier_type, normalized_identifier);
 CREATE INDEX idx_auth_login_flow_registration_token_hash ON auth_login_flow (registration_token_hash);
 CREATE INDEX idx_auth_login_flow_status ON auth_login_flow (status);
+CREATE INDEX idx_auth_login_flow_purpose ON auth_login_flow (purpose);
 
 CREATE TABLE auth_otp_challenge (
     id UUID PRIMARY KEY,

@@ -115,10 +115,25 @@ public class OtpChallengeService {
         challengeStore.save(challenge);
     }
 
-    private String generateOtp() {
-        if (properties.getDebug().isEnabled()) {
-            return properties.getDebug().getFixedOtp();
+    /**
+     * Convenience for callers (2FA enroll, identifier-verify, …) that need to
+     * check an OTP against a flow they fetched themselves. Returns true if the
+     * OTP matched and the challenge was consumed; false otherwise. Caller is
+     * expected to enforce its own rate-limit + flow-purpose checks.
+     */
+    public boolean verifyOtpForFlow(AuthLoginFlow flow, String otp, Instant now) {
+        OtpChallenge challenge = latestChallenge(flow.getId());
+        validateWaitingForOtp(flow, challenge, now);
+        if (!matches(challenge, otp)) {
+            recordFailure(challenge);
+            return false;
         }
+        verify(challenge, now);
+        flow.markOtpVerified(now);
+        return true;
+    }
+
+    private String generateOtp() {
         return String.format("%06d", secureRandom.nextInt(1_000_000));
     }
 }

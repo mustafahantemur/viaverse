@@ -39,6 +39,7 @@ public class CompleteAdminRegistrationUseCaseImpl implements CompleteAdminRegist
                         command.displayName(),
                         command.firstName(),
                         command.lastName(),
+                        command.password(),
                         command.acceptedRequiredConsents(),
                         command.marketingConsentAccepted(),
                         command.userAgent(),

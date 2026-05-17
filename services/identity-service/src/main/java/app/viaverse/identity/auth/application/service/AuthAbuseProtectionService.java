@@ -63,6 +63,34 @@ public class AuthAbuseProtectionService {
                 cfg.getIpMaxAttempts(), Duration.ofSeconds(cfg.getIpWindowSeconds()));
     }
 
+    public void enforcePasswordLogin(NormalizedIdentifier normalized, String clientIp) {
+        AuthProperties.PasswordLogin cfg = properties.getRateLimit().getPasswordLogin();
+        check(RateLimitScopeEnum.PASSWORD_LOGIN_IDENTIFIER,
+                normalized.type() + ":" + normalized.value(),
+                cfg.getIdentifierMaxAttempts(),
+                Duration.ofSeconds(cfg.getIdentifierWindowSeconds()));
+        check(RateLimitScopeEnum.PASSWORD_LOGIN_IP, clientIp,
+                cfg.getIpMaxAttempts(),
+                Duration.ofSeconds(cfg.getIpWindowSeconds()));
+    }
+
+    public void enforceTotpVerify(java.util.UUID accountId, String clientIp) {
+        AuthProperties.PasswordLogin cfg = properties.getRateLimit().getPasswordLogin();
+        check(RateLimitScopeEnum.TOTP_VERIFY_ACCOUNT, accountId.toString(),
+                cfg.getIdentifierMaxAttempts(),
+                Duration.ofSeconds(cfg.getIdentifierWindowSeconds()));
+        check(RateLimitScopeEnum.TOTP_VERIFY_IP, clientIp,
+                cfg.getIpMaxAttempts(),
+                Duration.ofSeconds(cfg.getIpWindowSeconds()));
+    }
+
+    public void enforceTwoFactorOp(java.util.UUID accountId) {
+        AuthProperties.PasswordLogin cfg = properties.getRateLimit().getPasswordLogin();
+        check(RateLimitScopeEnum.TWO_FACTOR_OP_ACCOUNT, accountId.toString(),
+                cfg.getIdentifierMaxAttempts(),
+                Duration.ofSeconds(cfg.getIdentifierWindowSeconds()));
+    }
+
     public void softLockOtp(AuthLoginFlow flow) {
         Duration lockout = Duration.ofSeconds(properties.getRateLimit().getLockout().getDurationSeconds());
         primeLockout(RateLimitScopeEnum.OTP_VERIFY_FLOW, flow.getId().toString(), lockout);

@@ -159,7 +159,6 @@ viaverse:
         client-id: ${APPLE_CLIENT_ID:}
     debug:
       enabled: ${VIAVERSE_AUTH_DEBUG_ENABLED:false}
-      fixed-otp: ${VIAVERSE_AUTH_DEBUG_FIXED_OTP:}
       seed-test-users: ${VIAVERSE_AUTH_DEBUG_SEED_USERS:false}
     rate-limit:
       enabled: ${VIAVERSE_AUTH_RATE_LIMIT_ENABLED:true}
@@ -219,7 +218,6 @@ viaverse:
         start-tls-enabled: false
     debug:
       enabled: ${VIAVERSE_AUTH_DEBUG_ENABLED:true}
-      fixed-otp: ${VIAVERSE_AUTH_DEBUG_FIXED_OTP:111111}
       seed-test-users: ${VIAVERSE_AUTH_DEBUG_SEED_USERS:true}
 
 ---
@@ -239,7 +237,6 @@ viaverse:
       secret: ${IDENTITY_JWT_SECRET:test-identity-jwt-secret-change-me}
     debug:
       enabled: true
-      fixed-otp: "111111"
       seed-test-users: true
     rate-limit:
       auth-start:

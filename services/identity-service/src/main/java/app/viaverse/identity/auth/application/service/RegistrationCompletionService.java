@@ -9,6 +9,7 @@ import app.viaverse.identity.auth.application.port.out.AuthLoginFlowRepository;
 import app.viaverse.identity.auth.application.port.out.IdentifierRepository;
 import app.viaverse.identity.auth.domain.model.AuthLoginFlow;
 import app.viaverse.identity.auth.domain.model.IdentityIdentifier;
+import app.viaverse.identity.auth.domain.policy.PasswordPolicy;
 import app.viaverse.identity.auth.domain.policy.RegistrationPolicy;
 import app.viaverse.identity.consent.application.ConsentPolicy;
 import app.viaverse.identity.consent.application.port.out.ConsentRecordRepository;
@@ -18,6 +19,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,6 +29,8 @@ public class RegistrationCompletionService {
     private final Clock clock;
     private final RegistrationPolicy registrationPolicy;
     private final ConsentPolicy consentPolicy;
+    private final PasswordPolicy passwordPolicy;
+    private final PasswordEncoder passwordEncoder;
     private final RegistrationTokenService registrationTokenService;
     private final AuthSessionIssuer sessionIssuer;
     private final AccountRepository accountRepository;
@@ -39,6 +43,8 @@ public class RegistrationCompletionService {
             Clock clock,
             RegistrationPolicy registrationPolicy,
             ConsentPolicy consentPolicy,
+            PasswordPolicy passwordPolicy,
+            PasswordEncoder passwordEncoder,
             RegistrationTokenService registrationTokenService,
             AuthSessionIssuer sessionIssuer,
             AccountRepository accountRepository,
@@ -50,6 +56,8 @@ public class RegistrationCompletionService {
         this.clock = clock;
         this.registrationPolicy = registrationPolicy;
         this.consentPolicy = consentPolicy;
+        this.passwordPolicy = passwordPolicy;
+        this.passwordEncoder = passwordEncoder;
         this.registrationTokenService = registrationTokenService;
         this.sessionIssuer = sessionIssuer;
         this.accountRepository = accountRepository;
@@ -66,11 +74,29 @@ public class RegistrationCompletionService {
 
         AuthLoginFlow flow = registrationTokenService.consumeRegistrationToken(command.registrationToken(), now);
 
+        // Social-verified flows (Google / Apple) bypass the password requirement:
+        // the IdP has already proved identifier ownership, and the user can add
+        // a password later via /me/password if they want a fallback credential.
+        // OTP-verified flows always require a password.
+        String passwordHash = null;
+        if (!flow.isExternalVerified()) {
+            passwordPolicy.validate(command.password());
+            passwordHash = passwordEncoder.encode(command.password());
+        } else if (command.password() != null && !command.password().isBlank()) {
+            // User opted to also set a password during social registration —
+            // still enforce the policy.
+            passwordPolicy.validate(command.password());
+            passwordHash = passwordEncoder.encode(command.password());
+        }
+
         UUID accountId = UUID.randomUUID();
         String displayName = command.displayName().trim();
         Account account = Account.register(accountId, displayName, now);
         for (AccountRoleEnum role : roles) {
             account.grantRole(role, now);
+        }
+        if (passwordHash != null) {
+            account.setPassword(passwordHash, now);
         }
         if (!isBlank(command.firstName()) || !isBlank(command.lastName())) {
             account.completeProfile(
