@@ -30,4 +30,8 @@ public final class ValkeyKeyScheme {
     public static String twoFactorPendingSecret(UUID accountId) {
         return "2fa-pending:" + accountId;
     }
+
+    public static String registrationDraft(UUID draftId) {
+        return "reg-draft:" + draftId;
+    }
 }

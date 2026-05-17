@@ -112,3 +112,25 @@
   --vv-shell-max: 1240px;
   --vv-shell-pad-x: clamp(20px, 5vw, 56px);
 }
+
+/* Dark mode — applied either via .dark class or [data-theme="dark"] on <html>. */
+.dark,
+[data-theme="dark"] {
+  --vv-bg:            #022C22;
+  --vv-surface:       #052E2B;
+  --vv-surface-muted: #0A3A33;
+  --vv-surface-hover: #0F4A40;
+
+  --vv-fg:            #E5E7EB;
+  --vv-fg-strong:     #FFFBF5;
+  --vv-fg-muted:      #9CA3AF;
+  --vv-fg-faint:      #6B7280;
+  --vv-fg-inverse:    #022C22;
+
+  --vv-border-subtle: rgba(255, 251, 245, 0.06);
+  --vv-border-muted:  rgba(255, 251, 245, 0.10);
+  --vv-border-faint:  rgba(255, 251, 245, 0.04);
+
+  --vv-primary-soft:  rgba(249, 115, 22, 0.18);
+  --vv-trust-soft:    rgba(16, 185, 129, 0.18);
+}

@@ -2,11 +2,18 @@
 
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { useId, useState } from "react";
+import { useTranslation } from "@/lib/i18n/I18nProvider";
 import styles from "./Field.module.css";
-import { describePasswordIssue, evaluatePassword, type PasswordEvaluation } from "@/lib/validation";
+import {
+    describePasswordIssue,
+    evaluatePassword,
+    type PasswordEvaluation,
+    type PasswordIssue,
+} from "@/lib/validation";
 
 interface Props extends Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "type"> {
     label: ReactNode;
+    hint?: ReactNode;
     error?: ReactNode;
     /** Show the strength meter + checklist (only on the "set new password" field). */
     showStrengthMeter?: boolean;
@@ -19,17 +26,24 @@ interface Props extends Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "type
  */
 export function PasswordField({
     label,
+    hint,
     error,
     showStrengthMeter = false,
     value,
     ...rest
 }: Props) {
     const id = useId();
+    const { locale } = useTranslation();
     const [visible, setVisible] = useState(false);
     const evaluation: PasswordEvaluation | null =
         showStrengthMeter && typeof value === "string" && value.length > 0
             ? evaluatePassword(value)
             : null;
+
+    const showLabel = locale === "tr" ? "Göster" : "Show";
+    const hideLabel = locale === "tr" ? "Gizle" : "Hide";
+    const showA11y = locale === "tr" ? "Parolayı göster" : "Show password";
+    const hideA11y = locale === "tr" ? "Parolayı gizle" : "Hide password";
 
     return (
         <label htmlFor={id} className={styles.label}>
@@ -50,12 +64,11 @@ export function PasswordField({
                     type="button"
                     onClick={() => setVisible((v) => !v)}
                     aria-pressed={visible}
-                    aria-label={visible ? "Hide password" : "Show password"}
+                    aria-label={visible ? hideA11y : showA11y}
                     style={{
                         position: "absolute",
                         right: 8,
-                        top: "50%",
-                        transform: "translateY(-50%)",
+                        top: 14,
                         background: "transparent",
                         border: "none",
                         color: "var(--vv-fg-muted)",
@@ -65,20 +78,28 @@ export function PasswordField({
                         padding: "6px 10px",
                     }}
                 >
-                    {visible ? "Hide" : "Show"}
+                    {visible ? hideLabel : showLabel}
                 </button>
             </span>
 
-            {error ? <span className={styles.error}>{error}</span> : null}
+            {error ? (
+                <span className={styles.error}>{error}</span>
+            ) : hint && !evaluation ? (
+                <span className={styles.hint}>{hint}</span>
+            ) : null}
 
-            {evaluation && !error && (
-                <PasswordChecklist evaluation={evaluation} />
-            )}
+            {evaluation && !error && <PasswordChecklist evaluation={evaluation} locale={locale} />}
         </label>
     );
 }
 
-function PasswordChecklist({ evaluation }: { evaluation: PasswordEvaluation }) {
+function PasswordChecklist({
+    evaluation,
+    locale,
+}: {
+    evaluation: PasswordEvaluation;
+    locale: string;
+}) {
     const segments = [0, 1, 2, 3];
     const meterColor =
         evaluation.score <= 1
@@ -86,6 +107,8 @@ function PasswordChecklist({ evaluation }: { evaluation: PasswordEvaluation }) {
             : evaluation.score <= 2
               ? "#F59E0B"
               : "var(--vv-trust)";
+
+    const needsLabel = locale === "tr" ? "Gerekenler" : "Needs";
 
     return (
         <span style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 2 }}>
@@ -111,9 +134,27 @@ function PasswordChecklist({ evaluation }: { evaluation: PasswordEvaluation }) {
                         lineHeight: 1.5,
                     }}
                 >
-                    Needs: {evaluation.issues.map(describePasswordIssue).join(" · ")}
+                    {needsLabel}: {evaluation.issues.map((issue) => describeIssue(issue, locale)).join(" · ")}
                 </span>
             )}
         </span>
     );
+}
+
+function describeIssue(issue: PasswordIssue, locale: string): string {
+    if (locale !== "tr") return describePasswordIssue(issue);
+    switch (issue) {
+        case "tooShort":
+            return "en az 10 karakter";
+        case "tooLong":
+            return "en fazla 128 karakter";
+        case "missingLower":
+            return "küçük harf";
+        case "missingUpper":
+            return "büyük harf";
+        case "missingDigit":
+            return "rakam";
+        case "missingSymbol":
+            return "sembol (örn. !@#$)";
+    }
 }

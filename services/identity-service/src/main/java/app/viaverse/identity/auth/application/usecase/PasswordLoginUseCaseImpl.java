@@ -55,21 +55,27 @@ public class PasswordLoginUseCaseImpl implements PasswordLoginUseCase {
     public Result execute(Command command) {
         Instant now = clock.instant();
         NormalizedIdentifier normalized = identifierNormalizer.normalize(command.identifier());
+        // Gate first (read-only) so a brute-forced account is blocked before we
+        // even look at the password. Only confirmed failures bump the counter
+        // below, so a healthy user who signs in often never burns their budget.
         abuseProtectionService.enforcePasswordLogin(normalized, command.clientIp());
 
         Optional<IdentityIdentifier> identifier =
                 identifierRepository.findByTypeAndValue(normalized.type(), normalized.value());
         if (identifier.isEmpty()) {
             // Same error as "wrong password" — no identifier enumeration.
+            abuseProtectionService.recordPasswordLoginFailure(normalized, command.clientIp());
             throw IdentityErrors.invalidCredentials();
         }
         Account account;
         try {
             account = sessionIssuer.activeAccount(identifier.get().accountId());
         } catch (RuntimeException exception) {
+            abuseProtectionService.recordPasswordLoginFailure(normalized, command.clientIp());
             throw IdentityErrors.invalidCredentials();
         }
         if (!account.hasPassword() || !passwordEncoder.matches(command.password(), account.getPasswordHash())) {
+            abuseProtectionService.recordPasswordLoginFailure(normalized, command.clientIp());
             throw IdentityErrors.invalidCredentials();
         }
 

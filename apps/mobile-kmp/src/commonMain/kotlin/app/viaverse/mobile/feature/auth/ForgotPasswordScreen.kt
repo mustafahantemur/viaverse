@@ -37,6 +37,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import io.ktor.client.HttpClient
 import app.viaverse.mobile.core.config.ApiConfig
+import app.viaverse.mobile.core.i18n.AppStrings
 
 /**
  * Forgot-password = identifier → OTP → new password. Server response on
@@ -78,7 +79,7 @@ fun ForgotPasswordScreen(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text("Reset password", style = MaterialTheme.typography.headlineMedium)
+        Text(AppStrings.resetPassword(), style = MaterialTheme.typography.headlineMedium)
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 
         when (stage) {
@@ -86,7 +87,7 @@ fun ForgotPasswordScreen(
                 OutlinedTextField(
                     value = identifier,
                     onValueChange = { identifier = it },
-                    label = { Text("Email or phone") },
+                    label = { Text(AppStrings.emailOrPhone()) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -95,9 +96,10 @@ fun ForgotPasswordScreen(
                         scope.launch {
                             busy = true; error = null
                             try {
+                                val normalized = IdentifierNormalizer.normalize(identifier)
                                 val result = post(
                                     "/api/auth/forgot-password/start",
-                                    buildJsonObject { put("identifier", JsonPrimitive(identifier.trim())) },
+                                    buildJsonObject { put("identifier", JsonPrimitive(normalized)) },
                                 )
                                 flowId = result["flowId"]?.jsonPrimitive?.content
                                 stage = ForgotPasswordStage.OTP
@@ -110,19 +112,14 @@ fun ForgotPasswordScreen(
                     },
                     enabled = !busy && identifier.isNotBlank(),
                     modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) { Text(if (busy) "Sending…" else "Send code") }
-                Text(
-                    "If the identifier is registered, a code will be sent. The response is " +
-                        "the same either way for your privacy.",
-                    style = MaterialTheme.typography.bodySmall,
-                )
+                ) { Text(if (busy) AppStrings.submitting() else AppStrings.sendCode()) }
             }
 
             ForgotPasswordStage.OTP -> {
                 OutlinedTextField(
                     value = otp,
                     onValueChange = { if (it.length <= 6 && it.all(Char::isDigit)) otp = it },
-                    label = { Text("Verification code") },
+                    label = { Text(AppStrings.verificationCode()) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                     modifier = Modifier.fillMaxWidth(),
@@ -151,19 +148,19 @@ fun ForgotPasswordScreen(
                     },
                     enabled = !busy && otp.length == 6,
                     modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) { Text(if (busy) "Verifying…" else "Verify") }
+                ) { Text(if (busy) AppStrings.verifying() else AppStrings.verify()) }
             }
 
             ForgotPasswordStage.NEW_PASSWORD -> {
                 val evaluation = PasswordPolicy.evaluate(newPassword)
                 val passwordsMatch = newPassword == confirmPassword
                 val confirmError = if (confirmPassword.isNotEmpty() && !passwordsMatch) {
-                    "Passwords don't match"
+                    AppStrings.passwordsDontMatch()
                 } else null
                 OutlinedTextField(
                     value = newPassword,
                     onValueChange = { newPassword = it },
-                    label = { Text("New password") },
+                    label = { Text(AppStrings.password()) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     isError = newPassword.isNotEmpty() && !evaluation.isValid,
@@ -180,7 +177,7 @@ fun ForgotPasswordScreen(
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    label = { Text("Confirm new password") },
+                    label = { Text(AppStrings.confirmPassword()) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     isError = confirmError != null,
@@ -212,11 +209,11 @@ fun ForgotPasswordScreen(
                     },
                     enabled = !busy && evaluation.isValid && passwordsMatch,
                     modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) { Text(if (busy) "Saving…" else "Save new password") }
+                ) { Text(if (busy) AppStrings.submitting() else AppStrings.resetPasswordCta()) }
             }
         }
 
-        TextButton(onClick = onBackToLogin) { Text("Back to sign in") }
+        TextButton(onClick = onBackToLogin) { Text(AppStrings.backToLogin()) }
     }
 }
 

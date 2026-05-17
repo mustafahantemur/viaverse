@@ -85,6 +85,52 @@ class AuthApi(
         return response
     }
 
+    /**
+     * Form-first registration. The server stashes the form data as a
+     * server-side draft (Valkey-backed, ~30 min TTL) and dispatches an
+     * email OTP. Phone OTP is requested in a separate step only when
+     * the user supplied a phone number.
+     */
+    suspend fun registerStart(
+        email: String,
+        phone: String?,
+        displayName: String,
+        firstName: String?,
+        lastName: String?,
+        password: String,
+        acceptedRequiredConsents: List<String>,
+        marketingConsentAccepted: Boolean,
+    ): JsonObject = postJson("/api/auth/register/start", buildJsonObject {
+        put("email", JsonPrimitive(email))
+        phone?.let { put("phone", JsonPrimitive(it)) }
+        put("displayName", JsonPrimitive(displayName))
+        firstName?.let { put("firstName", JsonPrimitive(it)) }
+        lastName?.let { put("lastName", JsonPrimitive(it)) }
+        put("password", JsonPrimitive(password))
+        put("acceptedRequiredConsents", buildJsonArray {
+            acceptedRequiredConsents.forEach { add(JsonPrimitive(it)) }
+        })
+        put("marketingConsentAccepted", JsonPrimitive(marketingConsentAccepted))
+    })
+
+    suspend fun registerVerifyEmail(draftId: String, otp: String): JsonObject {
+        val response = postJson("/api/auth/register/verify-email", buildJsonObject {
+            put("draftId", JsonPrimitive(draftId))
+            put("otp", JsonPrimitive(otp))
+        })
+        storeTokens(response)
+        return response
+    }
+
+    suspend fun registerVerifyPhone(draftId: String, otp: String): JsonObject {
+        val response = postJson("/api/auth/register/verify-phone", buildJsonObject {
+            put("draftId", JsonPrimitive(draftId))
+            put("otp", JsonPrimitive(otp))
+        })
+        storeTokens(response)
+        return response
+    }
+
     suspend fun requiredConsents(): JsonObject {
         val response = httpClient.get(apiConfig.baseUrl + "/api/auth/required-consents")
         val text = response.bodyAsText()

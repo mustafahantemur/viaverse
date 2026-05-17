@@ -1,40 +1,27 @@
+"use client";
+
 import { Container } from "@/components/primitives/Container";
 import { Reveal } from "@/components/motion/Reveal";
+import { useTranslation } from "@/lib/i18n/I18nProvider";
 import styles from "./FeatureGrid.module.css";
-
-interface Feature {
-    title: string;
-    description: string;
-}
-
-const FEATURES: readonly Feature[] = [
-    {
-        title: "Çevrendeki canlı akış",
-        description:
-            "Mahalleni saran küçük talepler, duyurular ve hizmet ilanları — hepsi tek bir akışta, mesafeye göre sıralı.",
-    },
-    {
-        title: "Hızlı teklif, hızlı dönüş",
-        description:
-            "Talep oluştur, doğrulanmış ustalardan saatler içinde teklif al. Ya da kendi yeteneğinle teklif vermeye başla.",
-    },
-    {
-        title: "Şeffaf ücretlendirme",
-        description:
-            "Viaverse üzerinden gelen tekliflerde sadece %10 komisyon kesilir. Sürpriz yok, gizli ücret yok.",
-    },
-] as const;
 
 /**
  * Renders the three value-prop cards under the hero. Plain CSS grid, no
  * carousel or animation library — staggered reveal is the only motion.
  */
 export function FeatureGrid() {
+    const { t } = useTranslation();
+    const features = [
+        { title: t.landing.features.f1Title, description: t.landing.features.f1Body },
+        { title: t.landing.features.f2Title, description: t.landing.features.f2Body },
+        { title: t.landing.features.f3Title, description: t.landing.features.f3Body },
+    ];
+
     return (
         <section id="features" className={styles.section}>
             <Container>
                 <div className={styles.grid}>
-                    {FEATURES.map((feature, index) => (
+                    {features.map((feature, index) => (
                         <Reveal key={feature.title} delayMs={index * 80}>
                             <article className={styles.card}>
                                 <h3 className={styles.title}>{feature.title}</h3>

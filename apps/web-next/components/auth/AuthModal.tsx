@@ -1,11 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import { LoginFlow } from "./LoginFlow";
 import { RegisterFlow } from "./RegisterFlow";
 import { ForgotPasswordFlow } from "./ForgotPasswordFlow";
+import { useTranslation } from "@/lib/i18n/I18nProvider";
+import styles from "./AuthModal.module.css";
 
 export type AuthView = "login" | "register" | "forgot";
 
@@ -16,38 +18,61 @@ interface Props {
 }
 
 /**
- * Single-modal host for the entire auth journey. Owns which flow is
- * currently mounted; each flow signals back via callbacks when the user
- * wants to switch to another flow or has completed the journey.
- *
- * On success the user is sent to {@code /app} (placeholder) — wire that
- * to the real signed-in surface when it exists.
+ * Tabbed auth modal hosting login + register + forgot-password. Closes
+ * only via the X button or Escape — the underlying {@link Modal}
+ * intentionally ignores overlay clicks so an accidental click outside
+ * doesn't lose a half-filled signup form.
  */
 export function AuthModal({ isOpen, onClose, initialView }: Props) {
     const router = useRouter();
+    const { t } = useTranslation();
     const [view, setView] = useState<AuthView>(initialView);
     const [seedIdentifier, setSeedIdentifier] = useState("");
 
-    // Reset to the requested view every time the modal opens.
-    function handleOpenChange() {
+    // Re-align internal view whenever the modal is reopened with a new request.
+    useEffect(() => {
         if (isOpen) {
             setView(initialView);
+            setSeedIdentifier("");
         }
-    }
-
-    if (isOpen && view !== initialView && seedIdentifier === "") {
-        // initialView changed externally while still in the same modal session —
-        // align the inner view. (Cheap effect; this branch is rarely hit.)
-        handleOpenChange();
-    }
+    }, [isOpen, initialView]);
 
     function onAuthenticated() {
         onClose();
         router.push("/app");
     }
 
+    const showTabs = view === "login" || view === "register";
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} labelledBy="auth-modal-title">
+            {showTabs && (
+                <div className={styles.tabs} role="tablist">
+                    <button
+                        type="button"
+                        role="tab"
+                        aria-selected={view === "login"}
+                        className={[styles.tab, view === "login" && styles.tabActive]
+                            .filter(Boolean)
+                            .join(" ")}
+                        onClick={() => setView("login")}
+                    >
+                        {t.auth.modal.tabSignIn}
+                    </button>
+                    <button
+                        type="button"
+                        role="tab"
+                        aria-selected={view === "register"}
+                        className={[styles.tab, view === "register" && styles.tabActive]
+                            .filter(Boolean)
+                            .join(" ")}
+                        onClick={() => setView("register")}
+                    >
+                        {t.auth.modal.tabCreate}
+                    </button>
+                </div>
+            )}
+
             {view === "login" && (
                 <LoginFlow
                     initialIdentifier={seedIdentifier}
@@ -64,7 +89,6 @@ export function AuthModal({ isOpen, onClose, initialView }: Props) {
             )}
             {view === "register" && (
                 <RegisterFlow
-                    initialIdentifier={seedIdentifier}
                     onRegistered={onAuthenticated}
                     onSwitchToLogin={(identifier) => {
                         setSeedIdentifier(identifier);

@@ -77,23 +77,54 @@ public class AuthAbuseProtectionService {
                 cfg.getIpMaxAttempts(), Duration.ofSeconds(cfg.getIpWindowSeconds()));
     }
 
+    /**
+     * Gate password-login attempts <em>by past failures</em>, not by every
+     * call. A successful login should not burn a slot — otherwise a healthy
+     * user who logs in often is indistinguishable from a brute-force script.
+     * Pair this read-only check with {@link #recordPasswordLoginFailure} on
+     * the catch path so only confirmed bad credentials count toward the
+     * limit.
+     */
     public void enforcePasswordLogin(NormalizedIdentifier normalized, String clientIp) {
         AuthProperties.PasswordLogin cfg = properties.getRateLimit().getPasswordLogin();
-        check(RateLimitScopeEnum.PASSWORD_LOGIN_IDENTIFIER,
+        peek(RateLimitScopeEnum.PASSWORD_LOGIN_IDENTIFIER,
                 normalized.type() + ":" + normalized.value(),
                 cfg.getIdentifierMaxAttempts(),
                 Duration.ofSeconds(cfg.getIdentifierWindowSeconds()));
-        check(RateLimitScopeEnum.PASSWORD_LOGIN_IP, clientIp,
+        peek(RateLimitScopeEnum.PASSWORD_LOGIN_IP, clientIp,
                 cfg.getIpMaxAttempts(),
                 Duration.ofSeconds(cfg.getIpWindowSeconds()));
     }
 
-    public void enforceTotpVerify(java.util.UUID accountId, String clientIp) {
+    /** Bump the failure buckets after invalid credentials. */
+    public void recordPasswordLoginFailure(NormalizedIdentifier normalized, String clientIp) {
         AuthProperties.PasswordLogin cfg = properties.getRateLimit().getPasswordLogin();
-        check(RateLimitScopeEnum.TOTP_VERIFY_ACCOUNT, accountId.toString(),
+        rateLimit.recordFailure(RateLimitScopeEnum.PASSWORD_LOGIN_IDENTIFIER,
+                normalized.type() + ":" + normalized.value(),
                 cfg.getIdentifierMaxAttempts(),
                 Duration.ofSeconds(cfg.getIdentifierWindowSeconds()));
-        check(RateLimitScopeEnum.TOTP_VERIFY_IP, clientIp,
+        rateLimit.recordFailure(RateLimitScopeEnum.PASSWORD_LOGIN_IP, clientIp,
+                cfg.getIpMaxAttempts(),
+                Duration.ofSeconds(cfg.getIpWindowSeconds()));
+    }
+
+    /** Read-only check for TOTP verify — see {@link #enforcePasswordLogin}. */
+    public void enforceTotpVerify(java.util.UUID accountId, String clientIp) {
+        AuthProperties.PasswordLogin cfg = properties.getRateLimit().getPasswordLogin();
+        peek(RateLimitScopeEnum.TOTP_VERIFY_ACCOUNT, accountId.toString(),
+                cfg.getIdentifierMaxAttempts(),
+                Duration.ofSeconds(cfg.getIdentifierWindowSeconds()));
+        peek(RateLimitScopeEnum.TOTP_VERIFY_IP, clientIp,
+                cfg.getIpMaxAttempts(),
+                Duration.ofSeconds(cfg.getIpWindowSeconds()));
+    }
+
+    public void recordTotpVerifyFailure(java.util.UUID accountId, String clientIp) {
+        AuthProperties.PasswordLogin cfg = properties.getRateLimit().getPasswordLogin();
+        rateLimit.recordFailure(RateLimitScopeEnum.TOTP_VERIFY_ACCOUNT, accountId.toString(),
+                cfg.getIdentifierMaxAttempts(),
+                Duration.ofSeconds(cfg.getIdentifierWindowSeconds()));
+        rateLimit.recordFailure(RateLimitScopeEnum.TOTP_VERIFY_IP, clientIp,
                 cfg.getIpMaxAttempts(),
                 Duration.ofSeconds(cfg.getIpWindowSeconds()));
     }
@@ -141,6 +172,18 @@ public class AuthAbuseProtectionService {
 
     private void check(RateLimitScopeEnum scope, String key, int limit, Duration window) {
         RateLimitPort.Result result = rateLimit.incrementAndCheck(scope, key, limit, window);
+        if (!result.allowed()) {
+            throw new RateLimitExceededException(result.ttlSeconds());
+        }
+    }
+
+    /**
+     * Read the bucket without bumping it. Used by gate-then-record flows
+     * (password login, TOTP verify) where only confirmed failures should
+     * cost a slot. Throws if the bucket is already at the limit.
+     */
+    private void peek(RateLimitScopeEnum scope, String key, int limit, Duration window) {
+        RateLimitPort.Result result = rateLimit.peek(scope, key, limit, window);
         if (!result.allowed()) {
             throw new RateLimitExceededException(result.ttlSeconds());
         }

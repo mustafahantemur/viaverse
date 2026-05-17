@@ -57,6 +57,7 @@ public class VerifyTotpUseCaseImpl implements VerifyTotpUseCase {
         }
         byte[] secret = accountSecretCipher.decrypt(account.getTwoFactorSecret());
         if (!totpService.verify(secret, command.totpCode(), now)) {
+            abuseProtectionService.recordTotpVerifyFailure(accountId, command.clientIp());
             throw IdentityErrors.invalidTotp();
         }
 

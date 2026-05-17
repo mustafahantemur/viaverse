@@ -5,6 +5,7 @@ import { Button } from "@/components/primitives/Button";
 import { Container } from "@/components/primitives/Container";
 import { EyebrowBadge } from "@/components/primitives/EyebrowBadge";
 import { Reveal } from "@/components/motion/Reveal";
+import { useTranslation } from "@/lib/i18n/I18nProvider";
 import styles from "./Hero.module.css";
 
 interface Props {
@@ -14,29 +15,29 @@ interface Props {
 
 /** Above-the-fold marketing hero. Mirrors the design system's WebHero composition. */
 export function Hero({ onSignup, onProviderSignup }: Props) {
+    const { t } = useTranslation();
+    const hero = t.landing.hero;
+
     return (
         <section className={styles.hero}>
             <Container className={styles.grid}>
                 <Reveal>
                     <div className={styles.copy}>
-                        <EyebrowBadge>Şu an çevrende olanlar</EyebrowBadge>
+                        <EyebrowBadge>{hero.eyebrow}</EyebrowBadge>
                         <h1 className={styles.headline}>
-                            Yakında <span className={styles.accentOrange}>küçük bir yardım</span>.
+                            {hero.headline1}{" "}
+                            <span className={styles.accentOrange}>{hero.headlineAccent1}</span>.
                             <br />
-                            İyi yapılmış{" "}
-                            <span className={styles.accentGreen}>büyük bir iş</span>.
+                            {hero.headline2}{" "}
+                            <span className={styles.accentGreen}>{hero.headlineAccent2}</span>.
                         </h1>
-                        <p className={styles.lede}>
-                            Bir el iste, çevrende olanları paylaş, küçük işlere teklif al — ya da
-                            kendi yeteneğini işe dönüştür. Viaverse, tam olarak nerede olduğunla
-                            bağlantılı tek yer.
-                        </p>
+                        <p className={styles.lede}>{hero.lede}</p>
                         <div className={styles.actions}>
                             <Button size="lg" onClick={onSignup}>
-                                Hesap oluştur — ücretsiz
+                                {hero.ctaPrimary}
                             </Button>
                             <Button size="lg" variant="outline" onClick={onProviderSignup}>
-                                Hizmet vermeye başla →
+                                {hero.ctaSecondary}
                             </Button>
                         </div>
                         <HeroStats />
@@ -52,10 +53,11 @@ export function Hero({ onSignup, onProviderSignup }: Props) {
 }
 
 function HeroStats() {
+    const { t } = useTranslation();
     const items = [
-        { value: "240k+", label: "yakınında aktif" },
-        { value: "12k", label: "doğrulanmış usta" },
-        { value: "%97", label: "geri dönüş oranı" },
+        { value: "240k+", label: t.landing.hero.stats.nearbyActive },
+        { value: "12k", label: t.landing.hero.stats.verifiedPros },
+        { value: "%97", label: t.landing.hero.stats.returnRate },
     ];
     return (
         <div className={styles.stats}>

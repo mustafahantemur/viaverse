@@ -23,6 +23,36 @@ public class RateLimitValkeyAdapter implements RateLimitPort {
 
     @Override
     public Result incrementAndCheck(RateLimitScopeEnum scope, String key, int limit, Duration window) {
+        return incrementInternal(scope, key, limit, window);
+    }
+
+    @Override
+    public Result peek(RateLimitScopeEnum scope, String key, int limit, Duration window) {
+        String bucketKey = ValkeyKeyScheme.rateLimit(scope, key);
+        try {
+            String raw = redis.opsForValue().get(bucketKey);
+            long count = raw == null ? 0L : parseCount(raw);
+            Long ttl = redis.getExpire(bucketKey);
+            // peek does not create / extend the bucket. {@code allowed} compares
+            // against {@code limit} strictly so a bucket that is *at* the limit
+            // still blocks further calls. {@code window} kept in the signature
+            // for symmetry with the recording calls; ignored on a pure read.
+            assert window != null;
+            return new Result(count < limit, count, ttl == null ? 0L : ttl);
+        } catch (DataAccessException exception) {
+            throw IdentityErrors.rateLimitBackendUnavailable(exception);
+        }
+    }
+
+    @Override
+    public Result recordFailure(RateLimitScopeEnum scope, String key, int limit, Duration window) {
+        // Semantically identical to incrementAndCheck (atomic INCR + TTL set on
+        // first write), but kept as a distinct method so call sites document
+        // intent: "bump this bucket because the operation failed".
+        return incrementInternal(scope, key, limit, window);
+    }
+
+    private Result incrementInternal(RateLimitScopeEnum scope, String key, int limit, Duration window) {
         String bucketKey = ValkeyKeyScheme.rateLimit(scope, key);
         Long count;
         Long ttl;
@@ -43,5 +73,13 @@ public class RateLimitValkeyAdapter implements RateLimitPort {
             throw IdentityErrors.rateLimitBackendUnavailable(null);
         }
         return new Result(count <= limit, count, ttl == null ? 0L : ttl);
+    }
+
+    private static long parseCount(String raw) {
+        try {
+            return Long.parseLong(raw);
+        } catch (NumberFormatException ignored) {
+            return 0L;
+        }
     }
 }

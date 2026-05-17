@@ -155,6 +155,60 @@ export async function register(payload: RegisterPayload): Promise<AuthSession> {
     return storeAccessTokenFromResult(result);
 }
 
+// ---- Form-first registration (draft) ----
+
+export type RegisterStartPayload = {
+    email: string;
+    phone?: string;
+    displayName: string;
+    firstName?: string;
+    lastName?: string;
+    password: string;
+    acceptedRequiredConsents: string[];
+    marketingConsentAccepted: boolean;
+};
+
+export type RegisterStartResult = {
+    draftId: string;
+    emailFlowId: string;
+    emailExpiresAt: string;
+    phoneVerificationPending: boolean;
+};
+
+export function registerStart(payload: RegisterStartPayload): Promise<RegisterStartResult> {
+    return call("/api/auth/register/start", {
+        method: "POST",
+        body: JSON.stringify(payload),
+    });
+}
+
+export type RegisterVerifyEmailResult = AuthSession & {
+    phoneFlowId?: string;
+    phoneExpiresAt?: string;
+};
+
+export async function registerVerifyEmail(
+    draftId: string,
+    otp: string,
+): Promise<RegisterVerifyEmailResult> {
+    const result = await call<RegisterVerifyEmailResult>("/api/auth/register/verify-email", {
+        method: "POST",
+        body: JSON.stringify({ draftId, otp }),
+    });
+    return storeAccessTokenFromResult(result) as RegisterVerifyEmailResult;
+}
+
+export async function registerVerifyPhone(
+    draftId: string,
+    otp: string,
+): Promise<AuthSession> {
+    const result = await call<AuthSession>("/api/auth/register/verify-phone", {
+        method: "POST",
+        body: JSON.stringify({ draftId, otp }),
+    });
+    return storeAccessTokenFromResult(result);
+}
+
 export async function refresh(): Promise<AuthSession> {
     const result = await call<AuthSession>("/api/auth/refresh", {
         method: "POST",

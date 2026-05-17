@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
+import { useTranslation } from "@/lib/i18n/I18nProvider";
 import styles from "./Modal.module.css";
 
 interface Props {
@@ -13,12 +14,14 @@ interface Props {
 }
 
 /**
- * Bare-bones accessible modal. Click-outside + Escape close, body scroll
- * lock while open, initial focus on the first focusable child. No external
- * deps — Next.js apps tend to inherit too many of those.
+ * Accessible modal. Escape and the explicit close button trigger
+ * {@code onClose}; clicking the overlay does NOT — once you start an
+ * auth flow we want the user to use the close button on purpose, not
+ * lose state to a stray click.
  */
 export function Modal({ isOpen, onClose, labelledBy, children }: Props) {
     const surfaceRef = useRef<HTMLDivElement | null>(null);
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (!isOpen) return;
@@ -47,13 +50,7 @@ export function Modal({ isOpen, onClose, labelledBy, children }: Props) {
     if (!isOpen) return null;
 
     return (
-        <div
-            className={styles.overlay}
-            onClick={(event) => {
-                if (event.target === event.currentTarget) onClose();
-            }}
-            role="presentation"
-        >
+        <div className={styles.overlay} role="presentation">
             <div
                 className={styles.surface}
                 role="dialog"
@@ -64,7 +61,7 @@ export function Modal({ isOpen, onClose, labelledBy, children }: Props) {
                 <button
                     type="button"
                     onClick={onClose}
-                    aria-label="Close"
+                    aria-label={t.auth.modal.close}
                     className={styles.close}
                 >
                     ×

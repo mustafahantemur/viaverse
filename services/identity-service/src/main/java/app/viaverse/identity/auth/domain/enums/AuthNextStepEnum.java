@@ -22,6 +22,8 @@ package app.viaverse.identity.auth.domain.enums;
 public enum AuthNextStepEnum {
     PASSWORD_REQUIRED,
     OTP_REQUIRED,
+    EMAIL_VERIFICATION_REQUIRED,
+    PHONE_VERIFICATION_REQUIRED,
     REGISTRATION_REQUIRED,
     TOTP_REQUIRED,
     AUTHENTICATED

@@ -1,51 +1,53 @@
+"use client";
+
 import { Container } from "@/components/primitives/Container";
 import { BrandMark } from "@/components/primitives/BrandMark";
+import { useTranslation } from "@/lib/i18n/I18nProvider";
 import styles from "./SiteFooter.module.css";
 
 export function SiteFooter() {
+    const { t } = useTranslation();
     const currentYear = new Date().getFullYear();
     return (
         <footer className={styles.footer}>
             <Container className={styles.row}>
                 <div className={styles.brand}>
                     <BrandMark size={28} />
-                    <p className={styles.tagline}>
-                        Yakındaki yardımı, küçük işleri ve hizmet verenleri buluşturan yer.
-                    </p>
+                    <p className={styles.tagline}>{t.landing.footer.tagline}</p>
                 </div>
                 <nav aria-label="Footer" className={styles.cols}>
                     <ul>
-                        <li className={styles.colTitle}>Ürün</li>
+                        <li className={styles.colTitle}>{t.landing.footer.product}</li>
                         <li>
-                            <a href="#features">Hizmetler</a>
+                            <a href="#features">{t.landing.nav.services}</a>
                         </li>
                         <li>
-                            <a href="#provider">Hizmet ver</a>
-                        </li>
-                    </ul>
-                    <ul>
-                        <li className={styles.colTitle}>Yardım</li>
-                        <li>
-                            <a href="#help">Yardım merkezi</a>
-                        </li>
-                        <li>
-                            <a href="#guide">Rehber</a>
+                            <a href="#provider">{t.landing.nav.provider}</a>
                         </li>
                     </ul>
                     <ul>
-                        <li className={styles.colTitle}>Yasal</li>
+                        <li className={styles.colTitle}>{t.landing.footer.help}</li>
                         <li>
-                            <a href="/legal/terms">Kullanım koşulları</a>
+                            <a href="#help">{t.landing.footer.helpCenter}</a>
                         </li>
                         <li>
-                            <a href="/legal/kvkk">KVKK</a>
+                            <a href="#guide">{t.landing.nav.guide}</a>
+                        </li>
+                    </ul>
+                    <ul>
+                        <li className={styles.colTitle}>{t.landing.footer.legal}</li>
+                        <li>
+                            <a href="/legal/terms">{t.landing.footer.terms}</a>
+                        </li>
+                        <li>
+                            <a href="/legal/kvkk">{t.landing.footer.kvkk}</a>
                         </li>
                     </ul>
                 </nav>
             </Container>
             <Container className={styles.bottom}>
                 <span>© {currentYear} Viaverse</span>
-                <span>Made with care in TR.</span>
+                <span>{t.landing.footer.madeIn}</span>
             </Container>
         </footer>
     );

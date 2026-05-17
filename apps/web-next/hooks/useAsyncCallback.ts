@@ -8,8 +8,9 @@ import { formatError } from "@/lib/formatError";
  * a guard against overlapping in-flight calls. Returns the same callback
  * type so it drops in unchanged where you previously called the async fn.
  *
- * Pattern lifted instead of repeated in every screen — historically each
- * form re-implemented its own busy/error pair with subtle differences.
+ * `cause` exposes the raw thrown value so callers can run their own
+ * localized formatter via {@code describeError}; `error` is the legacy
+ * server-supplied detail kept around for back-compat.
  */
 export function useAsyncCallback<TArgs extends unknown[], TResult>(
     fn: (...args: TArgs) => Promise<TResult>,
@@ -17,20 +18,24 @@ export function useAsyncCallback<TArgs extends unknown[], TResult>(
     run: (...args: TArgs) => Promise<TResult | undefined>;
     pending: boolean;
     error: string | null;
+    cause: unknown;
     reset: () => void;
 } {
     const [pending, setPending] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [cause, setCause] = useState<unknown>(null);
 
     const run = useCallback(
         async (...args: TArgs) => {
             if (pending) return undefined;
             setPending(true);
             setError(null);
+            setCause(null);
             try {
                 return await fn(...args);
             } catch (caught) {
                 setError(formatError(caught));
+                setCause(caught);
                 return undefined;
             } finally {
                 setPending(false);
@@ -39,7 +44,10 @@ export function useAsyncCallback<TArgs extends unknown[], TResult>(
         [fn, pending],
     );
 
-    const reset = useCallback(() => setError(null), []);
+    const reset = useCallback(() => {
+        setError(null);
+        setCause(null);
+    }, []);
 
-    return { run, pending, error, reset };
+    return { run, pending, error, cause, reset };
 }

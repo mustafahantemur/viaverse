@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -22,13 +23,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.text.KeyboardOptions
+import app.viaverse.mobile.core.i18n.AppStrings
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * Three-stage login: identifier → password → (optional) TOTP. Mirrors the
- * web flow so a user moving between platforms sees the same shape.
+ * Single-step login: identifier + password together. If 2FA is on, the
+ * server returns a partial-auth token and the user advances to a TOTP
+ * stage. The identifier is auto-normalized to E.164 (+90 prefix) when
+ * it looks like a phone number, matching the web flow exactly.
  */
 @Composable
 fun LoginScreen(
@@ -39,7 +42,7 @@ fun LoginScreen(
 ) {
     val scope = rememberCoroutineScope()
 
-    var stage by remember { mutableStateOf(LoginStage.IDENTIFIER) }
+    var stage by remember { mutableStateOf(LoginStage.CREDENTIALS) }
     var identifier by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var partialAuthToken by remember { mutableStateOf<String?>(null) }
@@ -51,48 +54,22 @@ fun LoginScreen(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text("Sign in", style = MaterialTheme.typography.headlineMedium)
+        Text(AppStrings.signIn(), style = MaterialTheme.typography.headlineMedium)
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 
         when (stage) {
-            LoginStage.IDENTIFIER -> {
+            LoginStage.CREDENTIALS -> {
                 OutlinedTextField(
                     value = identifier,
                     onValueChange = { identifier = it },
-                    label = { Text("Email or phone") },
+                    label = { Text(AppStrings.emailOrPhone()) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Button(
-                    onClick = {
-                        scope.launch {
-                            busy = true; error = null
-                            try {
-                                val result = authApi.start(identifier.trim())
-                                val nextStep = result["nextStep"]?.jsonPrimitive?.content
-                                if (nextStep == "PASSWORD_REQUIRED") {
-                                    stage = LoginStage.PASSWORD
-                                } else {
-                                    error = "This identifier looks new. Go to Create account."
-                                }
-                            } catch (throwable: Throwable) {
-                                error = AuthError.format(throwable)
-                            } finally {
-                                busy = false
-                            }
-                        }
-                    },
-                    enabled = !busy && identifier.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) { Text(if (busy) "Checking…" else "Continue") }
-            }
-
-            LoginStage.PASSWORD -> {
-                Text("Password for $identifier", style = MaterialTheme.typography.bodyMedium)
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password") },
+                    label = { Text(AppStrings.password()) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
@@ -102,7 +79,8 @@ fun LoginScreen(
                         scope.launch {
                             busy = true; error = null
                             try {
-                                val result = authApi.passwordLogin(identifier.trim(), password)
+                                val normalized = IdentifierNormalizer.normalize(identifier)
+                                val result = authApi.passwordLogin(normalized, password)
                                 val nextStep = result["nextStep"]?.jsonPrimitive?.content
                                 if (nextStep == "TOTP_REQUIRED") {
                                     partialAuthToken =
@@ -118,20 +96,22 @@ fun LoginScreen(
                             }
                         }
                     },
-                    enabled = !busy && password.isNotBlank(),
+                    enabled = !busy && identifier.isNotBlank() && password.isNotBlank(),
                     modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) { Text(if (busy) "Signing in…" else "Sign in") }
+                ) {
+                    Text(if (busy) AppStrings.signingIn() else AppStrings.signIn())
+                }
                 TextButton(onClick = { onForgotPassword(identifier.trim()) }) {
-                    Text("Forgot password?")
+                    Text(AppStrings.forgotPassword())
                 }
             }
 
             LoginStage.TOTP -> {
-                Text("6-digit code from authenticator app", style = MaterialTheme.typography.bodyMedium)
+                Text(AppStrings.totpHelp(), style = MaterialTheme.typography.bodyMedium)
                 OutlinedTextField(
                     value = totpCode,
                     onValueChange = { if (it.length <= 6 && it.all(Char::isDigit)) totpCode = it },
-                    label = { Text("Code") },
+                    label = { Text(AppStrings.verificationCode()) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                     modifier = Modifier.fillMaxWidth(),
@@ -153,15 +133,17 @@ fun LoginScreen(
                     },
                     enabled = !busy && totpCode.length == 6,
                     modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) { Text(if (busy) "Verifying…" else "Verify") }
+                ) {
+                    Text(if (busy) AppStrings.verifying() else AppStrings.verify())
+                }
             }
         }
 
         Spacer(Modifier.height(24.dp))
         TextButton(onClick = onSwitchToRegister) {
-            Text("No account? Create one")
+            Text(AppStrings.noAccountCreateOne())
         }
     }
 }
 
-private enum class LoginStage { IDENTIFIER, PASSWORD, TOTP }
+private enum class LoginStage { CREDENTIALS, TOTP }

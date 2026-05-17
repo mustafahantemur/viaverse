@@ -146,6 +146,46 @@ public final class IdentityErrors {
         );
     }
 
+    public static IdentityException emailAlreadyRegistered() {
+        return badRequest(
+                AppErrorCode.AUTH_IDENTIFIER_ALREADY_REGISTERED,
+                "Email is already registered",
+                Map.of("email", "is already in use")
+        );
+    }
+
+    public static IdentityException phoneAlreadyRegistered() {
+        return badRequest(
+                AppErrorCode.AUTH_IDENTIFIER_ALREADY_REGISTERED,
+                "Phone is already registered",
+                Map.of("phone", "is already in use")
+        );
+    }
+
+    public static IdentityException registrationDraftMissing() {
+        return badRequest(
+                AppErrorCode.AUTH_INVALID_AUTH_FLOW,
+                "Registration draft has expired or was never started",
+                Map.of("draftId", "is invalid or expired")
+        );
+    }
+
+    public static IdentityException registrationDraftWrongStage(String detail) {
+        return badRequest(
+                AppErrorCode.AUTH_INVALID_AUTH_FLOW,
+                detail,
+                Map.of("draftId", "is in the wrong stage for this step")
+        );
+    }
+
+    public static IdentityException identifierTypeUnsupportedForLogin() {
+        return badRequest(
+                AppErrorCode.VALIDATION_FAILED,
+                "Only email or phone identifiers are accepted",
+                Map.of("identifier", "must be an email or phone number")
+        );
+    }
+
     public static IdentityException totpRequired(String partialAuthToken) {
         return badRequest(
                 AppErrorCode.AUTH_TOTP_REQUIRED,

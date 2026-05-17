@@ -8,12 +8,19 @@
   padding: 16px;
   z-index: 100;
   animation: overlay-in 180ms ease-out;
+  overflow-y: auto;
+}
+
+[data-theme="dark"] .overlay {
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .surface {
   position: relative;
   width: 100%;
   max-width: 460px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
   background: var(--vv-surface);
   border-radius: var(--vv-radius-xl);
   box-shadow: var(--vv-shadow-lg);

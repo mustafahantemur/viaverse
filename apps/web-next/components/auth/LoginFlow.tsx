@@ -4,11 +4,16 @@ import { useState } from "react";
 import { Button } from "@/components/primitives/Button";
 import { Field } from "./Field";
 import { FormError } from "./FormError";
+import { OtpInput } from "./OtpInput";
 import { PasswordField } from "./PasswordField";
+import { SocialButtons } from "./SocialButtons";
 import { useAsyncCallback } from "@/hooks/useAsyncCallback";
-import { passwordLogin, start, verifyTotp } from "@/lib/authClient";
+import { useTranslation } from "@/lib/i18n/I18nProvider";
+import { passwordLogin, verifyTotp } from "@/lib/authClient";
+import { describeError } from "@/lib/authErrors";
+import { normalizeIdentifier } from "@/lib/identifier";
 
-type Stage = "identifier" | "password" | "totp";
+type LoginStage = "credentials" | "totp";
 
 interface Props {
     /** Pre-fill identifier (e.g. carried from a register prompt). */
@@ -19,9 +24,9 @@ interface Props {
 }
 
 /**
- * Three-stage login state machine: identifier → password → optional TOTP.
- * Hosted inside the auth modal (or any future standalone screen). Owns its
- * own state; the parent supplies callbacks for navigation between flows.
+ * Single-step login: identifier + password together. If 2FA is on, the
+ * server returns a partial-auth token and the user advances to the TOTP
+ * stage. No identifier-first step — the user types both and submits.
  */
 export function LoginFlow({
     initialIdentifier = "",
@@ -29,24 +34,16 @@ export function LoginFlow({
     onSwitchToRegister,
     onForgotPassword,
 }: Props) {
-    const [stage, setStage] = useState<Stage>("identifier");
+    const { t } = useTranslation();
+    const [stage, setStage] = useState<LoginStage>("credentials");
     const [identifier, setIdentifier] = useState(initialIdentifier);
     const [password, setPassword] = useState("");
     const [partialAuthToken, setPartialAuthToken] = useState<string | null>(null);
     const [totpCode, setTotpCode] = useState("");
 
-    const startFlow = useAsyncCallback(async () => {
-        const result = await start(identifier.trim());
-        if (result.nextStep === "PASSWORD_REQUIRED") {
-            setStage("password");
-        } else {
-            // Unknown identifier → bounce to register, preserving the identifier.
-            onSwitchToRegister(identifier.trim());
-        }
-    });
-
     const loginFlow = useAsyncCallback(async () => {
-        const result = await passwordLogin(identifier.trim(), password);
+        const normalized = normalizeIdentifier(identifier);
+        const result = await passwordLogin(normalized, password);
         if (result.nextStep === "TOTP_REQUIRED" && result.partialAuthToken) {
             setPartialAuthToken(result.partialAuthToken);
             setStage("totp");
@@ -61,66 +58,21 @@ export function LoginFlow({
         onAuthenticated();
     });
 
+    const loginError = loginFlow.cause ? describeError(loginFlow.cause, t) : null;
+    const totpError = totpFlow.cause ? describeError(totpFlow.cause, t) : null;
+
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <header>
-                <h2
-                    id="auth-modal-title"
-                    style={{
-                        margin: 0,
-                        fontSize: 24,
-                        fontWeight: 800,
-                        letterSpacing: "-0.02em",
-                    }}
-                >
-                    Sign in
+                <h2 id="auth-modal-title" style={titleStyle}>
+                    {stage === "credentials" ? t.auth.login.title : t.auth.totp.title}
                 </h2>
-                <p
-                    style={{
-                        margin: "6px 0 0",
-                        color: "var(--vv-fg-muted)",
-                        fontSize: 14,
-                    }}
-                >
-                    {stage === "identifier" && "We'll figure out the rest."}
-                    {stage === "password" && (
-                        <>
-                            Continue as <strong>{identifier}</strong>.
-                        </>
-                    )}
-                    {stage === "totp" && "Enter the code from your authenticator app."}
+                <p style={subtitleStyle}>
+                    {stage === "credentials" ? t.auth.login.subtitle : t.auth.totp.subtitle}
                 </p>
             </header>
 
-            {stage === "identifier" && (
-                <form
-                    style={{ display: "flex", flexDirection: "column", gap: 14 }}
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        startFlow.run();
-                    }}
-                >
-                    <FormError>{startFlow.error}</FormError>
-                    <Field
-                        label="Email or phone"
-                        value={identifier}
-                        onChange={(event) => setIdentifier(event.target.value)}
-                        autoFocus
-                        autoComplete="username"
-                        required
-                    />
-                    <Button
-                        type="submit"
-                        size="lg"
-                        fullWidth
-                        disabled={startFlow.pending || !identifier.trim()}
-                    >
-                        {startFlow.pending ? "Checking…" : "Continue"}
-                    </Button>
-                </form>
-            )}
-
-            {stage === "password" && (
+            {stage === "credentials" && (
                 <form
                     style={{ display: "flex", flexDirection: "column", gap: 14 }}
                     onSubmit={(event) => {
@@ -128,12 +80,20 @@ export function LoginFlow({
                         loginFlow.run();
                     }}
                 >
-                    <FormError>{loginFlow.error}</FormError>
+                    <FormError>{loginError}</FormError>
+                    <Field
+                        label={t.auth.login.identifierLabel}
+                        placeholder={t.auth.login.identifierPlaceholder}
+                        value={identifier}
+                        onChange={(event) => setIdentifier(event.target.value)}
+                        autoFocus
+                        autoComplete="username"
+                        required
+                    />
                     <PasswordField
-                        label="Password"
+                        label={t.auth.login.passwordLabel}
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
-                        autoFocus
                         autoComplete="current-password"
                         required
                     />
@@ -141,17 +101,22 @@ export function LoginFlow({
                         type="submit"
                         size="lg"
                         fullWidth
-                        disabled={loginFlow.pending || !password}
+                        disabled={loginFlow.pending || !identifier.trim() || !password}
                     >
-                        {loginFlow.pending ? "Signing in…" : "Sign in"}
+                        {loginFlow.pending ? t.auth.login.submitting : t.auth.login.submit}
                     </Button>
                     <button
                         type="button"
                         onClick={() => onForgotPassword(identifier.trim())}
                         style={inlineLink}
                     >
-                        Forgot password?
+                        {t.auth.login.forgotPassword}
                     </button>
+                    <SocialButtons
+                        variant="login"
+                        onGoogle={() => startSocial("google")}
+                        onApple={() => startSocial("apple")}
+                    />
                 </form>
             )}
 
@@ -163,18 +128,15 @@ export function LoginFlow({
                         totpFlow.run();
                     }}
                 >
-                    <FormError>{totpFlow.error}</FormError>
-                    <Field
-                        label="6-digit code"
+                    <FormError>{totpError}</FormError>
+                    <OtpInput
+                        label={t.auth.totp.label}
                         value={totpCode}
-                        onChange={(event) =>
-                            setTotpCode(event.target.value.replace(/[^0-9]/g, "").slice(0, 6))
-                        }
-                        inputMode="numeric"
-                        pattern="\d{6}"
-                        autoComplete="one-time-code"
+                        onChange={setTotpCode}
+                        onComplete={(code) => {
+                            if (code.length === 6 && !totpFlow.pending) totpFlow.run();
+                        }}
                         autoFocus
-                        required
                     />
                     <Button
                         type="submit"
@@ -182,31 +144,54 @@ export function LoginFlow({
                         fullWidth
                         disabled={totpFlow.pending || totpCode.length !== 6}
                     >
-                        {totpFlow.pending ? "Verifying…" : "Verify"}
+                        {totpFlow.pending ? t.auth.totp.submitting : t.auth.totp.submit}
                     </Button>
                 </form>
             )}
 
-            <p
-                style={{
-                    margin: 0,
-                    fontSize: 13,
-                    color: "var(--vv-fg-muted)",
-                    textAlign: "center",
-                }}
-            >
-                No account?{" "}
+            <p style={footerStyle}>
+                {t.auth.login.noAccount}{" "}
                 <button
                     type="button"
                     onClick={() => onSwitchToRegister(identifier.trim())}
                     style={inlineLink}
                 >
-                    Create one
+                    {t.auth.login.createOne}
                 </button>
             </p>
         </div>
     );
 }
+
+function startSocial(provider: "google" | "apple") {
+    // Placeholder — wire to /api/auth/social/{provider} popup flow when the
+    // OAuth client IDs are configured per environment. We keep the buttons
+    // present so the UI commitment is visible even while wiring is pending.
+    if (typeof window !== "undefined") {
+        window.open(`/api/auth/social/${provider}`, "_blank", "noopener,noreferrer");
+    }
+}
+
+const titleStyle: React.CSSProperties = {
+    margin: 0,
+    fontSize: 24,
+    fontWeight: 800,
+    letterSpacing: "-0.02em",
+    color: "var(--vv-fg-strong)",
+};
+
+const subtitleStyle: React.CSSProperties = {
+    margin: "6px 0 0",
+    color: "var(--vv-fg-muted)",
+    fontSize: 14,
+};
+
+const footerStyle: React.CSSProperties = {
+    margin: 0,
+    fontSize: 13,
+    color: "var(--vv-fg-muted)",
+    textAlign: "center",
+};
 
 const inlineLink: React.CSSProperties = {
     background: "transparent",

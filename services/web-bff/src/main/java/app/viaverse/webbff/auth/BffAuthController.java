@@ -100,6 +100,31 @@ public class BffAuthController {
                 HttpMethod.POST, IDENTITY_PATH + "/register", body, null, response);
     }
 
+    // ---- Draft-based registration (form-first) ----
+
+    @PostMapping("/register/start")
+    public ResponseEntity<Map<String, Object>> registerStart(@RequestBody Map<String, Object> body) {
+        return forward(HttpMethod.POST, IDENTITY_PATH + "/register/start", body, null);
+    }
+
+    @PostMapping("/register/verify-email")
+    public ResponseEntity<Map<String, Object>> registerVerifyEmail(
+            @RequestBody Map<String, Object> body,
+            HttpServletResponse response
+    ) {
+        return forwardAndPromoteRefreshCookie(
+                HttpMethod.POST, IDENTITY_PATH + "/register/verify-email", body, null, response);
+    }
+
+    @PostMapping("/register/verify-phone")
+    public ResponseEntity<Map<String, Object>> registerVerifyPhone(
+            @RequestBody Map<String, Object> body,
+            HttpServletResponse response
+    ) {
+        return forwardAndPromoteRefreshCookie(
+                HttpMethod.POST, IDENTITY_PATH + "/register/verify-phone", body, null, response);
+    }
+
     @PostMapping("/refresh")
     public ResponseEntity<Map<String, Object>> refresh(
             @RequestBody(required = false) Map<String, Object> body,

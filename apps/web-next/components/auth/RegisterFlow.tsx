@@ -5,69 +5,71 @@ import { Button } from "@/components/primitives/Button";
 import { ConsentList } from "./ConsentList";
 import { Field } from "./Field";
 import { FormError } from "./FormError";
+import { OtpInput } from "./OtpInput";
 import { PasswordField } from "./PasswordField";
+import { PhoneField } from "./PhoneField";
+import { SocialButtons } from "./SocialButtons";
 import { useAsyncCallback } from "@/hooks/useAsyncCallback";
 import { useRequiredConsents } from "@/hooks/useRequiredConsents";
-import { register, start, verifyOtp } from "@/lib/authClient";
+import { useTranslation } from "@/lib/i18n/I18nProvider";
+import {
+    registerStart,
+    registerVerifyEmail,
+    registerVerifyPhone,
+} from "@/lib/authClient";
+import { describeError } from "@/lib/authErrors";
 import { evaluatePassword } from "@/lib/validation";
 
-type Stage = "identifier" | "otp" | "details";
+type RegisterStage = "form" | "emailOtp" | "phoneOtp";
 
 interface Props {
-    initialIdentifier?: string;
     onRegistered: () => void;
     onSwitchToLogin: (identifier: string) => void;
 }
 
-export function RegisterFlow({ initialIdentifier = "", onRegistered, onSwitchToLogin }: Props) {
-    const [stage, setStage] = useState<Stage>("identifier");
-    const [identifier, setIdentifier] = useState(initialIdentifier);
-    const [flowId, setFlowId] = useState<string | null>(null);
-    const [otp, setOtp] = useState("");
-    const [registrationToken, setRegistrationToken] = useState<string | null>(null);
+/**
+ * Three-stage registration:
+ *   1. {@code form}      — full signup form (everything captured up front)
+ *   2. {@code emailOtp}  — verify email with 6-digit OTP
+ *   3. {@code phoneOtp}  — optional, only when phone was provided
+ *
+ * Server-side draft holds the form data so refreshing the page mid-OTP
+ * isn't fatal (within the draft TTL).
+ */
+export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
+    const { t, format } = useTranslation();
+    const [stage, setStage] = useState<RegisterStage>("form");
 
-    const [displayName, setDisplayName] = useState("");
+    // Form state
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
+    const [displayName, setDisplayName] = useState("");
+    const [email, setEmail] = useState("");
+    const [phoneLocal, setPhoneLocal] = useState("");
+    const [phoneE164, setPhoneE164] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [requiredAccepted, setRequiredAccepted] = useState<Record<string, boolean>>({});
     const [marketingAccepted, setMarketingAccepted] = useState(false);
 
+    // Draft progress
+    const [draftId, setDraftId] = useState<string | null>(null);
+    const [emailOtp, setEmailOtp] = useState("");
+    const [phoneOtp, setPhoneOtp] = useState("");
+
     const { consents } = useRequiredConsents();
-
-    const startFlow = useAsyncCallback(async () => {
-        const result = await start(identifier.trim());
-        if (result.nextStep === "OTP_REQUIRED" && result.flowId) {
-            setFlowId(result.flowId);
-            setStage("otp");
-        } else {
-            // Identifier is known → push the user to login instead.
-            onSwitchToLogin(identifier.trim());
-        }
-    });
-
-    const verifyFlow = useAsyncCallback(async () => {
-        if (!flowId) return;
-        const result = await verifyOtp(flowId, otp);
-        setRegistrationToken(result.registrationToken);
-        setStage("details");
-    });
 
     const passwordsMatch = password === confirmPassword;
     const passwordIsValid = evaluatePassword(password).isValid;
-    const confirmError =
-        confirmPassword.length === 0 || passwordsMatch
-            ? undefined
-            : "Passwords don't match";
     const allConsentsAccepted = consents
         ? consents.required.every((doc) => requiredAccepted[doc.type])
         : false;
 
-    const completeFlow = useAsyncCallback(async () => {
-        if (!registrationToken || !consents) return;
-        await register({
-            registrationToken,
+    const startFlow = useAsyncCallback(async () => {
+        if (!consents) return;
+        const result = await registerStart({
+            email: email.trim().toLowerCase(),
+            phone: phoneE164 || undefined,
             displayName: displayName.trim(),
             firstName: firstName.trim() || undefined,
             lastName: lastName.trim() || undefined,
@@ -77,51 +79,71 @@ export function RegisterFlow({ initialIdentifier = "", onRegistered, onSwitchToL
                 .map((doc) => doc.type),
             marketingConsentAccepted: marketingAccepted,
         });
+        setDraftId(result.draftId);
+        setStage("emailOtp");
+    });
+
+    const verifyEmailFlow = useAsyncCallback(async () => {
+        if (!draftId) return;
+        const result = await registerVerifyEmail(draftId, emailOtp);
+        if (result.nextStep === "PHONE_VERIFICATION_REQUIRED") {
+            setStage("phoneOtp");
+        } else {
+            onRegistered();
+        }
+    });
+
+    const verifyPhoneFlow = useAsyncCallback(async () => {
+        if (!draftId) return;
+        await registerVerifyPhone(draftId, phoneOtp);
         onRegistered();
     });
 
-    const canSubmitDetails = useMemo(
+    const canSubmitForm = useMemo(
         () =>
-            !completeFlow.pending &&
+            !startFlow.pending &&
+            email.trim().length > 0 &&
             displayName.trim().length > 0 &&
             passwordIsValid &&
             passwordsMatch &&
             allConsentsAccepted,
-        [completeFlow.pending, displayName, passwordIsValid, passwordsMatch, allConsentsAccepted],
+        [
+            startFlow.pending,
+            email,
+            displayName,
+            passwordIsValid,
+            passwordsMatch,
+            allConsentsAccepted,
+        ],
     );
+
+    const confirmError =
+        confirmPassword.length === 0 || passwordsMatch
+            ? undefined
+            : t.auth.register.passwordMismatch;
+
+    const startError = startFlow.cause ? describeError(startFlow.cause, t) : null;
+    const emailError = verifyEmailFlow.cause ? describeError(verifyEmailFlow.cause, t) : null;
+    const phoneError = verifyPhoneFlow.cause ? describeError(verifyPhoneFlow.cause, t) : null;
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <header>
-                <h2
-                    id="auth-modal-title"
-                    style={{
-                        margin: 0,
-                        fontSize: 24,
-                        fontWeight: 800,
-                        letterSpacing: "-0.02em",
-                    }}
-                >
-                    Create account
+                <h2 id="auth-modal-title" style={titleStyle}>
+                    {stage === "form" && t.auth.register.title}
+                    {stage === "emailOtp" && t.auth.emailOtp.title}
+                    {stage === "phoneOtp" && t.auth.phoneOtp.title}
                 </h2>
-                <p
-                    style={{
-                        margin: "6px 0 0",
-                        color: "var(--vv-fg-muted)",
-                        fontSize: 14,
-                    }}
-                >
-                    {stage === "identifier" && "Free, takes about a minute."}
-                    {stage === "otp" && (
-                        <>
-                            We sent a 6-digit code to <strong>{identifier}</strong>.
-                        </>
-                    )}
-                    {stage === "details" && "Set a password and accept the legal terms."}
+                <p style={subtitleStyle}>
+                    {stage === "form" && t.auth.register.subtitle}
+                    {stage === "emailOtp" &&
+                        format(t.auth.emailOtp.subtitle, { email: email.trim() })}
+                    {stage === "phoneOtp" &&
+                        format(t.auth.phoneOtp.subtitle, { phone: phoneE164 })}
                 </p>
             </header>
 
-            {stage === "identifier" && (
+            {stage === "form" && (
                 <form
                     style={{ display: "flex", flexDirection: "column", gap: 14 }}
                     onSubmit={(event) => {
@@ -129,89 +151,47 @@ export function RegisterFlow({ initialIdentifier = "", onRegistered, onSwitchToL
                         startFlow.run();
                     }}
                 >
-                    <FormError>{startFlow.error}</FormError>
-                    <Field
-                        label="Email or phone"
-                        value={identifier}
-                        onChange={(event) => setIdentifier(event.target.value)}
-                        autoFocus
-                        autoComplete="username"
-                        required
-                    />
-                    <Button
-                        type="submit"
-                        size="lg"
-                        fullWidth
-                        disabled={startFlow.pending || !identifier.trim()}
-                    >
-                        {startFlow.pending ? "Sending OTP…" : "Send verification code"}
-                    </Button>
-                </form>
-            )}
-
-            {stage === "otp" && (
-                <form
-                    style={{ display: "flex", flexDirection: "column", gap: 14 }}
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        verifyFlow.run();
-                    }}
-                >
-                    <FormError>{verifyFlow.error}</FormError>
-                    <Field
-                        label="Verification code"
-                        value={otp}
-                        onChange={(event) =>
-                            setOtp(event.target.value.replace(/[^0-9]/g, "").slice(0, 6))
-                        }
-                        inputMode="numeric"
-                        pattern="\d{6}"
-                        autoComplete="one-time-code"
-                        autoFocus
-                        required
-                        hint="In local dev open Mailpit at http://localhost:8025"
-                    />
-                    <Button
-                        type="submit"
-                        size="lg"
-                        fullWidth
-                        disabled={verifyFlow.pending || otp.length !== 6}
-                    >
-                        {verifyFlow.pending ? "Verifying…" : "Verify"}
-                    </Button>
-                </form>
-            )}
-
-            {stage === "details" && (
-                <form
-                    style={{ display: "flex", flexDirection: "column", gap: 14 }}
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        completeFlow.run();
-                    }}
-                >
-                    <FormError>{completeFlow.error}</FormError>
-                    <Field
-                        label="Display name"
-                        value={displayName}
-                        onChange={(event) => setDisplayName(event.target.value)}
-                        autoFocus
-                        required
-                    />
+                    <FormError>{startError}</FormError>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                         <Field
-                            label="First name"
+                            label={t.auth.register.firstNameLabel}
                             value={firstName}
                             onChange={(event) => setFirstName(event.target.value)}
+                            autoComplete="given-name"
                         />
                         <Field
-                            label="Last name"
+                            label={t.auth.register.lastNameLabel}
                             value={lastName}
                             onChange={(event) => setLastName(event.target.value)}
+                            autoComplete="family-name"
                         />
                     </div>
+                    <Field
+                        label={t.auth.register.displayNameLabel}
+                        hint={t.auth.register.displayNameHint}
+                        value={displayName}
+                        onChange={(event) => setDisplayName(event.target.value)}
+                        required
+                    />
+                    <Field
+                        label={t.auth.register.emailLabel}
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        autoComplete="email"
+                        required
+                    />
+                    <PhoneField
+                        label={t.auth.register.phoneLabel}
+                        hint={t.auth.register.phoneHint}
+                        value={phoneLocal}
+                        onChange={setPhoneLocal}
+                        onNormalizedChange={setPhoneE164}
+                        autoComplete="tel"
+                    />
                     <PasswordField
-                        label="Password"
+                        label={t.auth.register.passwordLabel}
+                        hint={t.auth.register.passwordHint}
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
                         autoComplete="new-password"
@@ -219,14 +199,13 @@ export function RegisterFlow({ initialIdentifier = "", onRegistered, onSwitchToL
                         showStrengthMeter
                     />
                     <PasswordField
-                        label="Confirm password"
+                        label={t.auth.register.passwordConfirmLabel}
                         value={confirmPassword}
                         onChange={(event) => setConfirmPassword(event.target.value)}
                         autoComplete="new-password"
                         required
                         error={confirmError}
                     />
-
                     {consents ? (
                         <ConsentList
                             consents={consents}
@@ -239,43 +218,150 @@ export function RegisterFlow({ initialIdentifier = "", onRegistered, onSwitchToL
                         />
                     ) : (
                         <span style={{ fontSize: 12, color: "var(--vv-fg-muted)" }}>
-                            Loading legal documents…
+                            {t.common.loading}
                         </span>
                     )}
+                    <Button type="submit" size="lg" fullWidth disabled={!canSubmitForm}>
+                        {startFlow.pending ? t.auth.register.submitting : t.auth.register.submit}
+                    </Button>
+                    <SocialButtons
+                        variant="register"
+                        onGoogle={() => startSocial("google")}
+                        onApple={() => startSocial("apple")}
+                    />
+                </form>
+            )}
 
-                    <Button type="submit" size="lg" fullWidth disabled={!canSubmitDetails}>
-                        {completeFlow.pending ? "Creating account…" : "Create account"}
+            {stage === "emailOtp" && (
+                <form
+                    style={{ display: "flex", flexDirection: "column", gap: 14 }}
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        verifyEmailFlow.run();
+                    }}
+                >
+                    <FormError>{emailError}</FormError>
+                    <OtpInput
+                        label={t.auth.emailOtp.label}
+                        hint={t.auth.emailOtp.resendHint}
+                        value={emailOtp}
+                        onChange={setEmailOtp}
+                        onComplete={(code) => {
+                            if (code.length === 6 && !verifyEmailFlow.pending) verifyEmailFlow.run();
+                        }}
+                        autoFocus
+                    />
+                    {isDevMailpitEnabled() && (
+                        <span style={devHintStyle}>{t.auth.emailOtp.devHint}</span>
+                    )}
+                    <Button
+                        type="submit"
+                        size="lg"
+                        fullWidth
+                        disabled={verifyEmailFlow.pending || emailOtp.length !== 6}
+                    >
+                        {verifyEmailFlow.pending
+                            ? t.auth.emailOtp.submitting
+                            : t.auth.emailOtp.submit}
                     </Button>
                 </form>
             )}
 
-            <p
-                style={{
-                    margin: 0,
-                    fontSize: 13,
-                    color: "var(--vv-fg-muted)",
-                    textAlign: "center",
-                }}
-            >
-                Already have an account?{" "}
-                <button
-                    type="button"
-                    onClick={() => onSwitchToLogin(identifier.trim())}
-                    style={{
-                        background: "transparent",
-                        border: "none",
-                        padding: 0,
-                        color: "var(--vv-primary)",
-                        fontWeight: 700,
-                        fontSize: "inherit",
-                        cursor: "pointer",
-                        textDecoration: "underline",
-                        textUnderlineOffset: 2,
+            {stage === "phoneOtp" && (
+                <form
+                    style={{ display: "flex", flexDirection: "column", gap: 14 }}
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        verifyPhoneFlow.run();
                     }}
                 >
-                    Sign in
+                    <FormError>{phoneError}</FormError>
+                    <OtpInput
+                        label={t.auth.phoneOtp.label}
+                        value={phoneOtp}
+                        onChange={setPhoneOtp}
+                        onComplete={(code) => {
+                            if (code.length === 6 && !verifyPhoneFlow.pending) verifyPhoneFlow.run();
+                        }}
+                        autoFocus
+                    />
+                    <Button
+                        type="submit"
+                        size="lg"
+                        fullWidth
+                        disabled={verifyPhoneFlow.pending || phoneOtp.length !== 6}
+                    >
+                        {verifyPhoneFlow.pending
+                            ? t.auth.phoneOtp.submitting
+                            : t.auth.phoneOtp.submit}
+                    </Button>
+                </form>
+            )}
+
+            <p style={footerStyle}>
+                {t.auth.register.haveAccount}{" "}
+                <button
+                    type="button"
+                    onClick={() => onSwitchToLogin(email.trim())}
+                    style={inlineLink}
+                >
+                    {t.auth.register.signIn}
                 </button>
             </p>
         </div>
     );
 }
+
+function startSocial(provider: "google" | "apple") {
+    if (typeof window !== "undefined") {
+        window.open(`/api/auth/social/${provider}`, "_blank", "noopener,noreferrer");
+    }
+}
+
+function isDevMailpitEnabled(): boolean {
+    return (
+        process.env.NODE_ENV === "development" ||
+        process.env.NEXT_PUBLIC_DEV_MAILPIT_HINT === "true"
+    );
+}
+
+const titleStyle: React.CSSProperties = {
+    margin: 0,
+    fontSize: 24,
+    fontWeight: 800,
+    letterSpacing: "-0.02em",
+    color: "var(--vv-fg-strong)",
+};
+
+const subtitleStyle: React.CSSProperties = {
+    margin: "6px 0 0",
+    color: "var(--vv-fg-muted)",
+    fontSize: 14,
+};
+
+const footerStyle: React.CSSProperties = {
+    margin: 0,
+    fontSize: 13,
+    color: "var(--vv-fg-muted)",
+    textAlign: "center",
+};
+
+const devHintStyle: React.CSSProperties = {
+    fontSize: 12,
+    color: "var(--vv-fg-muted)",
+    background: "var(--vv-surface-muted)",
+    padding: "8px 10px",
+    borderRadius: "var(--vv-radius-sm)",
+};
+
+const inlineLink: React.CSSProperties = {
+    background: "transparent",
+    border: "none",
+    padding: 0,
+    color: "var(--vv-primary)",
+    fontWeight: 700,
+    fontSize: "inherit",
+    cursor: "pointer",
+    textDecoration: "underline",
+    textUnderlineOffset: 2,
+};
