@@ -29,7 +29,8 @@ tasks.register("migrateLocal") {
         project(":services:search-service"),
         project(":services:trust-gamification-service"),
         project(":services:ads-monetization-service"),
-        project(":services:admin-bff")
+        project(":services:admin-bff"),
+        project(":services:web-bff")
     )
 
     serviceProjects.forEach {

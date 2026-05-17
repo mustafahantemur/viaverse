@@ -1,0 +1,296 @@
+/* =====================================================================
+   Viaverse — Colors & Type
+   ---------------------------------------------------------------------
+   Brand voice: warm, trustworthy, playful-but-professional.
+   Visual feel: warm ivory canvas, deep-forest text, orange CTA, trust-green accents.
+   Use semantic tokens (--vv-bg, --vv-fg, --vv-primary…) in feature screens.
+   Use raw scale tokens only inside this file or component libraries.
+   ===================================================================== */
+
+/* ---------- BRAND FONTS (self-hosted) ---------- */
+/* Plus Jakarta Sans — primary UI + display family (variable file: full weight axis) */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('fonts/PlusJakartaSans-VariableFont_wght.ttf') format('truetype-variations'),
+       url('fonts/PlusJakartaSans-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('fonts/PlusJakartaSans-Italic-VariableFont_wght.ttf') format('truetype-variations'),
+       url('fonts/PlusJakartaSans-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Open Sans — alt body family + wordmark substrate (variable: weight + width).
+   Using the width axis we can render a thin condensed form for the wordmark
+   that approximates the monoline "viaverse" lockup without shipping Montserrat. */
+@font-face {
+  font-family: 'Open Sans';
+  src: url('fonts/OpenSans-VariableFont_wdth_wght.ttf') format('truetype-variations'),
+       url('fonts/OpenSans-VariableFont_wdth_wght.ttf') format('truetype');
+  font-weight: 300 800;
+  font-stretch: 75% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sans';
+  src: url('fonts/OpenSans-Italic-VariableFont_wdth_wght.ttf') format('truetype-variations'),
+       url('fonts/OpenSans-Italic-VariableFont_wdth_wght.ttf') format('truetype');
+  font-weight: 300 800;
+  font-stretch: 75% 100%;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- BRAND PRIMITIVES ---------- */
+  /* Orange — Primary action, attention, taps */
+  --vv-orange-50:  #FFF7ED;
+  --vv-orange-100: #FFEDD5;
+  --vv-orange-200: #FED7AA;
+  --vv-orange-300: #FDBA74;
+  --vv-orange-400: #FB923C;
+  --vv-orange-500: #F97316; /* PRIMARY CTA */
+  --vv-orange-600: #EA580C; /* hover/press */
+  --vv-orange-700: #C2410C;
+
+  /* Deep Green — Brand secondary, deep mode background */
+  --vv-green-50:   #ECFDF5;
+  --vv-green-100:  #D1FAE5;
+  --vv-green-200:  #A7F3D0;
+  --vv-green-300:  #6EE7B7;
+  --vv-green-400:  #34D399;
+  --vv-green-500:  #10B981; /* trust accent */
+  --vv-green-600:  #059669;
+  --vv-green-700:  #047857;
+  --vv-green-800:  #065F46;
+  --vv-green-900:  #064E3B;
+  --vv-green-950:  #022C22; /* dark mode bg */
+  --vv-green-elev: #052E2B; /* dark mode elevated */
+
+  /* Ink — Text, deep neutrals */
+  --vv-ink-50:  #F9FAFB;
+  --vv-ink-100: #F3F4F6;
+  --vv-ink-200: #E5E7EB;
+  --vv-ink-300: #D1D5DB;
+  --vv-ink-400: #9CA3AF;
+  --vv-ink-500: #6B7280;
+  --vv-ink-600: #4B5563;
+  --vv-ink-700: #374151;
+  --vv-ink-800: #1F2937;
+  --vv-ink-900: #0F172A; /* PRIMARY TEXT */
+
+  /* Warm Ivory — Soft canvas */
+  --vv-ivory-50:  #FFFBF5;
+  --vv-ivory-100: #FFF7ED; /* main app bg in light */
+  --vv-ivory-200: #FCEFD9;
+
+  /* Status / Semantic */
+  --vv-success: #10B981;
+  --vv-warning: #F59E0B;
+  --vv-danger:  #EF4444;
+  --vv-info:    #3B82F6;
+
+  /* ---------- SEMANTIC TOKENS (light mode) ---------- */
+  --vv-bg:            #F4ECE0; /* page canvas (warmer than ivory-100, matches screenshots) */
+  --vv-surface:       #FFFBF5; /* card / sheet surface */
+  --vv-surface-muted: #F5EFE5; /* input fill, chip rest */
+  --vv-surface-hover: #FCEFD9;
+
+  --vv-fg:            #0F172A; /* primary text */
+  --vv-fg-strong:     #022C22; /* deepest text, headings */
+  --vv-fg-muted:      #6B7280; /* secondary text */
+  --vv-fg-faint:      #9CA3AF; /* placeholders, captions */
+  --vv-fg-inverse:    #FFFBF5;
+
+  --vv-border-subtle: rgba(15, 23, 42, 0.06);
+  --vv-border-muted:  rgba(15, 23, 42, 0.10);
+  --vv-border-faint:  rgba(15, 23, 42, 0.04);
+
+  --vv-primary:           #F97316; /* CTA */
+  --vv-primary-hover:     #EA580C;
+  --vv-primary-press:     #C2410C;
+  --vv-primary-soft:      rgba(249, 115, 22, 0.10);
+  --vv-primary-foreground:#FEEFD4; /* warm cream — text on orange backgrounds. Never #fff. */
+
+  --vv-trust:             #10B981; /* trust accent */
+  --vv-trust-deep:        #064E3B;
+  --vv-trust-soft:        rgba(16, 185, 129, 0.10);
+
+  /* Shadow / elevation */
+  --vv-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --vv-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --vv-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --vv-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10);
+  --vv-shadow-cta: 0 10px 24px rgba(194, 65, 12, 0.32), 0 4px 8px rgba(194, 65, 12, 0.22);
+  --vv-shadow-nav: 0 -10px 40px rgba(15, 23, 42, 0.03);
+
+  /* Radius scale */
+  --vv-radius-xs:  6px;
+  --vv-radius-sm:  10px;
+  --vv-radius-md:  14px;
+  --vv-radius-lg:  20px;  /* cards, sheets */
+  --vv-radius-xl:  24px;  /* big sheets */
+  --vv-radius-pill: 999px;
+
+  /* Spacing scale (4px base) */
+  --vv-space-1:  4px;
+  --vv-space-2:  8px;
+  --vv-space-3:  12px;
+  --vv-space-4:  16px;
+  --vv-space-5:  20px;
+  --vv-space-6:  24px;
+  --vv-space-8:  32px;
+  --vv-space-10: 40px;
+  --vv-space-12: 48px;
+  --vv-space-16: 64px;
+
+  /* ---------- TYPOGRAPHY ---------- */
+  /* Plus Jakarta Sans — friendly geometric workhorse for UI/headings.
+     Open Sans — humanist alt for long-form body content (e.g. SEO guides, FAQ).
+     Open Sans (condensed width axis) — substrate for wordmark-style lockups that
+     echo the thin monoline "viaverse" wordmark when the PNG can't be used. */
+  --vv-font-sans:    'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --vv-font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --vv-font-body:    'Open Sans', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --vv-font-wordmark:'Open Sans', 'Plus Jakarta Sans', sans-serif;
+  --vv-font-mono:    ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  --vv-text-2xs: 10px;
+  --vv-text-xs:  11px;
+  --vv-text-sm:  12px;
+  --vv-text-md:  14px;
+  --vv-text-base:15px;
+  --vv-text-lg:  16px;
+  --vv-text-xl:  20px;
+  --vv-text-2xl: 24px;
+  --vv-text-3xl: 32px;
+  --vv-text-4xl: 40px;
+  --vv-text-5xl: 56px;
+
+  --vv-leading-tight:   1.15;
+  --vv-leading-snug:    1.3;
+  --vv-leading-normal:  1.45;
+  --vv-leading-relaxed: 1.6;
+
+  --vv-tracking-tight:   -0.02em;
+  --vv-tracking-normal:  0;
+  --vv-tracking-wide:    0.08em;
+  --vv-tracking-wider:   0.2em; /* "VEYA" dividers, eyebrow labels */
+}
+
+/* ---------- DARK MODE ---------- */
+.dark, [data-theme="dark"] {
+  --vv-bg:            #022C22;
+  --vv-surface:       #052E2B;
+  --vv-surface-muted: #0A3A33;
+  --vv-surface-hover: #0F4A40;
+
+  --vv-fg:            #E5E7EB;
+  --vv-fg-strong:     #FFFBF5;
+  --vv-fg-muted:      #9CA3AF;
+  --vv-fg-faint:      #6B7280;
+  --vv-fg-inverse:    #022C22;
+
+  --vv-border-subtle: rgba(255, 251, 245, 0.06);
+  --vv-border-muted:  rgba(255, 251, 245, 0.10);
+  --vv-border-faint:  rgba(255, 251, 245, 0.04);
+
+  --vv-primary-soft:      rgba(249, 115, 22, 0.18);
+  --vv-trust-soft:        rgba(16, 185, 129, 0.18);
+  --vv-shadow-nav:        0 -10px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* =====================================================================
+   SEMANTIC ELEMENT STYLES
+   Use these classes in product code; do not write raw colors inline.
+   ===================================================================== */
+
+.vv-h1, h1.vv {
+  font-family: var(--vv-font-display);
+  font-size: clamp(28px, 4vw, var(--vv-text-4xl));
+  font-weight: 800;
+  letter-spacing: var(--vv-tracking-tight);
+  line-height: var(--vv-leading-tight);
+  color: var(--vv-fg-strong);
+}
+
+.vv-h2 {
+  font-family: var(--vv-font-display);
+  font-size: var(--vv-text-2xl);
+  font-weight: 800;
+  letter-spacing: var(--vv-tracking-tight);
+  line-height: var(--vv-leading-tight);
+  color: var(--vv-fg-strong);
+}
+
+.vv-h3 {
+  font-family: var(--vv-font-display);
+  font-size: var(--vv-text-xl);
+  font-weight: 700;
+  letter-spacing: var(--vv-tracking-tight);
+  line-height: var(--vv-leading-snug);
+  color: var(--vv-fg-strong);
+}
+
+.vv-title { /* screen title — 16/600 */
+  font-family: var(--vv-font-sans);
+  font-size: var(--vv-text-lg);
+  font-weight: 700;
+  letter-spacing: var(--vv-tracking-tight);
+  color: var(--vv-fg);
+}
+
+.vv-body {
+  font-family: var(--vv-font-sans);
+  font-size: var(--vv-text-md);
+  line-height: var(--vv-leading-normal);
+  color: var(--vv-fg);
+}
+
+.vv-body-sm {
+  font-family: var(--vv-font-sans);
+  font-size: var(--vv-text-sm);
+  line-height: var(--vv-leading-normal);
+  color: var(--vv-fg);
+}
+
+.vv-caption {
+  font-family: var(--vv-font-sans);
+  font-size: var(--vv-text-2xs);
+  line-height: var(--vv-leading-snug);
+  color: var(--vv-fg-muted);
+}
+
+.vv-eyebrow { /* "VEYA", "HIZMET VEREN MODU", mode pills */
+  font-family: var(--vv-font-sans);
+  font-size: var(--vv-text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--vv-tracking-wider);
+  color: var(--vv-fg-muted);
+}
+
+.vv-price {
+  font-family: var(--vv-font-display);
+  font-weight: 800;
+  letter-spacing: var(--vv-tracking-tight);
+  color: var(--vv-trust-deep);
+}
+
+.vv-wordmark {
+  font-family: var(--vv-font-wordmark);
+  font-weight: 300;
+  font-stretch: 90%;
+  letter-spacing: 0.06em;
+}
+
+/* Accent treatment for the "via|verse" wordmark — split-color v's */
+.vv-wordmark-accent .v-orange { color: var(--vv-primary); }
+.vv-wordmark-accent .v-green  { color: var(--vv-trust-deep); }

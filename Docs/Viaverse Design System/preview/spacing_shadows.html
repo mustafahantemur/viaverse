@@ -1,0 +1,19 @@
+<!doctype html>
+<html><head><meta charset="utf-8"/><title>Spacing — Shadows</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--vv-bg);font-family:var(--vv-font-sans);color:var(--vv-fg);}
+  .card{padding:28px 24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+  .item{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .box{width:72px;height:56px;background:var(--vv-surface);border-radius:14px;}
+  .lbl{font-size:10px;font-weight:700;color:var(--vv-fg);}
+  .hex{font-size:9px;color:var(--vv-fg-muted);font-family:var(--vv-font-mono);}
+  .cta{background:var(--vv-primary);}
+</style></head>
+<body><div class="card">
+  <div class="item"><div class="box" style="box-shadow:var(--vv-shadow-xs)"></div><div class="lbl">xs</div><div class="hex">--shadow-xs</div></div>
+  <div class="item"><div class="box" style="box-shadow:var(--vv-shadow-sm)"></div><div class="lbl">sm · cards</div><div class="hex">--shadow-sm</div></div>
+  <div class="item"><div class="box" style="box-shadow:var(--vv-shadow-md)"></div><div class="lbl">md · active</div><div class="hex">--shadow-md</div></div>
+  <div class="item"><div class="box" style="box-shadow:var(--vv-shadow-lg)"></div><div class="lbl">lg · sheets</div><div class="hex">--shadow-lg</div></div>
+  <div class="item"><div class="box cta" style="box-shadow:var(--vv-shadow-cta)"></div><div class="lbl">cta</div><div class="hex">--shadow-cta</div></div>
+</div></body></html>

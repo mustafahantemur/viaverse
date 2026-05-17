@@ -1,0 +1,33 @@
+<!doctype html>
+<html><head><meta charset="utf-8"/><title>Components — Inputs</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--vv-bg);font-family:var(--vv-font-sans);color:var(--vv-fg);}
+  .card{padding:22px 24px;display:flex;flex-direction:column;gap:12px;}
+  .lbl{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--vv-fg-muted);font-weight:700;}
+  .field{height:48px;border-radius:14px;border:1px solid var(--vv-border-muted);background:rgba(255,251,245,.4);padding:0 16px;font-family:var(--vv-font-sans);font-size:13px;color:var(--vv-fg);outline:none;width:100%;box-sizing:border-box;}
+  .field::placeholder{color:var(--vv-fg-faint);}
+  .field:focus{border-color:var(--vv-primary);box-shadow:0 0 0 1px var(--vv-primary);}
+  .search{height:40px;border-radius:999px;background:var(--vv-surface-muted);display:flex;align-items:center;gap:10px;padding-left:16px;overflow:hidden;}
+  .search input{flex:1;border:none;background:none;font-family:var(--vv-font-sans);font-size:12px;color:var(--vv-fg);outline:none;height:100%;}
+  .search input::placeholder{color:var(--vv-fg-faint);}
+  .search-btn{background:var(--vv-primary);color:var(--vv-primary-foreground);height:100%;padding:0 18px;font-weight:700;font-size:12px;border:none;cursor:pointer;}
+  .otp{display:flex;gap:8px;}
+  .otp .cell{width:38px;height:48px;border:1px solid var(--vv-border-muted);border-radius:12px;text-align:center;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;background:rgba(255,251,245,.4);color:var(--vv-fg);}
+  .otp .cell.filled{color:var(--vv-fg-strong);border-color:var(--vv-fg-faint);}
+</style></head>
+<body><div class="card">
+  <div class="lbl">Text input · focused</div>
+  <input class="field" value="Telefon numarası veya e-posta" />
+  <div class="lbl">OTP · 6 digit</div>
+  <div class="otp">
+    <div class="cell filled">5</div><div class="cell filled">8</div><div class="cell filled">2</div>
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+  </div>
+  <div class="lbl">Search · pill with compass + ara</div>
+  <div class="search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+    <input placeholder="Yakınındaki gündelik ihtiyaçları gör" />
+    <button class="search-btn">ara</button>
+  </div>
+</div></body></html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Viaverse — Mobile UI Kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--vv-bg); font-family: var(--vv-font-sans); color: var(--vv-fg); overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
+  .stage { position: relative; width: 420px; height: 860px; max-height: 96vh; aspect-ratio: 420/860;
+    background: var(--vv-surface); border-radius: 44px; overflow: hidden;
+    box-shadow: 0 0 0 12px #14281c, 0 30px 70px rgba(20,40,28,0.35), 0 60px 120px rgba(20,40,28,0.25);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .stage::before {
+    content: ""; position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 28px; background: #14281c; border-radius: 20px; z-index: 200;
+  }
+  .stage::after {
+    content: ""; position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 4px; background: rgba(15,23,42,0.25); border-radius: 999px; z-index: 200;
+  }
+  .stage > .app-root {
+    position: absolute; inset: 0; overflow: hidden;
+    /* Account for iOS notch + home indicator */
+    padding-top: 28px;
+  }
+  @keyframes vv-spin-y {
+    0%   { transform: perspective(800px) rotateX(18deg) rotateY(0deg); }
+    50%  { transform: perspective(800px) rotateX(-18deg) rotateY(180deg); }
+    100% { transform: perspective(800px) rotateX(18deg) rotateY(360deg); }
+  }
+  @keyframes vv-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(1.4); } }
+  /* Status bar replica */
+  .status-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 28px; z-index: 199;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 32px;
+    color: var(--vv-fg); font-family: var(--vv-font-sans); font-weight: 800; font-size: 12px;
+  }
+  .status-bar .right { display: flex; align-items: center; gap: 5px; }
+  .status-bar svg { width: 14px; height: 14px; }
+  /* Make page-level scroll on the inside not page-level */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.15); border-radius: 4px; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="status-bar">
+      <span>9:41</span>
+      <div class="right">
+        <svg viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="4" y="6" width="3" height="6" rx="0.5"/><rect x="8" y="3" width="3" height="9" rx="0.5"/><rect x="12" y="0" width="3" height="12" rx="0.5"/></svg>
+        <svg viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8a14 14 0 0 1 20 0"/><path d="M5 11a10 10 0 0 1 14 0"/><path d="M8 14a6 6 0 0 1 8 0"/></svg>
+        <svg viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="20" height="8" rx="2"/><rect x="3" y="4" width="14" height="4" rx="1" fill="currentColor"/><rect x="22" y="5" width="1.5" height="2" rx="0.5" fill="currentColor"/></svg>
+      </div>
+    </div>
+    <div class="app-root" id="root"></div>
+  </div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="VVPrimitives.jsx"></script>
+  <script type="text/babel" src="VVHeader.jsx"></script>
+  <script type="text/babel" src="VVBottomNav.jsx"></script>
+  <script type="text/babel" src="VVFeedCard.jsx"></script>
+  <script type="text/babel" src="VVCategoryRow.jsx"></script>
+  <script type="text/babel" src="VVOfferCard.jsx"></script>
+  <script type="text/babel" src="VVAuth.jsx"></script>
+  <script type="text/babel" src="VVChat.jsx"></script>
+  <script type="text/babel" src="VVProviderWelcome.jsx"></script>
+  <script type="text/babel" src="VVScreens.jsx"></script>
+
+  <script type="text/babel">
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<window.VVApp/>);
+  </script>
+</body>
+</html>

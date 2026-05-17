@@ -136,6 +136,15 @@
       "preLaunchTask": "backend: ready admin-bff"
     },
     {
+      "type": "java",
+      "name": "debug web-bff",
+      "request": "attach",
+      "hostName": "localhost",
+      "port": 5006,
+      "timeout": 60000,
+      "preLaunchTask": "debug: start web-bff target"
+    },
+    {
       "type": "node-terminal",
       "name": "run web-next",
       "request": "launch",
@@ -177,7 +186,8 @@
         "debug search-service",
         "debug trust-gamification-service",
         "debug ads-monetization-service",
-        "debug admin-bff"
+        "debug admin-bff",
+        "debug web-bff"
       ],
       "stopAll": true
     },
@@ -202,6 +212,7 @@
         "debug trust-gamification-service",
         "debug ads-monetization-service",
         "debug admin-bff",
+        "debug web-bff",
         "run web-next",
         "run admin-next"
       ],

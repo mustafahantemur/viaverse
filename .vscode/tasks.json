@@ -151,6 +151,42 @@
       "problemMatcher": []
     },
     {
+      "label": "backend: ready web-bff",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free web-bff"],
+      "problemMatcher": []
+    },
+    {
+      "label": "debug: start web-bff target",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready web-bff"],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/start-web-bff-debug.ps1"
+      ],
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "web-bff-debug",
+          "pattern": {
+            "regexp": "^(.*)$",
+            "message": 1
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".*",
+            "endsPattern": "Listening for transport dt_socket at address: 5006"
+          }
+        }
+      ]
+    },
+    {
       "label": "db: migrate local",
       "type": "shell",
       "command": "powershell",
@@ -244,6 +280,13 @@
       "type": "shell",
       "command": "powershell",
       "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8110"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free web-bff",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8001"],
       "problemMatcher": []
     },
     {

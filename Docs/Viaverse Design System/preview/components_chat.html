@@ -1,0 +1,19 @@
+<!doctype html>
+<html><head><meta charset="utf-8"/><title>Components — Chat Bubbles</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--vv-bg);font-family:var(--vv-font-sans);color:var(--vv-fg);}
+  .wrap{padding:20px 24px;display:flex;flex-direction:column;gap:10px;}
+  .row{display:flex;align-items:flex-end;gap:8px;}
+  .row.me{justify-content:flex-end;}
+  .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#D1FAE5,#064E3B);flex-shrink:0;}
+  .b{max-width:72%;padding:10px 14px;border-radius:18px;font-size:12px;line-height:1.5;}
+  .them{background:#FFFBF5;color:var(--vv-fg);border:1px solid var(--vv-border-muted);border-bottom-left-radius:6px;box-shadow:0 2px 6px rgba(15,23,42,.06), 0 1px 2px rgba(15,23,42,.04);}
+  .me .b{background:var(--vv-primary);color:var(--vv-primary-foreground);border-bottom-right-radius:6px;box-shadow:0 12px 24px rgba(124,45,18,.38), 0 4px 8px rgba(124,45,18,.30);font-weight:600;}
+  .t{font-size:9px;color:var(--vv-fg-muted);margin-top:4px;font-weight:600;}
+  .me .t{color:rgba(254,239,212,.7);text-align:right;}
+</style></head>
+<body><div class="wrap">
+  <div class="row"><div class="av"></div><div class="b them">Merhaba, tesisat işi için ilanınızı gördüm. Ne zaman müsaitsiniz?<div class="t">10:42</div></div></div>
+  <div class="row me"><div class="b">Selam Ahmet usta, yarın öğleden sonra uygunum. Saat 14:00 gibi gelebilir misiniz?<div class="t">10:45 · seen</div></div></div>
+</div></body></html>
