@@ -184,10 +184,14 @@ fun VvPhoneField(
     hint: String? = null,
     error: String? = null,
     dialCode: String = "+90",
+    /** TR mobile numbers are 10 digits after the dial code (5XX-XXX-XXXX). */
+    maxLength: Int = 10,
 ) {
     VvTextField(
         value = value,
-        onValueChange = { onValueChange(it.filter(Char::isDigit)) },
+        onValueChange = { raw ->
+            onValueChange(raw.filter(Char::isDigit).take(maxLength))
+        },
         label = label,
         modifier = modifier,
         placeholder = placeholder,

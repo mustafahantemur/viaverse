@@ -198,7 +198,7 @@ fun RegisterScreen(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            ConsentLabels.labelFor(doc.type),
+                            ConsentLabels.localized(doc.type),
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }

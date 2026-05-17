@@ -64,8 +64,13 @@ export function PhoneField({
     );
     const dialCode = country.dialCode;
 
+    // TR mobile numbers are 10 digits after the dial code (5XX-XXX-XXXX).
+    // Block further keystrokes once the user reaches that length so the
+    // submitted payload stays well-formed.
+    const maxLocalDigits = 10;
+
     function commit(raw: string) {
-        const digits = raw.replace(/[^0-9]/g, "");
+        const digits = raw.replace(/[^0-9]/g, "").slice(0, maxLocalDigits);
         onChange(digits);
         if (onNormalizedChange) {
             const normalized = digits ? `${dialCode}${digits}` : "";

@@ -1,6 +1,11 @@
 "use client";
 
-import { useId, type InputHTMLAttributes, type ReactNode } from "react";
+import {
+    useId,
+    type ChangeEvent,
+    type InputHTMLAttributes,
+    type ReactNode,
+} from "react";
 import styles from "./IdentifierField.module.css";
 
 interface Props extends Omit<InputHTMLAttributes<HTMLInputElement>, "id"> {
@@ -10,6 +15,8 @@ interface Props extends Omit<InputHTMLAttributes<HTMLInputElement>, "id"> {
     /** Country dial code (e.g. "+90") shown when the value looks like a phone. */
     dialCode?: string;
 }
+
+const MAX_PHONE_DIGITS = 10;
 
 /**
  * Single-line input that accepts either an email or a phone number.
@@ -24,11 +31,26 @@ export function IdentifierField({
     error,
     dialCode = "+90",
     value,
+    onChange,
     ...rest
 }: Props) {
     const id = useId();
     const raw = typeof value === "string" ? value : "";
     const showDial = looksLikePhone(raw);
+
+    function handleChange(event: ChangeEvent<HTMLInputElement>) {
+        const next = event.target.value;
+        // When the user is clearly typing a phone (no '@'), cap to 10 digits
+        // so they can't keep typing past a valid TR mobile length. Emails
+        // pass through untouched.
+        if (!next.includes("@")) {
+            const digits = next.replace(/[^0-9]/g, "");
+            if (digits.length > MAX_PHONE_DIGITS) {
+                event.target.value = digits.slice(0, MAX_PHONE_DIGITS);
+            }
+        }
+        onChange?.(event);
+    }
 
     return (
         <label htmlFor={id} className={styles.label}>
@@ -51,6 +73,7 @@ export function IdentifierField({
                     className={styles.input}
                     aria-invalid={error ? true : undefined}
                     value={value}
+                    onChange={handleChange}
                     {...rest}
                 />
             </div>
