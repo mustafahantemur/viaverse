@@ -286,7 +286,7 @@
       "label": "ports: free web-bff",
       "type": "shell",
       "command": "powershell",
-      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8001"],
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8001,5006"],
       "problemMatcher": []
     },
     {
@@ -308,20 +308,7 @@
       "problemMatcher": []
     },
     {
-      "label": "mobile-kmp: desktop",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/scripts/dev/start-mobile-desktop.ps1"
-      ],
-      "problemMatcher": []
-    },
-    {
-      "label": "mobile-kmp: android",
+      "label": "mobile: android",
       "type": "shell",
       "command": "powershell",
       "args": [

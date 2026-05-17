@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/primitives/Button";
 import { Field } from "./Field";
 import { FormError } from "./FormError";
+import { IdentifierField } from "./IdentifierField";
 import { OtpInput } from "./OtpInput";
 import { PasswordField } from "./PasswordField";
 import { SocialButtons } from "./SocialButtons";
@@ -81,7 +82,7 @@ export function LoginFlow({
                     }}
                 >
                     <FormError>{loginError}</FormError>
-                    <Field
+                    <IdentifierField
                         label={t.auth.login.identifierLabel}
                         placeholder={t.auth.login.identifierPlaceholder}
                         value={identifier}

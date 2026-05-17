@@ -15,6 +15,11 @@ if (Test-Path $envFile) {
 
 & "$scriptRoot\stop-local-app-ports.ps1" -Ports $DebugPort -Quiet
 
+# Self-heal: the build-logic plugin jar occasionally caches as empty
+# (incomplete interrupted build), which then breaks every dependent
+# subproject. The preflight cleans build-logic/build when that's the case.
+& "$scriptRoot\verify-build-logic.ps1" -RepoRoot $repoRoot
+
 Push-Location $repoRoot
 try {
     & "$repoRoot\gradlew.bat" --console=plain :services:identity-service:bootRunDebug "-PdebugPort=$DebugPort"

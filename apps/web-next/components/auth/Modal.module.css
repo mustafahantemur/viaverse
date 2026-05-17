@@ -24,24 +24,28 @@
   background: var(--vv-surface);
   border-radius: var(--vv-radius-xl);
   box-shadow: var(--vv-shadow-lg);
-  padding: 32px;
+  padding: 44px 32px 32px;
   animation: surface-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .close {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 36px;
-  height: 36px;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
   background: transparent;
   border: none;
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--vv-fg-muted);
   cursor: pointer;
   line-height: 1;
+  z-index: 1;
 }
 
 .close:hover {

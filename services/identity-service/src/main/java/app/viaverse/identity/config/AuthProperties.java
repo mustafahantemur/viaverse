@@ -436,11 +436,15 @@ public class AuthProperties {
 
     public static class PasswordLogin {
         // Per-identifier window protects the targeted account; per-IP window
-        // protects everyone else from one noisy host. Values default to the
-        // OWASP-recommended 5 attempts in 5 minutes per identifier; per-IP is
-        // wider because a single corporate NAT can have many users.
+        // protects everyone else from one noisy host. We raised the
+        // per-identifier ceiling above the classic OWASP "5 in 5 min" because
+        // gate-then-record only counts confirmed failures: legitimate users
+        // mistyping a password a few times in a row used to land them at the
+        // limit before they realized they had CapsLock on. 10 leaves
+        // breathing room while still bounding brute force well within the
+        // 300s window.
         private long identifierWindowSeconds = 300;
-        private int identifierMaxAttempts = 5;
+        private int identifierMaxAttempts = 10;
         private long ipWindowSeconds = 60;
         private int ipMaxAttempts = 30;
 

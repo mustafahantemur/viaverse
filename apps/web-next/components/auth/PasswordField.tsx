@@ -40,15 +40,13 @@ export function PasswordField({
             ? evaluatePassword(value)
             : null;
 
-    const showLabel = locale === "tr" ? "Göster" : "Show";
-    const hideLabel = locale === "tr" ? "Gizle" : "Hide";
     const showA11y = locale === "tr" ? "Parolayı göster" : "Show password";
     const hideA11y = locale === "tr" ? "Parolayı gizle" : "Hide password";
 
     return (
         <label htmlFor={id} className={styles.label}>
             <span className={styles.text}>{label}</span>
-            <span style={{ position: "relative", display: "block" }}>
+            <span className={styles.inputWrap}>
                 <input
                     id={id}
                     type={visible ? "text" : "password"}
@@ -57,7 +55,6 @@ export function PasswordField({
                         .join(" ")}
                     value={value}
                     aria-invalid={error ? true : undefined}
-                    style={{ width: "100%", paddingRight: 64 }}
                     {...rest}
                 />
                 <button
@@ -65,20 +62,10 @@ export function PasswordField({
                     onClick={() => setVisible((v) => !v)}
                     aria-pressed={visible}
                     aria-label={visible ? hideA11y : showA11y}
-                    style={{
-                        position: "absolute",
-                        right: 8,
-                        top: 14,
-                        background: "transparent",
-                        border: "none",
-                        color: "var(--vv-fg-muted)",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        padding: "6px 10px",
-                    }}
+                    className={styles.toggle}
+                    tabIndex={-1}
                 >
-                    {visible ? hideLabel : showLabel}
+                    {visible ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
             </span>
 
@@ -138,6 +125,41 @@ function PasswordChecklist({
                 </span>
             )}
         </span>
+    );
+}
+
+function EyeIcon() {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+        >
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+            <circle cx="12" cy="12" r="3" />
+        </svg>
+    );
+}
+
+function EyeOffIcon() {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+        >
+            <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.66 19.66 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a19.65 19.65 0 0 1-3.22 4.19" />
+            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+            <line x1="1" y1="1" x2="23" y2="23" />
+        </svg>
     );
 }
 

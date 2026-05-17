@@ -184,6 +184,7 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
                     <PhoneField
                         label={t.auth.register.phoneLabel}
                         hint={t.auth.register.phoneHint}
+                        placeholder="5XXXXXXXXX"
                         value={phoneLocal}
                         onChange={setPhoneLocal}
                         onNormalizedChange={setPhoneE164}
