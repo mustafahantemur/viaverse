@@ -75,18 +75,23 @@ $gradlew = Join-Path $repoRoot "gradlew.bat"
 
 Push-Location $repoRoot
 try {
-    $tasks = & $gradlew ":apps:mobile-kmp:tasks" "--all" "--quiet"
+    $tasks = & $gradlew ":apps:mobile-android:tasks" "--all" "--quiet"
     if ($LASTEXITCODE -ne 0) {
         Fail "Could not read mobile Gradle tasks."
     }
 
     if (-not ($tasks | Select-String -Pattern "installDebug")) {
-        Fail "The mobile module does not expose an Android installDebug task yet. Use 'run mobile-kmp desktop' for the current skeleton, or enable the Android application target in a dedicated mobile Gradle setup task."
+        Fail "The Android app module does not expose installDebug."
     }
 
-    & $gradlew ":apps:mobile-kmp:installDebug"
+    & $gradlew ":apps:mobile-android:installDebug"
     if ($LASTEXITCODE -ne 0) {
         Fail "Android APK install failed."
+    }
+
+    & $adb shell am start -n "app.viaverse.mobile/.MainActivity"
+    if ($LASTEXITCODE -ne 0) {
+        Fail "Android app launch failed."
     }
 }
 finally {

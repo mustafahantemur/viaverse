@@ -21,7 +21,7 @@ Required tools:
 - Node.js 22 or newer.
 - npm from the installed Node.js distribution.
 - Docker with Compose v2.
-- Android Studio later for Android emulator/device work.
+- Android Studio for Android emulator/device work.
 
 VS Code users can use the committed one-click launch/task setup:
 
@@ -36,7 +36,7 @@ Then use `Run and Debug`:
 - `debug backend: all services`
 - `run web-next`
 - `run admin-next`
-- `run mobile-kmp desktop`
+- `run mobile android`
 
 Manual local infrastructure setup:
 
@@ -85,10 +85,10 @@ Backend services:
 ./gradlew :services:admin-bff:bootRun
 ```
 
-Mobile desktop shell:
+Mobile Android app:
 
 ```powershell
-./gradlew :apps:mobile-kmp:desktopRun
+./scripts/dev/start-mobile-android.ps1
 ```
 
 Web shells:

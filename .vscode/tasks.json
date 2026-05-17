@@ -154,7 +154,7 @@
       "label": "backend: ready web-bff",
       "type": "shell",
       "dependsOrder": "sequence",
-      "dependsOn": ["backend: ready", "ports: free web-bff"],
+      "dependsOn": ["backend: ready identity-service", "ports: free web-bff"],
       "problemMatcher": []
     },
     {

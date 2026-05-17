@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.ResourceAccessException;
 
 /**
  * HTTP forwarder to identity-service. Carries the caller's bearer token
@@ -56,6 +57,8 @@ public class IdentityProxy {
                     exception.getStatusCode(),
                     jsonBodyParser.parse(exception.getResponseBodyAsString())
             );
+        } catch (ResourceAccessException exception) {
+            throw unavailable();
         }
     }
 
@@ -77,7 +80,19 @@ public class IdentityProxy {
                     exception.getStatusCode(),
                     jsonBodyParser.parse(exception.getResponseBodyAsString())
             );
+        } catch (ResourceAccessException exception) {
+            throw unavailable();
         }
+    }
+
+    private IdentityProxyException unavailable() {
+        return new IdentityProxyException(
+                org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                Map.of(
+                        "code", "IDENTITY_UNAVAILABLE",
+                        "message", "Identity service is temporarily unavailable"
+                )
+        );
     }
 
     public record ProxyResponse(HttpStatusCode status, Map<String, Object> body) {}

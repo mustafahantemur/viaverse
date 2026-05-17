@@ -15,6 +15,7 @@ sqldelight = "2.3.2"
 koin = "4.2.1"
 decompose = "3.5.0"
 androidActivityCompose = "1.13.0"
+androidGradlePlugin = "9.0.0"
 detekt = "1.23.8"
 ktlintGradle = "14.2.0"
 junitJupiter = "6.0.3"
@@ -55,6 +56,8 @@ spring-dependency-management = { id = "io.spring.dependency-management", version
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintGradle" }

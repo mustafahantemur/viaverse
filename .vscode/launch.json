@@ -160,14 +160,7 @@
     },
     {
       "type": "node-terminal",
-      "name": "run mobile-kmp desktop",
-      "request": "launch",
-      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-mobile-desktop.ps1\"",
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "type": "node-terminal",
-      "name": "run mobile-kmp android",
+      "name": "run mobile android",
       "request": "launch",
       "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-mobile-android.ps1\"",
       "cwd": "${workspaceFolder}"

@@ -36,10 +36,10 @@ include(
     ":services:admin-bff",
     ":services:web-bff",
     ":apps:mobile-kmp",
+    ":apps:mobile-android",
     ":apps:web-next",
     ":apps:admin-next",
     ":packages:api-contracts",
     ":packages:shared-kernel",
     ":packages:observability",
 )
-

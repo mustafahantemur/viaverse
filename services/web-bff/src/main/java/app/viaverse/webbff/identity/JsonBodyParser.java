@@ -1,9 +1,9 @@
 package app.viaverse.webbff.identity;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Parses a raw JSON string into the {@code Map<String, Object>} shape the BFF
@@ -16,10 +16,10 @@ public class JsonBodyParser {
 
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
 
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
-    public JsonBodyParser(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public JsonBodyParser(JsonMapper jsonMapper) {
+        this.jsonMapper = jsonMapper;
     }
 
     public Map<String, Object> parse(String raw) {
@@ -27,7 +27,7 @@ public class JsonBodyParser {
             return Map.of();
         }
         try {
-            return objectMapper.readValue(raw, MAP_TYPE);
+            return jsonMapper.readValue(raw, MAP_TYPE);
         } catch (Exception exception) {
             // Upstream sent something that isn't JSON — surface the raw bytes
             // so the caller can still see what went wrong instead of swallowing it.
