@@ -53,9 +53,12 @@ export function LoginFlow({
         }
     });
 
-    const totpFlow = useAsyncCallback(async () => {
-        if (!partialAuthToken) return;
-        await verifyTotp(partialAuthToken, totpCode);
+    // TOTP submit takes the code as an argument so OtpInput's auto-submit
+    // doesn't race React's state update (the closure would otherwise see
+    // the previous five digits).
+    const totpFlow = useAsyncCallback(async (code: string) => {
+        if (!partialAuthToken || code.length !== 6) return;
+        await verifyTotp(partialAuthToken, code);
         onAuthenticated();
     });
 
@@ -126,7 +129,7 @@ export function LoginFlow({
                     style={{ display: "flex", flexDirection: "column", gap: 14 }}
                     onSubmit={(event) => {
                         event.preventDefault();
-                        totpFlow.run();
+                        totpFlow.run(totpCode);
                     }}
                 >
                     <FormError>{totpError}</FormError>
@@ -135,7 +138,7 @@ export function LoginFlow({
                         value={totpCode}
                         onChange={setTotpCode}
                         onComplete={(code) => {
-                            if (code.length === 6 && !totpFlow.pending) totpFlow.run();
+                            if (code.length === 6 && !totpFlow.pending) totpFlow.run(code);
                         }}
                         autoFocus
                     />

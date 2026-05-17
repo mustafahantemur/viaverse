@@ -45,9 +45,10 @@ export function ForgotPasswordFlow({
         setStage("otp");
     });
 
-    const verifyFlow = useAsyncCallback(async () => {
-        if (!flowId) return;
-        const result = await forgotPasswordVerifyOtp(flowId, otp);
+    // Pass `code` so OtpInput's auto-submit doesn't race React state.
+    const verifyFlow = useAsyncCallback(async (code: string) => {
+        if (!flowId || code.length !== 6) return;
+        const result = await forgotPasswordVerifyOtp(flowId, code);
         setResetToken(result.resetToken);
         setStage("newPassword");
     });
@@ -111,7 +112,7 @@ export function ForgotPasswordFlow({
                     style={{ display: "flex", flexDirection: "column", gap: 14 }}
                     onSubmit={(event) => {
                         event.preventDefault();
-                        verifyFlow.run();
+                        verifyFlow.run(otp);
                     }}
                 >
                     <FormError>{verifyError}</FormError>
@@ -120,7 +121,7 @@ export function ForgotPasswordFlow({
                         value={otp}
                         onChange={setOtp}
                         onComplete={(code) => {
-                            if (code.length === 6 && !verifyFlow.pending) verifyFlow.run();
+                            if (code.length === 6 && !verifyFlow.pending) verifyFlow.run(code);
                         }}
                         autoFocus
                     />

@@ -7,20 +7,15 @@ import { Field } from "./Field";
 import { FormError } from "./FormError";
 import { OtpInput } from "./OtpInput";
 import { PasswordField } from "./PasswordField";
-import { PhoneField } from "./PhoneField";
 import { SocialButtons } from "./SocialButtons";
 import { useAsyncCallback } from "@/hooks/useAsyncCallback";
 import { useRequiredConsents } from "@/hooks/useRequiredConsents";
 import { useTranslation } from "@/lib/i18n/I18nProvider";
-import {
-    registerStart,
-    registerVerifyEmail,
-    registerVerifyPhone,
-} from "@/lib/authClient";
+import { registerStart, registerVerifyEmail } from "@/lib/authClient";
 import { describeError } from "@/lib/authErrors";
 import { evaluatePassword } from "@/lib/validation";
 
-type RegisterStage = "form" | "emailOtp" | "phoneOtp";
+type RegisterStage = "form" | "emailOtp";
 
 interface Props {
     onRegistered: () => void;
@@ -28,13 +23,16 @@ interface Props {
 }
 
 /**
- * Three-stage registration:
- *   1. {@code form}      — full signup form (everything captured up front)
- *   2. {@code emailOtp}  — verify email with 6-digit OTP
- *   3. {@code phoneOtp}  — optional, only when phone was provided
+ * Two-stage registration:
+ *   1. {@code form}     — full signup form (everything captured up front)
+ *   2. {@code emailOtp} — verify email with 6-digit OTP, then account is created
  *
- * Server-side draft holds the form data so refreshing the page mid-OTP
- * isn't fatal (within the draft TTL).
+ * Phone number is intentionally not collected here. We learned the hard
+ * way that asking for a phone (and an SMS OTP) at signup hurts conversion
+ * for something most users add later; verifying a phone now happens from
+ * the profile screen, gated by the same OTP flow the backend already
+ * exposes. The server-side draft holds the form data so refreshing the
+ * page mid-OTP isn't fatal (within the draft TTL).
  */
 export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
     const { t, format } = useTranslation();
@@ -45,8 +43,6 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
     const [lastName, setLastName] = useState("");
     const [displayName, setDisplayName] = useState("");
     const [email, setEmail] = useState("");
-    const [phoneLocal, setPhoneLocal] = useState("");
-    const [phoneE164, setPhoneE164] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [requiredAccepted, setRequiredAccepted] = useState<Record<string, boolean>>({});
@@ -55,7 +51,6 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
     // Draft progress
     const [draftId, setDraftId] = useState<string | null>(null);
     const [emailOtp, setEmailOtp] = useState("");
-    const [phoneOtp, setPhoneOtp] = useState("");
 
     const { consents } = useRequiredConsents();
 
@@ -69,7 +64,6 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
         if (!consents) return;
         const result = await registerStart({
             email: email.trim().toLowerCase(),
-            phone: phoneE164 || undefined,
             displayName: displayName.trim(),
             firstName: firstName.trim() || undefined,
             lastName: lastName.trim() || undefined,
@@ -83,19 +77,14 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
         setStage("emailOtp");
     });
 
-    const verifyEmailFlow = useAsyncCallback(async () => {
-        if (!draftId) return;
-        const result = await registerVerifyEmail(draftId, emailOtp);
-        if (result.nextStep === "PHONE_VERIFICATION_REQUIRED") {
-            setStage("phoneOtp");
-        } else {
-            onRegistered();
-        }
-    });
-
-    const verifyPhoneFlow = useAsyncCallback(async () => {
-        if (!draftId) return;
-        await registerVerifyPhone(draftId, phoneOtp);
+    // Email OTP submit. The code is passed as an argument (rather than read
+    // from state) so it stays correct when OtpInput auto-submits the moment
+    // its sixth cell is filled — at that point the React state update from
+    // the same render hasn't propagated, and reading `emailOtp` from the
+    // closure would send the previous five-digit value to the server.
+    const verifyEmailFlow = useAsyncCallback(async (otp: string) => {
+        if (!draftId || otp.length !== 6) return;
+        await registerVerifyEmail(draftId, otp);
         onRegistered();
     });
 
@@ -124,7 +113,6 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
 
     const startError = startFlow.cause ? describeError(startFlow.cause, t) : null;
     const emailError = verifyEmailFlow.cause ? describeError(verifyEmailFlow.cause, t) : null;
-    const phoneError = verifyPhoneFlow.cause ? describeError(verifyPhoneFlow.cause, t) : null;
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -132,14 +120,11 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
                 <h2 id="auth-modal-title" style={titleStyle}>
                     {stage === "form" && t.auth.register.title}
                     {stage === "emailOtp" && t.auth.emailOtp.title}
-                    {stage === "phoneOtp" && t.auth.phoneOtp.title}
                 </h2>
                 <p style={subtitleStyle}>
                     {stage === "form" && t.auth.register.subtitle}
                     {stage === "emailOtp" &&
                         format(t.auth.emailOtp.subtitle, { email: email.trim() })}
-                    {stage === "phoneOtp" &&
-                        format(t.auth.phoneOtp.subtitle, { phone: phoneE164 })}
                 </p>
             </header>
 
@@ -180,15 +165,6 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
                         onChange={(event) => setEmail(event.target.value)}
                         autoComplete="email"
                         required
-                    />
-                    <PhoneField
-                        label={t.auth.register.phoneLabel}
-                        hint={t.auth.register.phoneHint}
-                        placeholder="5XXXXXXXXX"
-                        value={phoneLocal}
-                        onChange={setPhoneLocal}
-                        onNormalizedChange={setPhoneE164}
-                        autoComplete="tel"
                     />
                     <PasswordField
                         label={t.auth.register.passwordLabel}
@@ -238,7 +214,7 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
                     style={{ display: "flex", flexDirection: "column", gap: 14 }}
                     onSubmit={(event) => {
                         event.preventDefault();
-                        verifyEmailFlow.run();
+                        verifyEmailFlow.run(emailOtp);
                     }}
                 >
                     <FormError>{emailError}</FormError>
@@ -248,7 +224,7 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
                         value={emailOtp}
                         onChange={setEmailOtp}
                         onComplete={(code) => {
-                            if (code.length === 6 && !verifyEmailFlow.pending) verifyEmailFlow.run();
+                            if (code.length === 6 && !verifyEmailFlow.pending) verifyEmailFlow.run(code);
                         }}
                         autoFocus
                     />
@@ -264,37 +240,6 @@ export function RegisterFlow({ onRegistered, onSwitchToLogin }: Props) {
                         {verifyEmailFlow.pending
                             ? t.auth.emailOtp.submitting
                             : t.auth.emailOtp.submit}
-                    </Button>
-                </form>
-            )}
-
-            {stage === "phoneOtp" && (
-                <form
-                    style={{ display: "flex", flexDirection: "column", gap: 14 }}
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        verifyPhoneFlow.run();
-                    }}
-                >
-                    <FormError>{phoneError}</FormError>
-                    <OtpInput
-                        label={t.auth.phoneOtp.label}
-                        value={phoneOtp}
-                        onChange={setPhoneOtp}
-                        onComplete={(code) => {
-                            if (code.length === 6 && !verifyPhoneFlow.pending) verifyPhoneFlow.run();
-                        }}
-                        autoFocus
-                    />
-                    <Button
-                        type="submit"
-                        size="lg"
-                        fullWidth
-                        disabled={verifyPhoneFlow.pending || phoneOtp.length !== 6}
-                    >
-                        {verifyPhoneFlow.pending
-                            ? t.auth.phoneOtp.submitting
-                            : t.auth.phoneOtp.submit}
                     </Button>
                 </form>
             )}

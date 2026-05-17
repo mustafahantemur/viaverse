@@ -32,6 +32,7 @@ extensions.configure<KotlinMultiplatformExtension> {
         val desktopMain by getting {
             dependencies {
                 implementation(composeDependencies.desktop.currentOs)
+                implementation("io.ktor:ktor-client-cio:3.4.3")
             }
         }
 

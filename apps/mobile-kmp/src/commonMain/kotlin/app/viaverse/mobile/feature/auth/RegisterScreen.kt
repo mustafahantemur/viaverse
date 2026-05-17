@@ -38,11 +38,13 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * Form-first registration:
  *   1. {@code FORM}      — full signup form (everything captured up front)
- *   2. {@code EMAIL_OTP} — verify email with 6-digit OTP
- *   3. {@code PHONE_OTP} — only when the user provided a phone number
+ *   2. {@code EMAIL_OTP} — verify email with 6-digit OTP, then account is created
  *
- * The server-side draft holds the form data so a refresh / quick app
- * switch mid-OTP isn't fatal (within the draft TTL).
+ * Phone number is intentionally not collected here. Asking for an SMS OTP
+ * during signup hurt conversion for something most users add later;
+ * phone verification has moved to the profile screen. The server-side
+ * draft still holds the form data so a brief app switch mid-OTP isn't
+ * fatal (within the draft TTL).
  */
 @Composable
 fun RegisterScreen(
@@ -57,7 +59,6 @@ fun RegisterScreen(
     var lastName by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var marketingAccepted by remember { mutableStateOf(false) }
@@ -66,8 +67,6 @@ fun RegisterScreen(
 
     var draftId by remember { mutableStateOf<String?>(null) }
     var emailOtp by remember { mutableStateOf("") }
-    var phoneOtp by remember { mutableStateOf("") }
-    var normalizedPhone by remember { mutableStateOf("") }
 
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -103,7 +102,6 @@ fun RegisterScreen(
             when (stage) {
                 RegisterStage.FORM -> AppStrings.createAccount()
                 RegisterStage.EMAIL_OTP -> AppStrings.verificationCode()
-                RegisterStage.PHONE_OTP -> AppStrings.verificationCode()
             },
             style = MaterialTheme.typography.headlineMedium,
         )
@@ -119,8 +117,6 @@ fun RegisterScreen(
                 onDisplayNameChange = { displayName = it },
                 email = email,
                 onEmailChange = { email = it },
-                phone = phone,
-                onPhoneChange = { phone = it },
                 password = password,
                 onPasswordChange = { password = it },
                 confirmPassword = confirmPassword,
@@ -137,12 +133,9 @@ fun RegisterScreen(
                     scope.launch {
                         busy = true; error = null
                         try {
-                            val phoneE164 = if (phone.isBlank()) null else
-                                IdentifierNormalizer.normalizePhone(phone)
-                            normalizedPhone = phoneE164.orEmpty()
                             val result = authApi.registerStart(
                                 email = email.trim().lowercase(),
-                                phone = phoneE164,
+                                phone = null,
                                 displayName = displayName.trim(),
                                 firstName = firstName.trim().ifBlank { null },
                                 lastName = lastName.trim().ifBlank { null },
@@ -174,34 +167,7 @@ fun RegisterScreen(
                     scope.launch {
                         busy = true; error = null
                         try {
-                            val result = authApi.registerVerifyEmail(id, emailOtp)
-                            val next = result["nextStep"]?.jsonPrimitive?.content
-                            if (next == "PHONE_VERIFICATION_REQUIRED") {
-                                stage = RegisterStage.PHONE_OTP
-                            } else {
-                                onRegistered()
-                            }
-                        } catch (throwable: Throwable) {
-                            error = AuthError.format(throwable)
-                        } finally {
-                            busy = false
-                        }
-                    }
-                },
-            )
-
-            RegisterStage.PHONE_OTP -> OtpStage(
-                subtitle = AppStrings.phoneOtpSubtitle(normalizedPhone),
-                showMailpitHint = false,
-                otp = phoneOtp,
-                onOtpChange = { phoneOtp = it },
-                busy = busy,
-                onSubmit = {
-                    val id = draftId ?: return@OtpStage
-                    scope.launch {
-                        busy = true; error = null
-                        try {
-                            authApi.registerVerifyPhone(id, phoneOtp)
+                            authApi.registerVerifyEmail(id, emailOtp)
                             onRegistered()
                         } catch (throwable: Throwable) {
                             error = AuthError.format(throwable)
@@ -229,8 +195,6 @@ private fun FormStage(
     onDisplayNameChange: (String) -> Unit,
     email: String,
     onEmailChange: (String) -> Unit,
-    phone: String,
-    onPhoneChange: (String) -> Unit,
     password: String,
     onPasswordChange: (String) -> Unit,
     confirmPassword: String,
@@ -272,15 +236,6 @@ private fun FormStage(
         label = { Text(AppStrings.email()) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = phone,
-        onValueChange = onPhoneChange,
-        label = { Text(AppStrings.phoneOptional()) },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-        supportingText = { Text("+90", style = MaterialTheme.typography.bodySmall) },
         modifier = Modifier.fillMaxWidth(),
     )
     OutlinedTextField(
@@ -370,7 +325,7 @@ private fun OtpStage(
     }
 }
 
-private enum class RegisterStage { FORM, EMAIL_OTP, PHONE_OTP }
+private enum class RegisterStage { FORM, EMAIL_OTP }
 
 internal data class ConsentDoc(val type: String, val version: String)
 
