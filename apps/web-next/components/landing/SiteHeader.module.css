@@ -1,0 +1,59 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: rgba(255, 251, 245, 0.7);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid transparent;
+  transition: background 220ms ease, border-color 220ms ease, backdrop-filter 220ms ease;
+}
+
+.scrolled {
+  background: rgba(255, 251, 245, 0.92);
+  backdrop-filter: blur(14px);
+  border-bottom-color: var(--vv-border-faint);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  gap: 28px;
+}
+
+.nav a {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vv-fg);
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity 160ms ease;
+}
+
+.nav a:hover {
+  opacity: 1;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .nav {
+    display: none;
+  }
+}

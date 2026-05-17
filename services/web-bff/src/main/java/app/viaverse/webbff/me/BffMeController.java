@@ -1,12 +1,10 @@
 package app.viaverse.webbff.me;
 
 import app.viaverse.webbff.identity.IdentityProxy;
-import app.viaverse.webbff.identity.IdentityProxyException;
 import java.util.Map;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,8 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Authenticated user surface. Pure pass-through — the BFF carries the
- * client's Authorization header into identity-service and bubbles the
- * response back.
+ * caller's Authorization header into identity-service and bubbles the
+ * response back. Upstream errors are translated by
+ * {@link app.viaverse.webbff.identity.IdentityProxyExceptionHandler}.
  */
 @RestController
 @RequestMapping("/api/me")
@@ -75,10 +74,5 @@ public class BffMeController {
     ) {
         IdentityProxy.ProxyResponse proxied = identityProxy.exchange(method, path, body, authorization);
         return ResponseEntity.status(proxied.status()).body(proxied.body());
-    }
-
-    @ExceptionHandler(IdentityProxyException.class)
-    ResponseEntity<Map<String, Object>> handleUpstream(IdentityProxyException exception) {
-        return ResponseEntity.status(exception.getStatus()).body(exception.getBody());
     }
 }

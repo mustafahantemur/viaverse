@@ -36,9 +36,13 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Three-stage registration: identifier → OTP → details (display name +
- * password + consents). Mirrors the BFF contract; the server stamps
- * canonical consent versions, so we only echo back the {@code type}s the
- * user ticked.
+ * password + confirm + consents). Mirrors the BFF contract — the server
+ * stamps canonical consent versions, so we only echo back the {@code type}s
+ * the user ticked and never display the version number to them.
+ *
+ * Composable is broken into private sub-functions per stage so each stage's
+ * dependencies are explicit in its signature instead of all 12 form fields
+ * being in one mega-Composable.
  */
 @Composable
 fun RegisterScreen(
@@ -58,6 +62,7 @@ fun RegisterScreen(
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var marketingAccepted by remember { mutableStateOf(false) }
     val requiredAccepted = remember { mutableStateMapOf<String, Boolean>() }
     var requiredDocs by remember { mutableStateOf<List<ConsentDoc>>(emptyList()) }
@@ -69,19 +74,25 @@ fun RegisterScreen(
         if (stage == RegisterStage.DETAILS && requiredDocs.isEmpty()) {
             try {
                 val body = authApi.requiredConsents()
-                val docs = (body["required"] as? JsonArray)?.mapNotNull { element ->
-                    val obj = element.jsonObject
-                    ConsentDoc(
-                        type = obj["type"]?.jsonPrimitive?.content ?: return@mapNotNull null,
-                        version = obj["version"]?.jsonPrimitive?.content ?: "",
-                    )
-                } ?: emptyList()
-                requiredDocs = docs
+                requiredDocs = (body["required"] as? JsonArray).orEmptyDocs()
             } catch (throwable: Throwable) {
                 error = AuthError.format(throwable)
             }
         }
     }
+
+    val passwordEvaluation = PasswordPolicy.evaluate(password)
+    val passwordsMatch = password == confirmPassword
+    val confirmError = if (confirmPassword.isNotEmpty() && !passwordsMatch) {
+        "Passwords don't match"
+    } else null
+    val allConsentsAccepted = requiredDocs.isNotEmpty() &&
+        requiredDocs.all { requiredAccepted[it.type] == true }
+    val canSubmitDetails = !busy &&
+        displayName.isNotBlank() &&
+        passwordEvaluation.isValid &&
+        passwordsMatch &&
+        allConsentsAccepted
 
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
@@ -91,160 +102,255 @@ fun RegisterScreen(
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 
         when (stage) {
-            RegisterStage.IDENTIFIER -> {
-                OutlinedTextField(
-                    value = identifier,
-                    onValueChange = { identifier = it },
-                    label = { Text("Email or phone") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Button(
-                    onClick = {
-                        scope.launch {
-                            busy = true; error = null
-                            try {
-                                val result = authApi.start(identifier.trim())
-                                val nextStep = result["nextStep"]?.jsonPrimitive?.content
-                                if (nextStep == "OTP_REQUIRED") {
-                                    flowId = result["flowId"]?.jsonPrimitive?.content
-                                    stage = RegisterStage.OTP
-                                } else {
-                                    error = "This identifier already has an account. Sign in instead."
-                                }
-                            } catch (throwable: Throwable) {
-                                error = AuthError.format(throwable)
-                            } finally {
-                                busy = false
+            RegisterStage.IDENTIFIER -> IdentifierStage(
+                identifier = identifier,
+                onIdentifierChange = { identifier = it },
+                busy = busy,
+                onSubmit = {
+                    scope.launch {
+                        busy = true; error = null
+                        try {
+                            val result = authApi.start(identifier.trim())
+                            val nextStep = result["nextStep"]?.jsonPrimitive?.content
+                            if (nextStep == "OTP_REQUIRED") {
+                                flowId = result["flowId"]?.jsonPrimitive?.content
+                                stage = RegisterStage.OTP
+                            } else {
+                                error = "This identifier already has an account. Sign in instead."
                             }
+                        } catch (throwable: Throwable) {
+                            error = AuthError.format(throwable)
+                        } finally {
+                            busy = false
                         }
-                    },
-                    enabled = !busy && identifier.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) { Text(if (busy) "Sending OTP…" else "Send verification code") }
-            }
-
-            RegisterStage.OTP -> {
-                Text(
-                    "A 6-digit code has been sent to $identifier. In local dev, " +
-                        "open Mailpit at http://localhost:8025.",
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                OutlinedTextField(
-                    value = otp,
-                    onValueChange = { if (it.length <= 6 && it.all(Char::isDigit)) otp = it },
-                    label = { Text("Verification code") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Button(
-                    onClick = {
-                        val flow = flowId ?: return@Button
-                        scope.launch {
-                            busy = true; error = null
-                            try {
-                                val result = authApi.verifyOtp(flow, otp)
-                                registrationToken =
-                                    result["registrationToken"]?.jsonPrimitive?.content
-                                stage = RegisterStage.DETAILS
-                            } catch (throwable: Throwable) {
-                                error = AuthError.format(throwable)
-                            } finally {
-                                busy = false
-                            }
-                        }
-                    },
-                    enabled = !busy && otp.length == 6,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) { Text(if (busy) "Verifying…" else "Verify") }
-            }
-
-            RegisterStage.DETAILS -> {
-                OutlinedTextField(
-                    value = displayName,
-                    onValueChange = { displayName = it },
-                    label = { Text("Display name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = firstName,
-                    onValueChange = { firstName = it },
-                    label = { Text("First name (optional)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = lastName,
-                    onValueChange = { lastName = it },
-                    label = { Text("Last name (optional)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password (min 10, mix of upper/lower/digit/symbol)") },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                requiredDocs.forEach { doc ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = requiredAccepted[doc.type] == true,
-                            onCheckedChange = { requiredAccepted[doc.type] = it },
-                        )
-                        Text("I accept ${humanize(doc.type)} (${doc.version})")
                     }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = marketingAccepted, onCheckedChange = { marketingAccepted = it })
-                    Text("(Optional) Send me product updates")
-                }
-                Button(
-                    onClick = {
-                        val token = registrationToken ?: return@Button
-                        scope.launch {
-                            busy = true; error = null
-                            try {
-                                authApi.register(
-                                    registrationToken = token,
-                                    displayName = displayName.trim(),
-                                    firstName = firstName.trim().ifBlank { null },
-                                    lastName = lastName.trim().ifBlank { null },
-                                    password = password,
-                                    acceptedRequiredConsents = requiredDocs
-                                        .filter { requiredAccepted[it.type] == true }
-                                        .map { it.type },
-                                    marketingConsentAccepted = marketingAccepted,
-                                )
-                                onRegistered()
-                            } catch (throwable: Throwable) {
-                                error = AuthError.format(throwable)
-                            } finally {
-                                busy = false
-                            }
+                },
+            )
+
+            RegisterStage.OTP -> OtpStage(
+                identifier = identifier,
+                otp = otp,
+                onOtpChange = { otp = it },
+                busy = busy,
+                onSubmit = {
+                    val flow = flowId ?: return@OtpStage
+                    scope.launch {
+                        busy = true; error = null
+                        try {
+                            val result = authApi.verifyOtp(flow, otp)
+                            registrationToken =
+                                result["registrationToken"]?.jsonPrimitive?.content
+                            stage = RegisterStage.DETAILS
+                        } catch (throwable: Throwable) {
+                            error = AuthError.format(throwable)
+                        } finally {
+                            busy = false
                         }
-                    },
-                    enabled = !busy &&
-                        displayName.isNotBlank() &&
-                        password.isNotBlank() &&
-                        requiredDocs.isNotEmpty() &&
-                        requiredDocs.all { requiredAccepted[it.type] == true },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) { Text(if (busy) "Creating account…" else "Create account") }
-            }
+                    }
+                },
+            )
+
+            RegisterStage.DETAILS -> DetailsStage(
+                displayName = displayName,
+                onDisplayNameChange = { displayName = it },
+                firstName = firstName,
+                onFirstNameChange = { firstName = it },
+                lastName = lastName,
+                onLastNameChange = { lastName = it },
+                password = password,
+                onPasswordChange = { password = it },
+                confirmPassword = confirmPassword,
+                onConfirmPasswordChange = { confirmPassword = it },
+                confirmError = confirmError,
+                passwordIssues = passwordEvaluation.issues,
+                requiredDocs = requiredDocs,
+                requiredAccepted = requiredAccepted,
+                marketingAccepted = marketingAccepted,
+                onMarketingChange = { marketingAccepted = it },
+                busy = busy,
+                canSubmit = canSubmitDetails,
+                onSubmit = {
+                    val token = registrationToken ?: return@DetailsStage
+                    scope.launch {
+                        busy = true; error = null
+                        try {
+                            authApi.register(
+                                registrationToken = token,
+                                displayName = displayName.trim(),
+                                firstName = firstName.trim().ifBlank { null },
+                                lastName = lastName.trim().ifBlank { null },
+                                password = password,
+                                acceptedRequiredConsents = requiredDocs
+                                    .filter { requiredAccepted[it.type] == true }
+                                    .map { it.type },
+                                marketingConsentAccepted = marketingAccepted,
+                            )
+                            onRegistered()
+                        } catch (throwable: Throwable) {
+                            error = AuthError.format(throwable)
+                        } finally {
+                            busy = false
+                        }
+                    }
+                },
+            )
         }
 
         TextButton(onClick = onSwitchToLogin) { Text("Already have an account? Sign in") }
     }
 }
 
+@Composable
+private fun IdentifierStage(
+    identifier: String,
+    onIdentifierChange: (String) -> Unit,
+    busy: Boolean,
+    onSubmit: () -> Unit,
+) {
+    OutlinedTextField(
+        value = identifier,
+        onValueChange = onIdentifierChange,
+        label = { Text("Email or phone") },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Button(
+        onClick = onSubmit,
+        enabled = !busy && identifier.isNotBlank(),
+        modifier = Modifier.fillMaxWidth().height(48.dp),
+    ) { Text(if (busy) "Sending OTP…" else "Send verification code") }
+}
+
+@Composable
+private fun OtpStage(
+    identifier: String,
+    otp: String,
+    onOtpChange: (String) -> Unit,
+    busy: Boolean,
+    onSubmit: () -> Unit,
+) {
+    Text(
+        "A 6-digit code has been sent to $identifier. In local dev, " +
+            "open Mailpit at http://localhost:8025.",
+        style = MaterialTheme.typography.bodySmall,
+    )
+    OutlinedTextField(
+        value = otp,
+        onValueChange = { if (it.length <= 6 && it.all(Char::isDigit)) onOtpChange(it) },
+        label = { Text("Verification code") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Button(
+        onClick = onSubmit,
+        enabled = !busy && otp.length == 6,
+        modifier = Modifier.fillMaxWidth().height(48.dp),
+    ) { Text(if (busy) "Verifying…" else "Verify") }
+}
+
+@Composable
+private fun DetailsStage(
+    displayName: String,
+    onDisplayNameChange: (String) -> Unit,
+    firstName: String,
+    onFirstNameChange: (String) -> Unit,
+    lastName: String,
+    onLastNameChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    confirmPassword: String,
+    onConfirmPasswordChange: (String) -> Unit,
+    confirmError: String?,
+    passwordIssues: List<PasswordPolicy.Issue>,
+    requiredDocs: List<ConsentDoc>,
+    requiredAccepted: MutableMap<String, Boolean>,
+    marketingAccepted: Boolean,
+    onMarketingChange: (Boolean) -> Unit,
+    busy: Boolean,
+    canSubmit: Boolean,
+    onSubmit: () -> Unit,
+) {
+    OutlinedTextField(
+        value = displayName,
+        onValueChange = onDisplayNameChange,
+        label = { Text("Display name") },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    OutlinedTextField(
+        value = firstName,
+        onValueChange = onFirstNameChange,
+        label = { Text("First name (optional)") },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    OutlinedTextField(
+        value = lastName,
+        onValueChange = onLastNameChange,
+        label = { Text("Last name (optional)") },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    OutlinedTextField(
+        value = password,
+        onValueChange = onPasswordChange,
+        label = { Text("Password") },
+        singleLine = true,
+        visualTransformation = PasswordVisualTransformation(),
+        supportingText = if (password.isNotEmpty() && passwordIssues.isNotEmpty()) {
+            {
+                Text(
+                    "Needs: " + passwordIssues.joinToString(" · ") { PasswordPolicy.describe(it) },
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        } else null,
+        isError = password.isNotEmpty() && passwordIssues.isNotEmpty(),
+        modifier = Modifier.fillMaxWidth(),
+    )
+    OutlinedTextField(
+        value = confirmPassword,
+        onValueChange = onConfirmPasswordChange,
+        label = { Text("Confirm password") },
+        singleLine = true,
+        visualTransformation = PasswordVisualTransformation(),
+        isError = confirmError != null,
+        supportingText = confirmError?.let { msg ->
+            { Text(msg, style = MaterialTheme.typography.bodySmall) }
+        },
+        modifier = Modifier.fillMaxWidth(),
+    )
+
+    requiredDocs.forEach { doc ->
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(
+                checked = requiredAccepted[doc.type] == true,
+                onCheckedChange = { requiredAccepted[doc.type] = it },
+            )
+            Text(ConsentLabels.labelFor(doc.type))
+        }
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Checkbox(checked = marketingAccepted, onCheckedChange = onMarketingChange)
+        Text("(Optional) Send me product updates")
+    }
+    Button(
+        onClick = onSubmit,
+        enabled = canSubmit,
+        modifier = Modifier.fillMaxWidth().height(48.dp),
+    ) { Text(if (busy) "Creating account…" else "Create account") }
+}
+
 private enum class RegisterStage { IDENTIFIER, OTP, DETAILS }
 
-private data class ConsentDoc(val type: String, val version: String)
+internal data class ConsentDoc(val type: String, val version: String)
 
-private fun humanize(type: String): String =
-    type.lowercase().split('_').joinToString(" ") { it.replaceFirstChar(Char::uppercase) }
+private fun JsonArray?.orEmptyDocs(): List<ConsentDoc> =
+    this?.mapNotNull { element ->
+        val obj = element.jsonObject
+        ConsentDoc(
+            type = obj["type"]?.jsonPrimitive?.content ?: return@mapNotNull null,
+            version = obj["version"]?.jsonPrimitive?.content ?: "",
+        )
+    } ?: emptyList()

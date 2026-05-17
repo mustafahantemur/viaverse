@@ -27,6 +27,20 @@ public class AuthAbuseProtectionService {
         check(RateLimitScopeEnum.AUTH_START_IP, clientIp,
                 authStart.getIpMaxAttempts(), Duration.ofSeconds(authStart.getIpWindowSeconds()));
         checkDeviceIfPresent(authStart, clientFingerprint);
+        // NOTE: the resend cooldown is intentionally NOT enforced here. /auth/start
+        // is a triage call — it may return PASSWORD_REQUIRED (known identifier, no
+        // OTP sent) and applying the 1-per-60s cooldown to that path blocks
+        // legitimate quick re-tries (user double-clicks, types two identifiers
+        // back-to-back, etc.). Call {@link #enforceOtpResendCooldown} explicitly
+        // from the branches that actually dispatch an OTP.
+    }
+
+    /**
+     * Cooldown that protects the OTP dispatch channel from spam. Apply this
+     * right before issuing an OTP — not in {@link #enforceStart}, which would
+     * incorrectly throttle the "known identifier → password screen" path.
+     */
+    public void enforceOtpResendCooldown(NormalizedIdentifier normalized) {
         enforceResendCooldown(normalized);
     }
 

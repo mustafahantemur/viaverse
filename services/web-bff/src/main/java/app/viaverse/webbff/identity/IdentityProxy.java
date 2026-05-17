@@ -2,6 +2,7 @@ package app.viaverse.webbff.identity;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -10,23 +11,29 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClient;
 
 /**
- * Thin HTTP forwarder to identity-service. Carries the caller's bearer
- * token through (if any), preserves the wire shape so error responses
- * surface to the client exactly as identity produced them, and bubbles
- * non-2xx HTTP status up via {@link IdentityProxyException} so the
- * controller layer can decide whether to translate them.
+ * HTTP forwarder to identity-service. Carries the caller's bearer token
+ * through (if any), preserves identity's wire shape so error responses
+ * surface to the client unchanged, and turns non-2xx into
+ * {@link IdentityProxyException} so controllers don't have to mix happy-path
+ * and error logic. {@link IdentityProxyExceptionHandler} maps that exception
+ * back into the original status + body for the client.
  *
  * <p>The proxy intentionally doesn't validate JWTs — identity-service is
- * the source of truth for authn/authz; double-validation would just
- * couple the BFF to identity's signing keys.
+ * the source of truth for authn/authz; double-validation would just couple
+ * the BFF to identity's signing keys.
  */
 @Component
 public class IdentityProxy {
 
-    private final RestClient identityRestClient;
+    private static final ParameterizedTypeReference<Map<String, Object>> MAP_BODY =
+            new ParameterizedTypeReference<>() {};
 
-    public IdentityProxy(RestClient identityRestClient) {
+    private final RestClient identityRestClient;
+    private final JsonBodyParser jsonBodyParser;
+
+    public IdentityProxy(RestClient identityRestClient, JsonBodyParser jsonBodyParser) {
         this.identityRestClient = identityRestClient;
+        this.jsonBodyParser = jsonBodyParser;
     }
 
     public ProxyResponse exchange(HttpMethod method, String path, Object body, String authorization) {
@@ -42,11 +49,13 @@ public class IdentityProxy {
                     })
                     .body(body == null ? new HashMap<>() : body)
                     .retrieve()
-                    .toEntity(new org.springframework.core.ParameterizedTypeReference<>() {});
+                    .toEntity(MAP_BODY);
             return new ProxyResponse(response.getStatusCode(), response.getBody());
         } catch (HttpStatusCodeException exception) {
-            Map<String, Object> body0 = parseErrorBody(exception.getResponseBodyAsString());
-            throw new IdentityProxyException(exception.getStatusCode(), body0);
+            throw new IdentityProxyException(
+                    exception.getStatusCode(),
+                    jsonBodyParser.parse(exception.getResponseBodyAsString())
+            );
         }
     }
 
@@ -61,23 +70,13 @@ public class IdentityProxy {
                         }
                     })
                     .retrieve()
-                    .toEntity(new org.springframework.core.ParameterizedTypeReference<>() {});
+                    .toEntity(MAP_BODY);
             return new ProxyResponse(response.getStatusCode(), response.getBody());
         } catch (HttpStatusCodeException exception) {
-            Map<String, Object> body0 = parseErrorBody(exception.getResponseBodyAsString());
-            throw new IdentityProxyException(exception.getStatusCode(), body0);
-        }
-    }
-
-    private Map<String, Object> parseErrorBody(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return Map.of();
-        }
-        try {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            return mapper.readValue(raw, new com.fasterxml.jackson.core.type.TypeReference<>() {});
-        } catch (Exception exception) {
-            return Map.of("raw", raw);
+            throw new IdentityProxyException(
+                    exception.getStatusCode(),
+                    jsonBodyParser.parse(exception.getResponseBodyAsString())
+            );
         }
     }
 

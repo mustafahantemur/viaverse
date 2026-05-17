@@ -2,19 +2,19 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Viaverse",
-  description: "Viaverse public web shell",
+    title: "Viaverse — yakındaki yardımı, küçük işleri, hizmet verenleri buluştur",
+    description:
+        "Hyperlokal sosyal & küçük-iş ağı. Bir el iste, paylaş, teklif al — ya da yeteneğini işe dönüştür.",
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
+    return (
+        <html lang="tr">
+            <body>{children}</body>
+        </html>
+    );
 }
-

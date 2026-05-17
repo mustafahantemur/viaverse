@@ -63,6 +63,10 @@ public class StartPasswordResetUseCaseImpl implements StartPasswordResetUseCase 
             return new Result(UUID.randomUUID(), normalized.type(), expiresAt, false);
         }
 
+        // About to dispatch an OTP — apply the cooldown only here, not in
+        // enforceStart (see AuthAbuseProtectionService for rationale).
+        abuseProtectionService.enforceOtpResendCooldown(normalized);
+
         AuthLoginFlow flow = flowRepository.save(AuthLoginFlow.issue(
                 UUID.randomUUID(),
                 LoginFlowPurposeEnum.PASSWORD_RESET,

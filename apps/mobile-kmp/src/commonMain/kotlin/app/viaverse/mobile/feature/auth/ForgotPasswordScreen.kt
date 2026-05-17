@@ -58,6 +58,7 @@ fun ForgotPasswordScreen(
     var otp by remember { mutableStateOf("") }
     var resetToken by remember { mutableStateOf<String?>(null) }
     var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -154,12 +155,38 @@ fun ForgotPasswordScreen(
             }
 
             ForgotPasswordStage.NEW_PASSWORD -> {
+                val evaluation = PasswordPolicy.evaluate(newPassword)
+                val passwordsMatch = newPassword == confirmPassword
+                val confirmError = if (confirmPassword.isNotEmpty() && !passwordsMatch) {
+                    "Passwords don't match"
+                } else null
                 OutlinedTextField(
                     value = newPassword,
                     onValueChange = { newPassword = it },
                     label = { Text("New password") },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
+                    isError = newPassword.isNotEmpty() && !evaluation.isValid,
+                    supportingText = if (newPassword.isNotEmpty() && evaluation.issues.isNotEmpty()) {
+                        {
+                            Text(
+                                "Needs: " + evaluation.issues.joinToString(" · ") { PasswordPolicy.describe(it) },
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    } else null,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Confirm new password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    isError = confirmError != null,
+                    supportingText = confirmError?.let { msg ->
+                        { Text(msg, style = MaterialTheme.typography.bodySmall) }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Button(
@@ -183,7 +210,7 @@ fun ForgotPasswordScreen(
                             }
                         }
                     },
-                    enabled = !busy && newPassword.isNotBlank(),
+                    enabled = !busy && evaluation.isValid && passwordsMatch,
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                 ) { Text(if (busy) "Saving…" else "Save new password") }
             }

@@ -1,0 +1,6 @@
+.shell {
+  max-width: var(--vv-shell-max);
+  margin: 0 auto;
+  padding-left: var(--vv-shell-pad-x);
+  padding-right: var(--vv-shell-pad-x);
+}

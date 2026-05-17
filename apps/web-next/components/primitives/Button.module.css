@@ -1,0 +1,84 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--vv-font-sans);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border-radius: var(--vv-radius-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    transform 120ms ease,
+    background-color 160ms ease,
+    box-shadow 200ms ease;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.size-md {
+  padding: 11px 22px;
+  font-size: 14px;
+}
+
+.size-lg {
+  padding: 16px 28px;
+  font-size: 15px;
+}
+
+.variant-primary {
+  background: var(--vv-primary);
+  color: var(--vv-primary-foreground);
+  box-shadow: var(--vv-shadow-cta);
+  border-radius: var(--vv-radius-pill);
+}
+
+.variant-primary.size-lg {
+  border-radius: var(--vv-radius-md);
+}
+
+.variant-primary:hover:not(:disabled) {
+  background: var(--vv-primary-hover);
+}
+
+.variant-ghost {
+  background: transparent;
+  color: var(--vv-fg);
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: var(--vv-radius-pill);
+}
+
+.variant-ghost:hover:not(:disabled) {
+  background: var(--vv-surface);
+}
+
+.variant-outline {
+  background: var(--vv-surface);
+  color: var(--vv-fg);
+  border-color: var(--vv-border-muted);
+}
+
+.variant-outline:hover:not(:disabled) {
+  background: var(--vv-surface-hover);
+}
+
+.full {
+  width: 100%;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+}

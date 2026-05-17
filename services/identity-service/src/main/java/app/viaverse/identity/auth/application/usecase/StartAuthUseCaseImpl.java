@@ -78,6 +78,11 @@ public class StartAuthUseCaseImpl implements StartAuthUseCase {
             );
         }
 
+        // Only enforce the per-identifier resend cooldown on the path that
+        // actually dispatches an OTP. /start for a known identifier returns
+        // PASSWORD_REQUIRED without sending anything, and shouldn't be cooldowned.
+        abuseProtectionService.enforceOtpResendCooldown(normalized);
+
         Instant expiresAt = now.plus(properties.getOtp().getTtl());
         AuthLoginFlow flow = flowRepository.save(AuthLoginFlow.issue(
                 UUID.randomUUID(),

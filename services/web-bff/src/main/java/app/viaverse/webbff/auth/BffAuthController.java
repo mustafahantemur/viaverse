@@ -1,14 +1,12 @@
 package app.viaverse.webbff.auth;
 
 import app.viaverse.webbff.identity.IdentityProxy;
-import app.viaverse.webbff.identity.IdentityProxyException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,15 +22,16 @@ import org.springframework.web.bind.annotation.RestController;
  * <ul>
  *   <li>Promote {@code refreshToken} from response body to an HttpOnly
  *       cookie on every credential-issuing endpoint. Mobile clients still
- *       see it in the body; web clients should ignore the body field
- *       and rely on the cookie.</li>
+ *       see it in the body; web clients should ignore the body field and
+ *       rely on the cookie.</li>
  *   <li>Read the refresh token from the cookie on {@code /refresh} so the
  *       browser never has to put it in JS.</li>
  *   <li>Clear the cookie on logout.</li>
  * </ul>
  *
  * <p>Everything else is a transparent pass-through; identity is still the
- * source of truth for validation, rate-limit, and error shape.
+ * source of truth for validation, rate-limit, and error shape. Upstream
+ * errors are translated by {@link app.viaverse.webbff.identity.IdentityProxyExceptionHandler}.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -42,10 +41,16 @@ public class BffAuthController {
 
     private final IdentityProxy identityProxy;
     private final RefreshCookieService refreshCookieService;
+    private final ApiResponseEnvelope envelope;
 
-    public BffAuthController(IdentityProxy identityProxy, RefreshCookieService refreshCookieService) {
+    public BffAuthController(
+            IdentityProxy identityProxy,
+            RefreshCookieService refreshCookieService,
+            ApiResponseEnvelope envelope
+    ) {
         this.identityProxy = identityProxy;
         this.refreshCookieService = refreshCookieService;
+        this.envelope = envelope;
     }
 
     @PostMapping("/start")
@@ -58,7 +63,8 @@ public class BffAuthController {
             @RequestBody Map<String, Object> body,
             HttpServletResponse response
     ) {
-        return forwardAndMaybeSetCookie(HttpMethod.POST, IDENTITY_PATH + "/password-login", body, null, response);
+        return forwardAndPromoteRefreshCookie(
+                HttpMethod.POST, IDENTITY_PATH + "/password-login", body, null, response);
     }
 
     @PostMapping("/verify-totp")
@@ -66,7 +72,8 @@ public class BffAuthController {
             @RequestBody Map<String, Object> body,
             HttpServletResponse response
     ) {
-        return forwardAndMaybeSetCookie(HttpMethod.POST, IDENTITY_PATH + "/verify-totp", body, null, response);
+        return forwardAndPromoteRefreshCookie(
+                HttpMethod.POST, IDENTITY_PATH + "/verify-totp", body, null, response);
     }
 
     @PostMapping("/verify-otp")
@@ -80,7 +87,7 @@ public class BffAuthController {
             @RequestBody Map<String, Object> body,
             HttpServletResponse response
     ) {
-        return forwardAndMaybeSetCookie(
+        return forwardAndPromoteRefreshCookie(
                 HttpMethod.POST, IDENTITY_PATH + "/social/" + provider, body, null, response);
     }
 
@@ -89,7 +96,8 @@ public class BffAuthController {
             @RequestBody Map<String, Object> body,
             HttpServletResponse response
     ) {
-        return forwardAndMaybeSetCookie(HttpMethod.POST, IDENTITY_PATH + "/register", body, null, response);
+        return forwardAndPromoteRefreshCookie(
+                HttpMethod.POST, IDENTITY_PATH + "/register", body, null, response);
     }
 
     @PostMapping("/refresh")
@@ -98,16 +106,16 @@ public class BffAuthController {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
-        // Prefer cookie (web) — fall back to body (mobile).
-        String cookieToken = refreshCookieService.read(request).orElse(null);
-        Map<String, Object> forwarded;
-        if (cookieToken != null) {
-            forwarded = new LinkedHashMap<>();
-            forwarded.put("refreshToken", cookieToken);
-        } else {
-            forwarded = body == null ? Map.of() : body;
-        }
-        return forwardAndMaybeSetCookie(
+        // Prefer cookie (web) — fall back to body (mobile). Identity-service
+        // only sees one shape: {refreshToken: …}.
+        Map<String, Object> forwarded = refreshCookieService.read(request)
+                .map(token -> {
+                    Map<String, Object> body0 = new LinkedHashMap<>();
+                    body0.put("refreshToken", token);
+                    return body0;
+                })
+                .orElse(body == null ? Map.of() : body);
+        return forwardAndPromoteRefreshCookie(
                 HttpMethod.POST, IDENTITY_PATH + "/refresh", forwarded, null, response);
     }
 
@@ -118,14 +126,11 @@ public class BffAuthController {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
-        String cookieToken = refreshCookieService.read(request).orElse(null);
         Map<String, Object> forwarded = new LinkedHashMap<>();
-        if (body != null) {
-            forwarded.putAll(body);
-        }
-        if (cookieToken != null && !forwarded.containsKey("refreshToken")) {
-            forwarded.put("refreshToken", cookieToken);
-        }
+        if (body != null) forwarded.putAll(body);
+        refreshCookieService.read(request)
+                .filter(token -> !forwarded.containsKey("refreshToken"))
+                .ifPresent(token -> forwarded.put("refreshToken", token));
         ResponseEntity<Map<String, Object>> result =
                 forward(HttpMethod.POST, IDENTITY_PATH + "/logout", forwarded, authorization);
         refreshCookieService.clear(response);
@@ -155,19 +160,16 @@ public class BffAuthController {
         return forward(HttpMethod.POST, IDENTITY_PATH + "/forgot-password/complete", body, null);
     }
 
-    // ---- helpers ----
+    // ---- shared forwarder ----
 
     private ResponseEntity<Map<String, Object>> forward(
-            HttpMethod method,
-            String path,
-            Object body,
-            String authorization
+            HttpMethod method, String path, Object body, String authorization
     ) {
         IdentityProxy.ProxyResponse proxied = identityProxy.exchange(method, path, body, authorization);
         return ResponseEntity.status(proxied.status()).body(proxied.body());
     }
 
-    private ResponseEntity<Map<String, Object>> forwardAndMaybeSetCookie(
+    private ResponseEntity<Map<String, Object>> forwardAndPromoteRefreshCookie(
             HttpMethod method,
             String path,
             Object body,
@@ -175,30 +177,8 @@ public class BffAuthController {
             HttpServletResponse response
     ) {
         IdentityProxy.ProxyResponse proxied = identityProxy.exchange(method, path, body, authorization);
-        Map<String, Object> data = extractData(proxied.body());
-        if (data != null) {
-            Object refreshToken = data.get("refreshToken");
-            if (refreshToken instanceof String token && !token.isBlank()) {
-                refreshCookieService.set(response, token);
-            }
-        }
+        envelope.stringField(proxied.body(), "refreshToken")
+                .ifPresent(token -> refreshCookieService.set(response, token));
         return ResponseEntity.status(proxied.status()).body(proxied.body());
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> extractData(Map<String, Object> body) {
-        if (body == null) {
-            return null;
-        }
-        Object data = body.get("data");
-        if (data instanceof Map<?, ?> map) {
-            return (Map<String, Object>) map;
-        }
-        return body;
-    }
-
-    @ExceptionHandler(IdentityProxyException.class)
-    ResponseEntity<Map<String, Object>> handleUpstream(IdentityProxyException exception) {
-        return ResponseEntity.status(exception.getStatus()).body(exception.getBody());
     }
 }
