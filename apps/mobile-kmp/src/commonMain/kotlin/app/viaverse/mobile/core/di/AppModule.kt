@@ -4,6 +4,7 @@ import app.viaverse.mobile.core.config.ApiConfig
 import app.viaverse.mobile.core.logging.AppLogger
 import app.viaverse.mobile.core.logging.ConsoleAppLogger
 import app.viaverse.mobile.core.network.HealthCheckClient
+import app.viaverse.mobile.feature.auth.AuthApi
 import io.ktor.client.HttpClient
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -13,5 +14,6 @@ fun appModule(): Module = module {
     single<AppLogger> { ConsoleAppLogger() }
     single { HttpClient() }
     single { HealthCheckClient(get(), get()) }
+    single { AuthApi(get(), get()) }
 }
 
