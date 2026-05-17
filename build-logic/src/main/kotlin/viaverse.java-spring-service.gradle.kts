@@ -36,7 +36,8 @@ val dbMapping = mapOf(
     "search-service" to "viaverse_search",
     "trust-gamification-service" to "viaverse_trust_gamification",
     "ads-monetization-service" to "viaverse_ads_monetization",
-    "admin-bff" to "viaverse_admin_bff"
+    "admin-bff" to "viaverse_admin_bff",
+    "web-bff" to "viaverse_web_bff"
 )
 
 val defaultDbName = dbMapping[project.name]

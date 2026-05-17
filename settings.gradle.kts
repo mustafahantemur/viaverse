@@ -34,6 +34,7 @@ include(
     ":services:trust-gamification-service",
     ":services:ads-monetization-service",
     ":services:admin-bff",
+    ":services:web-bff",
     ":apps:mobile-kmp",
     ":apps:web-next",
     ":apps:admin-next",

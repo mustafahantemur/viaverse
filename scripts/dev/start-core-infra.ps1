@@ -16,6 +16,7 @@ $serviceDatabases = @(
     "viaverse_trust_gamification",
     "viaverse_ads_monetization",
     "viaverse_admin_bff",
+    "viaverse_web_bff",
     "viaverse_identity_test",
     "viaverse_marketplace_test",
     "viaverse_payment_test",
@@ -25,7 +26,8 @@ $serviceDatabases = @(
     "viaverse_search_test",
     "viaverse_trust_gamification_test",
     "viaverse_ads_monetization_test",
-    "viaverse_admin_bff_test"
+    "viaverse_admin_bff_test",
+    "viaverse_web_bff_test"
 )
 
 function Fail($message) {
