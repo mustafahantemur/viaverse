@@ -5,7 +5,9 @@ import app.viaverse.contracts.marketplace.MarketplaceJobCompletedV1KafkaEvent;
 import app.viaverse.contracts.marketplace.MarketplaceJobCreatedV1KafkaEvent;
 import app.viaverse.contracts.marketplace.MarketplaceJobStartedV1KafkaEvent;
 import app.viaverse.contracts.marketplace.MarketplaceOfferAcceptedV1KafkaEvent;
+import app.viaverse.contracts.marketplace.MarketplaceOfferWithdrawnV1KafkaEvent;
 import app.viaverse.contracts.marketplace.MarketplaceOfferSubmittedV1KafkaEvent;
+import app.viaverse.contracts.marketplace.MarketplaceRequestCancelledV1KafkaEvent;
 import app.viaverse.contracts.marketplace.MarketplaceRequestCreatedV1KafkaEvent;
 import app.viaverse.marketplace.marketplace.application.port.out.MarketplaceEventPublisher;
 import app.viaverse.marketplace.marketplace.domain.model.Job;
@@ -68,6 +70,43 @@ public class MarketplaceKafkaPublisher implements MarketplaceEventPublisher {
                         offer.getProviderAccountId(),
                         offer.getAmountMinor(),
                         offer.getCurrency()
+                )
+        );
+    }
+
+    @Override
+    public void publishRequestCancelled(ServiceRequest request) {
+        UUID eventId = UUID.randomUUID();
+        outboxWriter.enqueue(
+                eventId,
+                MarketplaceEventTypes.REQUEST_CANCELLED_V1,
+                BINDING_NAME,
+                request.getId().toString(),
+                new MarketplaceRequestCancelledV1KafkaEvent(
+                        eventId,
+                        Instant.now(clock),
+                        "v1",
+                        request.getId(),
+                        request.getRequesterAccountId()
+                )
+        );
+    }
+
+    @Override
+    public void publishOfferWithdrawn(Offer offer) {
+        UUID eventId = UUID.randomUUID();
+        outboxWriter.enqueue(
+                eventId,
+                MarketplaceEventTypes.OFFER_WITHDRAWN_V1,
+                BINDING_NAME,
+                offer.getId().toString(),
+                new MarketplaceOfferWithdrawnV1KafkaEvent(
+                        eventId,
+                        Instant.now(clock),
+                        "v1",
+                        offer.getId(),
+                        offer.getRequestId(),
+                        offer.getProviderAccountId()
                 )
         );
     }

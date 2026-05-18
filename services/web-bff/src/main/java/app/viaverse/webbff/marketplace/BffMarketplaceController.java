@@ -53,6 +53,14 @@ public class BffMarketplaceController {
         return ResponseEntity.status(proxied.status()).body(proxied.body());
     }
 
+    @PostMapping("/requests/{requestId}/cancel")
+    public ResponseEntity<Map<String, Object>> cancelRequest(
+            @PathVariable String requestId,
+            @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        return forward(HttpMethod.POST, "/api/v1/requests/" + requestId + "/cancel", Map.of(), authorization);
+    }
+
     @PostMapping("/requests/{requestId}/offers")
     public ResponseEntity<Map<String, Object>> submitOffer(
             @PathVariable String requestId,
@@ -72,6 +80,22 @@ public class BffMarketplaceController {
                 authorization
         );
         return ResponseEntity.status(proxied.status()).body(proxied.body());
+    }
+
+    @GetMapping("/me/offers")
+    public ResponseEntity<Map<String, Object>> myOffers(
+            @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        MarketplaceProxy.ProxyResponse proxied = marketplaceProxy.get("/api/v1/me/offers", authorization);
+        return ResponseEntity.status(proxied.status()).body(proxied.body());
+    }
+
+    @PostMapping("/offers/{offerId}/withdraw")
+    public ResponseEntity<Map<String, Object>> withdrawOffer(
+            @PathVariable String offerId,
+            @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        return forward(HttpMethod.POST, "/api/v1/offers/" + offerId + "/withdraw", Map.of(), authorization);
     }
 
     @PostMapping("/requests/{requestId}/offers/{offerId}/accept")

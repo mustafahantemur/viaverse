@@ -1,5 +1,6 @@
 package app.viaverse.marketplace.marketplace.infrastructure.adapter.in.web.controller;
 
+import app.viaverse.marketplace.marketplace.application.port.in.CancelServiceRequestUseCase;
 import app.viaverse.marketplace.marketplace.application.port.in.CreateServiceRequestUseCase;
 import app.viaverse.marketplace.marketplace.application.port.in.ListCurrentServiceRequestsUseCase;
 import app.viaverse.marketplace.marketplace.application.port.in.ListOpenServiceRequestsUseCase;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ServiceRequestController {
 
     private final CreateServiceRequestUseCase createServiceRequestUseCase;
+    private final CancelServiceRequestUseCase cancelServiceRequestUseCase;
     private final ListOpenServiceRequestsUseCase listOpenServiceRequestsUseCase;
     private final ListRelevantServiceRequestsUseCase listRelevantServiceRequestsUseCase;
     private final ListCurrentServiceRequestsUseCase listCurrentServiceRequestsUseCase;
@@ -31,12 +33,14 @@ public class ServiceRequestController {
 
     public ServiceRequestController(
             CreateServiceRequestUseCase createServiceRequestUseCase,
+            CancelServiceRequestUseCase cancelServiceRequestUseCase,
             ListOpenServiceRequestsUseCase listOpenServiceRequestsUseCase,
             ListRelevantServiceRequestsUseCase listRelevantServiceRequestsUseCase,
             ListCurrentServiceRequestsUseCase listCurrentServiceRequestsUseCase,
             MarketplaceDtoMapper mapper
     ) {
         this.createServiceRequestUseCase = createServiceRequestUseCase;
+        this.cancelServiceRequestUseCase = cancelServiceRequestUseCase;
         this.listOpenServiceRequestsUseCase = listOpenServiceRequestsUseCase;
         this.listRelevantServiceRequestsUseCase = listRelevantServiceRequestsUseCase;
         this.listCurrentServiceRequestsUseCase = listCurrentServiceRequestsUseCase;
@@ -84,6 +88,16 @@ public class ServiceRequestController {
         return ApiResponse.ok(listCurrentServiceRequestsUseCase.execute(accountId(jwt)).stream()
                 .map(mapper::toResponse)
                 .toList());
+    }
+
+    @PostMapping("/requests/{requestId}/cancel")
+    public ApiResponse<ServiceRequestResponse> cancel(
+            @AuthenticationPrincipal Jwt jwt,
+            @org.springframework.web.bind.annotation.PathVariable UUID requestId
+    ) {
+        return ApiResponse.ok(mapper.toResponse(cancelServiceRequestUseCase.execute(
+                new CancelServiceRequestUseCase.Command(requestId, accountId(jwt))
+        )));
     }
 
     private UUID accountId(Jwt jwt) {

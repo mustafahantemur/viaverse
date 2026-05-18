@@ -87,6 +87,13 @@ public final class Offer {
         return withStatus(OfferStatusEnum.REJECTED, now);
     }
 
+    public Offer withdraw(Instant now) {
+        if (!isSubmitted()) {
+            throw new IllegalStateException("Only submitted offers can be withdrawn");
+        }
+        return withStatus(OfferStatusEnum.WITHDRAWN, now);
+    }
+
     private Offer withStatus(OfferStatusEnum nextStatus, Instant now) {
         return new Offer(
                 id,

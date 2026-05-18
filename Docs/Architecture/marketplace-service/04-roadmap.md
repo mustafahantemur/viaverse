@@ -10,15 +10,16 @@
 | Offer acceptance | Requester chooses one offer; sibling offers are rejected |
 | Job creation/execution | Accepted offer becomes a job that can start and complete |
 | First work feed | `/feed/work` filters jobs by active mode + profile-owned service categories |
+| Provider offer inbox | `/me/offers` lets providers track and withdraw their own live bids |
+| Cancellation / withdrawal | Open requests can be cancelled and submitted offers can be withdrawn safely |
 | Web UI | `/app/marketplace` supports the whole flow |
 | Events | Marketplace lifecycle emits through the transactional outbox |
 
 ## Phase 2 — commercial hardening
 
 - gRPC profile eligibility read
-- locality-aware work feed refinement
+- richer locality-aware work feed refinement
 - behavioural ranking inputs + recommendation-service handoff
-- cancellation / withdrawal
 - expiry and reopen policies
 - search projections and locality filters
 - messaging thread creation
@@ -34,6 +35,6 @@
 ## Adjacent but separate lanes
 
 - `media-service`: upload sessions, SeaweedFS-backed assets, transforms, thumbnails, video metadata
-- future `content-service`: announcements, events, advice posts, organic business promotion
+- `content-service`: announcements, events, advice posts, organic business promotion
 - future `recommendation-service`: ranking for the local social feed and the work feed from behaviour signals
 - `ads-monetization-service`: paid campaign delivery over content/media, not ownership of organic posts

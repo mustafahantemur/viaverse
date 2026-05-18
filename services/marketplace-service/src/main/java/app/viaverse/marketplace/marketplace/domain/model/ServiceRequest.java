@@ -143,6 +143,30 @@ public final class ServiceRequest {
         );
     }
 
+    public ServiceRequest cancel(Instant now) {
+        if (!isOpen()) {
+            throw new IllegalStateException("Only open requests can be cancelled");
+        }
+        return new ServiceRequest(
+                id,
+                requesterAccountId,
+                title,
+                description,
+                category,
+                budgetMinAmountMinor,
+                budgetMaxAmountMinor,
+                currency,
+                remoteAllowed,
+                district,
+                city,
+                mediaAssetIds,
+                ServiceRequestStatusEnum.CANCELLED,
+                createdAt,
+                Objects.requireNonNull(now, "now"),
+                version
+        );
+    }
+
     private static String requireText(String value, String field, int maxLength) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(field + " must not be blank");

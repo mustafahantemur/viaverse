@@ -8,7 +8,11 @@ public interface MarketplaceEventPublisher {
 
     void publishRequestCreated(ServiceRequest request);
 
+    void publishRequestCancelled(ServiceRequest request);
+
     void publishOfferSubmitted(Offer offer);
+
+    void publishOfferWithdrawn(Offer offer);
 
     void publishOfferAccepted(ServiceRequest request, Offer offer);
 

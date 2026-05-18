@@ -11,4 +11,6 @@ public interface OfferJpaRepository extends JpaRepository<OfferJpaEntity, UUID> 
     Optional<OfferJpaEntity> findByRequestIdAndProviderAccountId(UUID requestId, UUID providerAccountId);
 
     List<OfferJpaEntity> findAllByRequestIdOrderByCreatedAtDesc(UUID requestId);
+
+    List<OfferJpaEntity> findAllByProviderAccountIdOrderByCreatedAtDesc(UUID providerAccountId);
 }

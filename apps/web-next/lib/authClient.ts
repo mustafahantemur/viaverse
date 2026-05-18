@@ -562,6 +562,14 @@ export function myServiceRequests(): Promise<ServiceRequestView[]> {
     return call("/api/me/requests", { method: "GET", authed: true });
 }
 
+export function cancelServiceRequest(requestId: string): Promise<ServiceRequestView> {
+    return call(`/api/requests/${requestId}/cancel`, {
+        method: "POST",
+        body: JSON.stringify({}),
+        authed: true,
+    });
+}
+
 export function submitOffer(
     requestId: string,
     amountMinor: number,
@@ -577,6 +585,18 @@ export function submitOffer(
 
 export function listOffers(requestId: string): Promise<OfferView[]> {
     return call(`/api/requests/${requestId}/offers`, { method: "GET", authed: true });
+}
+
+export function myOffers(): Promise<OfferView[]> {
+    return call("/api/me/offers", { method: "GET", authed: true });
+}
+
+export function withdrawOffer(offerId: string): Promise<OfferView> {
+    return call(`/api/offers/${offerId}/withdraw`, {
+        method: "POST",
+        body: JSON.stringify({}),
+        authed: true,
+    });
 }
 
 export function acceptOffer(requestId: string, offerId: string): Promise<JobView> {

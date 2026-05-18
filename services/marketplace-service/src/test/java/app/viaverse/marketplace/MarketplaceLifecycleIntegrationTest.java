@@ -179,6 +179,41 @@ class MarketplaceLifecycleIntegrationTest {
         assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
     }
 
+    @Test
+    void providerCanTrackAndWithdrawOwnOfferAndRequesterCanCancelOpenRequest() throws Exception {
+        Map<String, Object> createdRequest = unwrap(post("/api/v1/requests", Map.of(
+                "title", "Bahçe sulama",
+                "description", "Haftalık sulama desteği lazım.",
+                "category", "HOME_REPAIR",
+                "currency", "TRY",
+                "remoteAllowed", false
+        ), requesterToken).body());
+        String requestId = createdRequest.get("id").toString();
+
+        Map<String, Object> submittedOffer = unwrap(post(
+                "/api/v1/requests/" + requestId + "/offers",
+                Map.of("amountMinor", 40_000, "currency", "TRY"),
+                providerToken
+        ).body());
+        String offerId = submittedOffer.get("id").toString();
+
+        assertThat(unwrapList(get("/api/v1/me/offers", providerToken).body())).hasSize(1);
+        Map<String, Object> withdrawn = unwrap(post(
+                "/api/v1/offers/" + offerId + "/withdraw",
+                Map.of(),
+                providerToken
+        ).body());
+        assertThat(withdrawn).containsEntry("status", "WITHDRAWN");
+
+        Map<String, Object> cancelled = unwrap(post(
+                "/api/v1/requests/" + requestId + "/cancel",
+                Map.of(),
+                requesterToken
+        ).body());
+        assertThat(cancelled).containsEntry("status", "CANCELLED");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM outbox_event", Integer.class)).isEqualTo(4);
+    }
+
     private String accessToken(UUID accountId) {
         SecretKey key = new SecretKeySpec(JWT_SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         JwtEncoder encoder = new NimbusJwtEncoder(new ImmutableSecret<>(key));

@@ -57,4 +57,12 @@ public class OfferJpaAdapter implements OfferRepository {
                 .map(mapper::toDomain)
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Offer> findAllByProviderAccountId(UUID providerAccountId) {
+        return repository.findAllByProviderAccountIdOrderByCreatedAtDesc(providerAccountId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }

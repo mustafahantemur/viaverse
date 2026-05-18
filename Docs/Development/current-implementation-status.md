@@ -134,11 +134,12 @@ The current architecture direction is captured in `Docs/Architecture/trust-and-m
 Implemented now:
 
 - request creation and customer request listing
-- offer submission and acceptance
+- offer submission, withdrawal, current-provider offer listing, and acceptance
+- open-request cancellation with pending-offer cleanup
 - accepted-offer → job lifecycle (`AGREED` → `IN_PROGRESS` → `COMPLETED`)
 - transactional outbox events for the lifecycle
-- first rule-based **work feed** using profile-owned service categories
-- `/app/marketplace` web flow for requests, relevant jobs, offers, and active jobs
+- first rule-based **work feed** using profile-owned service categories plus own-request suppression and business locality
+- `/app/marketplace` web flow for requests, relevant jobs, provider offers, and active jobs
 
 Important product distinction now reflected in code:
 

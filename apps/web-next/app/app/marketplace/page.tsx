@@ -7,6 +7,7 @@ import { Button } from "@/components/primitives/Button";
 import { Container } from "@/components/primitives/Container";
 import {
     acceptOffer,
+    cancelServiceRequest,
     completeJob,
     createServiceRequest,
     currentProfile,
@@ -14,11 +15,13 @@ import {
     listOffers,
     me,
     myJobs,
+    myOffers,
     myServiceRequests,
     refresh,
     setAccessToken,
     startJob,
     submitOffer,
+    withdrawOffer,
     workFeed,
     type CurrentProfileView,
     type JobView,
@@ -52,6 +55,7 @@ export default function MarketplacePage() {
     const [workRequests, setWorkRequests] = useState<ServiceRequestView[]>([]);
     const [myRequests, setMyRequests] = useState<ServiceRequestView[]>([]);
     const [jobs, setJobs] = useState<JobView[]>([]);
+    const [offers, setOffers] = useState<OfferView[]>([]);
     const [offersByRequest, setOffersByRequest] = useState<Record<string, OfferView[]>>({});
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [busy, setBusy] = useState(false);
@@ -64,12 +68,13 @@ export default function MarketplacePage() {
                 if (!getAccessToken()) {
                     await refresh();
                 }
-                const [fetchedMe, fetchedProfile, fetchedWorkFeed, fetchedMine, fetchedJobs] = await Promise.all([
+                const [fetchedMe, fetchedProfile, fetchedWorkFeed, fetchedMine, fetchedJobs, fetchedOffers] = await Promise.all([
                     me(),
                     currentProfile(),
                     workFeed(),
                     myServiceRequests(),
                     myJobs(),
+                    myOffers(),
                 ]);
                 if (!cancelled) {
                     setMeView(fetchedMe);
@@ -77,6 +82,7 @@ export default function MarketplacePage() {
                     setWorkRequests(fetchedWorkFeed);
                     setMyRequests(fetchedMine);
                     setJobs(fetchedJobs);
+                    setOffers(fetchedOffers);
                     setStatus("ready");
                 }
             } catch {
@@ -104,14 +110,16 @@ export default function MarketplacePage() {
     );
 
     async function refreshLists() {
-        const [fetchedWorkFeed, fetchedMine, fetchedJobs] = await Promise.all([
+        const [fetchedWorkFeed, fetchedMine, fetchedJobs, fetchedOffers] = await Promise.all([
             workFeed(),
             myServiceRequests(),
             myJobs(),
+            myOffers(),
         ]);
         setWorkRequests(fetchedWorkFeed);
         setMyRequests(fetchedMine);
         setJobs(fetchedJobs);
+        setOffers(fetchedOffers);
     }
 
     async function run(action: () => Promise<void>) {
@@ -220,6 +228,12 @@ export default function MarketplacePage() {
                                                         }));
                                                     })
                                                 }
+                                                onCancel={() =>
+                                                    run(async () => {
+                                                        await cancelServiceRequest(request.id);
+                                                        await refreshLists();
+                                                    })
+                                                }
                                             />
                                         ))
                                     )}
@@ -249,6 +263,31 @@ export default function MarketplacePage() {
                                                 onComplete={() =>
                                                     run(async () => {
                                                         await completeJob(job.id);
+                                                        await refreshLists();
+                                                    })
+                                                }
+                                            />
+                                        ))
+                                    )}
+                                </div>
+                            </article>
+
+                            <article className={styles.card}>
+                                <div className={styles.cardHeader}>
+                                    <h2>{t.marketplace.myOffersTitle}</h2>
+                                </div>
+                                <div className={styles.stack}>
+                                    {offers.length === 0 ? (
+                                        <p className={styles.empty}>{t.marketplace.noOffers}</p>
+                                    ) : (
+                                        offers.map((offer) => (
+                                            <OfferStatusCard
+                                                key={offer.id}
+                                                offer={offer}
+                                                busy={busy}
+                                                onWithdraw={() =>
+                                                    run(async () => {
+                                                        await withdrawOffer(offer.id);
                                                         await refreshLists();
                                                     })
                                                 }
@@ -389,12 +428,14 @@ function MyRequestCard({
     busy,
     onLoadOffers,
     onAccept,
+    onCancel,
 }: {
     request: ServiceRequestView;
     offers?: OfferView[];
     busy: boolean;
     onLoadOffers: () => Promise<void>;
     onAccept: (offerId: string) => Promise<void>;
+    onCancel: () => Promise<void>;
 }) {
     const { t } = useTranslation();
     return (
@@ -404,6 +445,11 @@ function MyRequestCard({
                 <span className={styles.meta}>{request.status}</span>
             </div>
             <p className={styles.meta}>{formatBudget(request)}</p>
+            {request.status === "OPEN" && (
+                <Button variant="outline" disabled={busy} onClick={onCancel}>
+                    {t.marketplace.cancelRequest}
+                </Button>
+            )}
             <Button variant="outline" disabled={busy} onClick={onLoadOffers}>
                 {t.marketplace.loadOffers}
             </Button>
@@ -424,6 +470,35 @@ function MyRequestCard({
                         </div>
                     ))}
                 </div>
+            )}
+        </article>
+    );
+}
+
+function OfferStatusCard({
+    offer,
+    busy,
+    onWithdraw,
+}: {
+    offer: OfferView;
+    busy: boolean;
+    onWithdraw: () => Promise<void>;
+}) {
+    const { t } = useTranslation();
+    return (
+        <article className={styles.requestCard}>
+            <div className={styles.cardHeader}>
+                <h3>{formatMoney(offer.amountMinor, offer.currency)}</h3>
+                <span className={styles.meta}>{offer.status}</span>
+            </div>
+            <p className={styles.meta}>
+                {t.marketplace.request}: {shortId(offer.requestId)}
+            </p>
+            {offer.message && <p>{offer.message}</p>}
+            {offer.status === "SUBMITTED" && (
+                <Button variant="outline" disabled={busy} onClick={onWithdraw}>
+                    {t.marketplace.withdrawOffer}
+                </Button>
             )}
         </article>
     );

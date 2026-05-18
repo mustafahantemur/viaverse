@@ -27,7 +27,14 @@ recommended synchronous profile capability read described in `service-communicat
 5. A job is created with frozen agreed terms and `AGREED` status.
 6. Outbox emits `marketplace.offer.accepted.v1` and `marketplace.job.created.v1`.
 
-## 4. Execute job
+## 4. Withdraw or cancel before matching
+
+1. A provider may withdraw their own still-submitted offer.
+2. A requester may cancel their own still-open request.
+3. Cancelling an open request rejects any sibling submitted offers so stale bids do not remain actionable.
+4. Outbox emits `marketplace.offer.withdrawn.v1` or `marketplace.request.cancelled.v1`.
+
+## 5. Execute job
 
 1. Assigned provider starts the job → `IN_PROGRESS`.
 2. Requester confirms completion → `COMPLETED`.
@@ -36,7 +43,7 @@ recommended synchronous profile capability read described in `service-communicat
 Payment, messaging, dispute, and review integrations attach to this graph in later slices; this first cut intentionally
 keeps the commercial lifecycle coherent before adding more services around it.
 
-## 5. Work feed
+## 6. Work feed
 
 The first cut now exposes both:
 
@@ -54,6 +61,8 @@ Current implementation boundary:
 
 - active `BUSINESS` mode + approved business capability → business service categories,
 - active `INDIVIDUAL_PROVIDER` mode → individual-provider service categories,
+- a business work feed suppresses non-remote requests outside the business locality,
+- a user never sees their own open requests as provider opportunities,
 - customer mode or missing categories → no provider opportunities yet.
 
 That is intentionally conservative: an empty catalog should not quietly degrade into “show every job.”

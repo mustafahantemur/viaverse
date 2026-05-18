@@ -41,7 +41,10 @@ public class ListRelevantServiceRequestsUseCaseImpl implements ListRelevantServi
         if (categories.isEmpty()) {
             return List.of();
         }
-        return repository.findAllOpenByCategories(categories);
+        return repository.findAllOpenByCategories(categories).stream()
+                .filter(request -> !request.getRequesterAccountId().equals(accountId))
+                .filter(request -> visibleForCurrentMode(request, eligibility))
+                .toList();
     }
 
     private Set<MarketplaceServiceCategory> categoriesFor(ProviderEligibilityGateway.Eligibility eligibility) {
@@ -55,5 +58,28 @@ public class ListRelevantServiceRequestsUseCaseImpl implements ListRelevantServi
             return eligibility.individualProviderServiceCategories();
         }
         return Set.of();
+    }
+
+    private boolean visibleForCurrentMode(
+            ServiceRequest request,
+            ProviderEligibilityGateway.Eligibility eligibility
+    ) {
+        if (request.isRemoteAllowed()) {
+            return true;
+        }
+        if (BUSINESS_MODE.equals(eligibility.activeMode())
+                && eligibility.businessEnabled()
+                && APPROVED_BUSINESS.equals(eligibility.businessVerificationStatus())) {
+            if (eligibility.businessCity() == null || request.getCity() == null) {
+                return true;
+            }
+            if (!eligibility.businessCity().equalsIgnoreCase(request.getCity())) {
+                return false;
+            }
+            return eligibility.businessDistrict() == null
+                    || request.getDistrict() == null
+                    || eligibility.businessDistrict().equalsIgnoreCase(request.getDistrict());
+        }
+        return true;
     }
 }

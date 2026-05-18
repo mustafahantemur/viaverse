@@ -16,4 +16,6 @@ public interface OfferRepository {
     Optional<Offer> findByRequestIdAndProviderAccountId(UUID requestId, UUID providerAccountId);
 
     List<Offer> findAllByRequestId(UUID requestId);
+
+    List<Offer> findAllByProviderAccountId(UUID providerAccountId);
 }
