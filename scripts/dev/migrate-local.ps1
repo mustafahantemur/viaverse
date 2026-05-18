@@ -24,6 +24,7 @@ if (-not $?) {
 
 Push-Location $repoRoot
 try {
+    & "$scriptRoot\verify-build-logic.ps1" -RepoRoot $repoRoot
     Write-Host "Executing Gradle migrateLocal with loaded local environment"
     & "$repoRoot\gradlew.bat" migrateLocal
     if ($LASTEXITCODE -ne 0) {

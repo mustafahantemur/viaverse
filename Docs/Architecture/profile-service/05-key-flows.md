@@ -56,6 +56,10 @@ Multi-step; profile-service stores the draft so the user can resume.
 
 Rejection mirrors the same shape with `REJECTED` status and a reason event.
 
+Approval changes the launch face to `BUSINESS`, not the account identity. `CUSTOMER` remains enabled, so the
+same person can immediately `PATCH /me/active-mode` back to `CUSTOMER` and continue using normal-user flows
+such as following people or requesting services.
+
 ## 5. Public profile view
 
 `GET /profiles/{accountId}` from anywhere, *including unauthenticated callers* via BFF cache.

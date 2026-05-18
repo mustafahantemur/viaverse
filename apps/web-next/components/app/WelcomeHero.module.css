@@ -1,0 +1,22 @@
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 40px 0 24px;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--vv-font-display);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: var(--vv-tracking-tight);
+  color: var(--vv-fg-strong);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--vv-fg-muted);
+  font-size: 16px;
+  max-width: 56ch;
+}

@@ -8,7 +8,9 @@
 | `INDIVIDUAL_PROVIDER` | Discover open jobs, apply, complete small/local/flexible work — student, freelancer, repairperson, courier, designer, casual helper. | Off; enabled by the user |
 | `BUSINESS` | Operate as a registered business (pharmacy, agency, clinic, shop) — invoicing, business profile, branded presence | Off; enabled through a separate onboarding |
 
-These are **non-exclusive flags on one account**. A user can be all three. The product framing matters:
+These are **non-exclusive flags on one account**. A user can be all three. In particular, turning on `BUSINESS`
+does **not** replace `CUSTOMER`: a business owner can switch back to customer mode, post requests, follow people,
+and use ordinary consumer surfaces with the same account. The product framing matters:
 
 - The product is not "marketplace for pros". It is **lowering the bar to earning** for ordinary people. INDIVIDUAL_PROVIDER must be cheap to turn on — no portfolio, no certifications required at first. The app reveals more depth as the user takes more jobs.
 - BUSINESS is heavier — verified entity, legal name, tax/registration, possibly approved by ops. It must feel different from individual provider.
@@ -21,7 +23,7 @@ These are **non-exclusive flags on one account**. A user can be all three. The p
 |---|---|
 | New account | `CUSTOMER` |
 | Account that enabled provider | Still `CUSTOMER` until first explicit switch — opt-in |
-| Account that enabled business | `BUSINESS` after onboarding completes |
+| Account that enabled business | `BUSINESS` after onboarding completes, but can switch back to `CUSTOMER` at any time |
 
 **Security note:** `active_mode` does not grant any new permission server-side. Authorization comes from the capability flags themselves. The mode only affects which UI surfaces the BFF/clients render.
 

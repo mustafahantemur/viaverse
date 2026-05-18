@@ -274,6 +274,14 @@ export function getRequiredConsents(): Promise<RequiredConsents> {
     return call("/api/auth/required-consents", { method: "GET" });
 }
 
+export type CapabilityTerms = {
+    capabilityTerms: RequiredConsentDocument[];
+};
+
+export function getCapabilityTerms(): Promise<CapabilityTerms> {
+    return call("/api/auth/capability-terms", { method: "GET" });
+}
+
 // ---- Me ----
 
 export type MeView = {
@@ -293,6 +301,142 @@ export function changePassword(currentPassword: string | null, newPassword: stri
     return call("/api/me/password", {
         method: "POST",
         body: JSON.stringify({ currentPassword: currentPassword ?? "", newPassword }),
+        authed: true,
+    });
+}
+
+// ---- Profile ----
+
+export type ActiveMode = "CUSTOMER" | "INDIVIDUAL_PROVIDER" | "BUSINESS";
+export type CapabilityStatus = "ENABLED" | "PENDING_REVIEW" | "SUSPENDED" | "DISABLED";
+export type PublicVisibility = "PUBLIC" | "LIMITED" | "PRIVATE";
+export type BusinessSector = "PHARMACY" | "CLINIC" | "AGENCY" | "SHOP" | "SOFTWARE" | "OTHER";
+export type BusinessVerificationStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED";
+
+export type CapabilityView = {
+    capability: ActiveMode;
+    status: CapabilityStatus;
+    verificationLevel?: string;
+    enabledAt?: string;
+    disabledAt?: string;
+};
+
+export type IndividualProviderProfileView = {
+    serviceBlurb?: string;
+    availabilitySummary?: string;
+    acceptsRemote: boolean;
+    providerTermsVersionAccepted?: string;
+};
+
+export type BusinessProfileView = {
+    legalName?: string;
+    tradeName?: string;
+    sector?: BusinessSector;
+    taxId?: string;
+    addressLine?: string;
+    district?: string;
+    city?: string;
+    country?: string;
+    phone?: string;
+    emailPublic?: string;
+    logoMediaId?: string;
+    openingHoursJson?: string;
+    verificationStatus: BusinessVerificationStatus;
+    businessTermsVersionAccepted?: string;
+    rejectionReason?: string;
+};
+
+export type CurrentProfileView = {
+    accountId: string;
+    displayName: string;
+    firstName?: string;
+    lastName?: string;
+    avatarMediaId?: string;
+    headline?: string;
+    bio?: string;
+    locale: string;
+    timezone: string;
+    activeMode: ActiveMode;
+    completenessScore: number;
+    publicVisibility: PublicVisibility;
+    capabilities: CapabilityView[];
+    individualProviderProfile?: IndividualProviderProfileView;
+    businessProfile?: BusinessProfileView;
+};
+
+export type UpdateProfilePayload = Partial<Pick<
+    CurrentProfileView,
+    "displayName" | "firstName" | "lastName" | "headline" | "bio" | "locale" | "timezone" | "publicVisibility"
+>>;
+
+export type UpdateBusinessDraftPayload = {
+    legalName?: string;
+    tradeName?: string;
+    sector?: BusinessSector;
+    taxId?: string;
+    addressLine?: string;
+    district?: string;
+    city?: string;
+    country?: string;
+    phone?: string;
+    emailPublic?: string;
+    logoMediaId?: string;
+    openingHoursJson?: string;
+};
+
+export function currentProfile(): Promise<CurrentProfileView> {
+    return call("/api/me/profile", { method: "GET", authed: true });
+}
+
+export function updateProfile(payload: UpdateProfilePayload): Promise<CurrentProfileView> {
+    return call("/api/me/profile", {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+        authed: true,
+    });
+}
+
+export function enableIndividualProvider(
+    acceptedProviderTermsVersion: string,
+    serviceBlurb?: string,
+): Promise<CurrentProfileView> {
+    return call("/api/me/capabilities/individual-provider/enable", {
+        method: "POST",
+        body: JSON.stringify({ acceptedProviderTermsVersion, serviceBlurb }),
+        authed: true,
+    });
+}
+
+export function updateActiveMode(activeMode: ActiveMode): Promise<CurrentProfileView> {
+    return call("/api/me/active-mode", {
+        method: "PATCH",
+        body: JSON.stringify({ activeMode }),
+        authed: true,
+    });
+}
+
+export function startBusinessOnboarding(): Promise<BusinessProfileView> {
+    return call("/api/me/capabilities/business/start", {
+        method: "POST",
+        body: JSON.stringify({}),
+        authed: true,
+    });
+}
+
+export function updateBusinessDraft(payload: UpdateBusinessDraftPayload): Promise<BusinessProfileView> {
+    return call("/api/me/business/draft", {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+        authed: true,
+    });
+}
+
+export function submitBusinessOnboarding(
+    acceptedBusinessTermsVersion: string,
+): Promise<BusinessProfileView> {
+    return call("/api/me/capabilities/business/submit", {
+        method: "POST",
+        body: JSON.stringify({ acceptedBusinessTermsVersion }),
         authed: true,
     });
 }

@@ -479,6 +479,16 @@ class IdentityAuthIntegrationTest {
     }
 
     @Test
+    void capabilityTermsEndpointPublishesProviderAndBusinessVersions() {
+        ResponseEntity<Map> response = get("/api/v1/auth/capability-terms", null);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<Map<String, Object>> terms = (List<Map<String, Object>>) response.getBody().get("capabilityTerms");
+        assertThat(terms).extracting(item -> item.get("type"))
+                .containsExactlyInAnyOrder("PROVIDER_TERMS", "BUSINESS_TERMS");
+    }
+
+    @Test
     void missingRequiredConsentFailsRegistration() {
         String email = newEmail();
         String registrationToken = obtainRegistrationToken(email);

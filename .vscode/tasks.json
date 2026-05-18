@@ -59,6 +59,13 @@
       "problemMatcher": []
     },
     {
+      "label": "backend: ready profile-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free profile-service"],
+      "problemMatcher": []
+    },
+    {
       "label": "debug: start identity-service target",
       "type": "shell",
       "dependsOrder": "sequence",
@@ -83,6 +90,35 @@
             "activeOnStart": true,
             "beginsPattern": ".*",
             "endsPattern": "Listening for transport dt_socket at address: 5005"
+          }
+        }
+      ]
+    },
+    {
+      "label": "debug: start profile-service target",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready profile-service"],
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/start-profile-debug.ps1"
+      ],
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "profile-debug",
+          "pattern": {
+            "regexp": "^(.*)$",
+            "message": 1
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".*",
+            "endsPattern": "Listening for transport dt_socket at address: 5007"
           }
         }
       ]
@@ -154,7 +190,7 @@
       "label": "backend: ready web-bff",
       "type": "shell",
       "dependsOrder": "sequence",
-      "dependsOn": ["backend: ready identity-service", "ports: free web-bff"],
+      "dependsOn": ["backend: ready", "ports: free web-bff"],
       "problemMatcher": []
     },
     {
@@ -217,6 +253,13 @@
       "type": "shell",
       "command": "powershell",
       "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8101,5005"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free profile-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8111,5007"],
       "problemMatcher": []
     },
     {

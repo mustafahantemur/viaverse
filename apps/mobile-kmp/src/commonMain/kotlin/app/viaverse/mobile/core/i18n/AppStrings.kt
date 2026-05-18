@@ -169,6 +169,66 @@ object AppStrings {
     fun hidePasswordA11y(): String =
         pick("Parolayı gizle", "Hide password")
 
+    // Home / post-auth welcome surface
+    @Composable @ReadOnlyComposable
+    fun welcomeHeading(name: String): String =
+        pick("Hoş geldin, $name", "Welcome, $name")
+
+    @Composable @ReadOnlyComposable
+    fun welcomeSubtitleNew(): String =
+        pick("Hesabın hazır. Aşağıdan başlayabilirsin.",
+             "Your account is ready. Start with one of the cards below.")
+
+    @Composable @ReadOnlyComposable
+    fun welcomeSubtitleReturning(): String =
+        pick("Tekrar hoş geldin. Bugün ne yapmak istersin?",
+             "Welcome back. What would you like to do today?")
+
+    @Composable @ReadOnlyComposable
+    fun customerModeBadge(): String = pick("Müşteri modu", "Customer mode")
+
+    @Composable @ReadOnlyComposable
+    fun activeModeBadge(activeMode: String): String = when (activeMode) {
+        "INDIVIDUAL_PROVIDER" -> pick("Hizmet veren modu", "Provider mode")
+        "BUSINESS" -> pick("İşletme modu", "Business mode")
+        else -> customerModeBadge()
+    }
+
+    @Composable @ReadOnlyComposable
+    fun emptyFeed(): String =
+        pick("Çevrende henüz aktivite yok — ilk talebi sen oluştur.",
+             "Nothing happening nearby yet — be the first to post a request.")
+
+    @Composable @ReadOnlyComposable
+    fun actionPostRequestTitle(): String = pick("Talep oluştur", "Post a request")
+
+    @Composable @ReadOnlyComposable
+    fun actionPostRequestDesc(): String =
+        pick("Yakındaki birinden yardım iste.", "Ask for help from someone near you.")
+
+    @Composable @ReadOnlyComposable
+    fun actionBrowseJobsTitle(): String = pick("Açık işlere göz at", "Browse open jobs")
+
+    @Composable @ReadOnlyComposable
+    fun actionBrowseJobsDesc(): String =
+        pick("Çevrendeki taleplere teklif ver.", "Send offers on local requests.")
+
+    @Composable @ReadOnlyComposable
+    fun actionBecomeProviderTitle(): String =
+        pick("Hizmet vermeye başla", "Become a provider")
+
+    @Composable @ReadOnlyComposable
+    fun actionBecomeProviderDesc(): String =
+        pick("Tek tıkla provider modunu aç.", "Turn on provider mode in one tap.")
+
+    @Composable @ReadOnlyComposable
+    fun actionSettingsTitle(): String = pick("Profil ve ayarlar", "Profile & settings")
+
+    @Composable @ReadOnlyComposable
+    fun actionSettingsDesc(): String =
+        pick("Görünen ad, dil, tema ve gizlilik.",
+             "Display name, language, theme, privacy.")
+
     @Composable @ReadOnlyComposable
     private fun pick(tr: String, en: String): String =
         if (LocalAppLanguage.current.value == AppLanguage.TR) tr else en

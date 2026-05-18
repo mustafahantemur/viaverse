@@ -1,0 +1,150 @@
+.page {
+  padding-bottom: 56px;
+}
+
+.loading {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  color: var(--vv-fg-muted);
+}
+
+.hero {
+  padding: 36px 0 24px;
+}
+
+.hero h1 {
+  margin: 8px 0;
+  font-size: clamp(28px, 4vw, 38px);
+  letter-spacing: var(--vv-tracking-tight);
+}
+
+.hero p {
+  margin: 0;
+  color: var(--vv-fg-muted);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.message {
+  margin: 0 0 18px;
+  color: var(--vv-trust-deep);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--vv-border-muted);
+  border-radius: var(--vv-radius-lg);
+  background: var(--vv-surface);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.cardHeader h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.cardHeader span,
+.muted {
+  color: var(--vv-fg-muted);
+  font-size: 13px;
+}
+
+.formGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field span {
+  color: var(--vv-fg-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  border: 1px solid var(--vv-border-muted);
+  border-radius: var(--vv-radius-sm);
+  background: var(--vv-bg);
+  color: var(--vv-fg);
+  font: inherit;
+  padding: 11px 12px;
+}
+
+.field textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.field input:disabled,
+.field textarea:disabled,
+.field select:disabled {
+  opacity: 0.7;
+}
+
+.modeRow,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.modeChip {
+  border: 1px solid var(--vv-border-muted);
+  border-radius: var(--vv-radius-pill);
+  background: var(--vv-bg);
+  color: var(--vv-fg);
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.modeChipActive {
+  background: var(--vv-primary-soft);
+  border-color: var(--vv-primary);
+  color: var(--vv-primary-press);
+}
+
+.terms {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  color: var(--vv-fg-muted);
+  font-size: 14px;
+}
+
+.terms input {
+  margin-top: 3px;
+}
+
+.terms a {
+  color: var(--vv-primary-press);
+  text-decoration: underline;
+}

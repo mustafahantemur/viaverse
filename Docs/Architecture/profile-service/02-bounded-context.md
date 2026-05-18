@@ -37,7 +37,10 @@ Profile-service **does NOT own**:
 - **Capabilities are flags, not separate accounts.** A user is one account that can be `CUSTOMER + INDIVIDUAL_PROVIDER + BUSINESS` simultaneously. We do not model "provider account" as a sibling row.
 - **Business profile is a 1-to-1 attached aggregate**, not a parallel account. The same login owns it. Multi-business-per-user is a Phase 2+ consideration; until then, enforce one business profile per account.
 - **No payment/KYC fields here.** When a provider wants to receive payouts, `payment-service` collects what it needs; profile-service just knows "provider capability is enabled" + "payments side has approved this user" (a flag mirrored from a payment-service event).
-- **No moderation actions here.** Admin tooling lives in `admin-bff` and writes to profile-service via internal endpoints; the moderation queue itself is owned by `trust-gamification-service` (or a future `moderation-service`).
+- **No moderation engines here.** Admin tooling lives in `admin-bff` and writes to profile-service via internal endpoints;
+  automated business verification, human-authenticity signals, and content-safety decisions belong to
+  `trust-gamification-service` / a future `moderation-service`. The target operating model is automation-first with
+  human review only for exceptions; see [trust-and-moderation.md](../trust-and-moderation.md).
 
 ## What stays in identity-service
 

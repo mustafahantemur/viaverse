@@ -19,5 +19,6 @@ Cross-cutting (apply to every backend service, not just profile-service):
 | [Shared modules](../shared-modules.md) | Where reusable code lives; reorganization plan for `packages/`. |
 | [Engineering standards](../engineering-standards.md) | Layering rules, observability, testing — the bar profile-service must clear. |
 | [Service communication](../service-communication.md) | Kafka vs gRPC vs REST — which transport for which call shape. |
+| [Trust, verification, and moderation](../trust-and-moderation.md) | Automation-first business approval, human verification, future content moderation. |
 
 Phase 0 through Phase 3 are now implemented on the active branch; Phase 4 is the next boundary.

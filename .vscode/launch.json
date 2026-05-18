@@ -11,12 +11,28 @@
     {
       "type": "java",
       "name": "debug identity-service",
-      "request": "attach",
+      "request": "launch",
       "projectName": "identity-service",
-      "hostName": "localhost",
-      "port": 5005,
-      "timeout": 60000,
-      "preLaunchTask": "debug: start identity-service target"
+      "mainClass": "app.viaverse.identity.IdentityServiceApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/identity-service/src/main/resources/",
+      "preLaunchTask": "backend: ready identity-service"
+    },
+    {
+      "type": "java",
+      "name": "debug profile-service",
+      "request": "launch",
+      "projectName": "profile-service",
+      "mainClass": "app.viaverse.profile.ProfileServiceApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/profile-service/src/main/resources/",
+      "preLaunchTask": "backend: ready profile-service"
     },
     {
       "type": "java",
@@ -138,11 +154,15 @@
     {
       "type": "java",
       "name": "debug web-bff",
-      "request": "attach",
-      "hostName": "localhost",
-      "port": 5006,
-      "timeout": 60000,
-      "preLaunchTask": "debug: start web-bff target"
+      "request": "launch",
+      "projectName": "web-bff",
+      "mainClass": "app.viaverse.webbff.WebBffApplication",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "envFile": "${workspaceFolder}/.env.local",
+      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/web-bff/src/main/resources/",
+      "preLaunchTask": "backend: ready web-bff"
     },
     {
       "type": "node-terminal",
@@ -171,6 +191,7 @@
       "name": "debug backend: all services",
       "configurations": [
         "debug identity-service",
+        "debug profile-service",
         "debug marketplace-service",
         "debug payment-service",
         "debug messaging-service",
@@ -196,6 +217,7 @@
       "name": "run local stack: backend + web apps",
       "configurations": [
         "debug identity-service",
+        "debug profile-service",
         "debug marketplace-service",
         "debug payment-service",
         "debug messaging-service",

@@ -7,6 +7,7 @@ $ErrorActionPreference = "Stop"
 
 $serviceDatabases = @(
     "viaverse_identity",
+    "viaverse_profile",
     "viaverse_marketplace",
     "viaverse_payment",
     "viaverse_messaging",
@@ -18,6 +19,7 @@ $serviceDatabases = @(
     "viaverse_admin_bff",
     "viaverse_web_bff",
     "viaverse_identity_test",
+    "viaverse_profile_test",
     "viaverse_marketplace_test",
     "viaverse_payment_test",
     "viaverse_messaging_test",

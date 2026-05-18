@@ -61,6 +61,8 @@ The active implementation branch has now advanced through:
 - Story 2.1 through Story 2.4
 - Story 3.1 through Story 3.3
 - an extra cross-cutting extraction: `security-kernel`, because `profile-service` became the second JWT consumer earlier than originally expected
+- client follow-through for the shipped slice: web profile/business workspace, first admin business queue screen,
+  and a real active-mode badge on mobile home
 
 Phase 4 (trust read-through + identity slimming) is the next dependency boundary.
 

@@ -23,6 +23,11 @@ profile-service should **never call identity-service in the hot path**. Two inte
 - Translating the public `/api/profile` surface to internal `GET /profiles/{accountId}` calls
 - Cache headers for unauthenticated public-profile reads
 
+Onboarding UIs also read the current capability legal texts through identity's public
+`GET /api/v1/auth/capability-terms` surface (proxied as `GET /api/auth/capability-terms` by `web-bff`).
+The client displays the returned URL/version and posts that returned version back when enabling provider
+or submitting business onboarding; versions are never hardcoded in the UI.
+
 ## Talking to future services
 
 | Consumer | What it needs |

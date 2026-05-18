@@ -140,6 +140,32 @@ class AuthApi(
         return unwrapData(text)
     }
 
+    /**
+     * Self read for the signed-in user. Reads through the BFF, which
+     * forwards to identity-service's `/me` endpoint. The access token
+     * is attached automatically by {@link #getJsonAuthed}.
+     */
+    suspend fun me(): JsonObject = getJsonAuthed("/api/me")
+
+    /**
+     * Rich self profile read from profile-service via web-bff.
+     */
+    suspend fun profile(): JsonObject = getJsonAuthed("/api/me/profile")
+
+    private suspend fun getJsonAuthed(path: String): JsonObject {
+        val response = httpClient.get(apiConfig.baseUrl + path) {
+            val token = AuthTokens.accessToken
+            if (token != null) {
+                headers { append(HttpHeaders.Authorization, "Bearer $token") }
+            }
+        }
+        val text = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            throw AuthApiException(response.status.value, text)
+        }
+        return unwrapData(text)
+    }
+
     private suspend fun postJson(path: String, body: JsonObject): JsonObject {
         val response = httpClient.post(apiConfig.baseUrl + path) {
             contentType(ContentType.Application.Json)

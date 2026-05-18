@@ -1,13 +1,10 @@
 package app.viaverse.mobile.feature.auth
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -15,16 +12,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import app.viaverse.mobile.core.config.ApiConfig
-import app.viaverse.mobile.core.i18n.AppStrings
 import app.viaverse.mobile.core.i18n.LocalAppLanguage
 import app.viaverse.mobile.core.i18n.rememberAppLanguageState
 import app.viaverse.mobile.core.theme.LocalAppTheme
 import app.viaverse.mobile.core.theme.rememberAppThemeState
 import app.viaverse.mobile.designsystem.ViaverseTheme
-import app.viaverse.mobile.designsystem.VvPrimaryButton
 import app.viaverse.mobile.designsystem.VvTopBar
+import app.viaverse.mobile.feature.home.HomeScreen
 import app.viaverse.mobile.feature.splash.SplashScreen
 import io.ktor.client.HttpClient
 
@@ -61,7 +56,11 @@ fun AuthShell(
                     is Screen.Splash -> SplashScreen(onContinue = { screen = Screen.Login })
 
                     else -> Column(modifier = Modifier.fillMaxSize()) {
-                        VvTopBar()
+                        // Home screen draws its own chrome; the shared
+                        // top bar is only useful on auth screens.
+                        if (current !is Screen.Home) {
+                            VvTopBar()
+                        }
                         when (current) {
                             is Screen.Login -> LoginScreen(
                                 authApi = authApi,
@@ -86,20 +85,13 @@ fun AuthShell(
                                 onBackToLogin = { screen = Screen.Login },
                             )
 
-                            is Screen.Home -> Column(
-                                modifier = Modifier.fillMaxSize().padding(24.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                Text(AppStrings.signedIn(), style = MaterialTheme.typography.headlineMedium)
-                                Text(
-                                    "Access token (in memory): ${AuthTokens.accessToken?.take(24)}…",
-                                    style = MaterialTheme.typography.bodySmall,
-                                )
-                                VvPrimaryButton(text = AppStrings.logOut(), onClick = {
+                            is Screen.Home -> HomeScreen(
+                                authApi = authApi,
+                                onLogout = {
                                     AuthTokens.clear()
                                     screen = Screen.Login
-                                })
-                            }
+                                },
+                            )
 
                             Screen.Splash -> Unit // handled above
                         }

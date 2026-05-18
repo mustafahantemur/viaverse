@@ -168,6 +168,12 @@ public class BffAuthController {
         return ResponseEntity.status(proxied.status()).body(proxied.body());
     }
 
+    @GetMapping("/capability-terms")
+    public ResponseEntity<Map<String, Object>> capabilityTerms() {
+        IdentityProxy.ProxyResponse proxied = identityProxy.get(IDENTITY_PATH + "/capability-terms", null);
+        return ResponseEntity.status(proxied.status()).body(proxied.body());
+    }
+
     // ---- Forgot password ----
 
     @PostMapping("/forgot-password/start")

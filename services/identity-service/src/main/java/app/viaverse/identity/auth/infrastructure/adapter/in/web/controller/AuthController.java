@@ -25,6 +25,7 @@ import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.Veri
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.VerifyTotpRequest;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthCompletionResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthResponse;
+import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.CapabilityTermsResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.RequiredConsentsResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.StartAuthResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.mapper.AuthDtoMapper;
@@ -132,6 +133,14 @@ public class AuthController {
                 consentPolicy.requiredDocuments(),
                 consentPolicy.marketingDocument()
         ));
+    }
+
+    @GetMapping("/capability-terms")
+    public ApiResponse<CapabilityTermsResponse> capabilityTerms() {
+        return ApiResponse.ok(new CapabilityTermsResponse(java.util.List.of(
+                consentPolicy.providerTermsDocument(),
+                consentPolicy.businessTermsDocument()
+        )));
     }
 
     @PostMapping("/start")

@@ -136,6 +136,14 @@ class ProfileBusinessIntegrationTest {
                 String.class,
                 accountId
         )).isEqualTo("BUSINESS");
+
+        HttpResponse<String> switchedBackToCustomer = patch(
+                "/api/v1/me/active-mode",
+                Map.of("activeMode", "CUSTOMER"),
+                accessToken
+        );
+        assertThat(switchedBackToCustomer.statusCode()).isEqualTo(HttpStatus.OK.value());
+        assertThat(unwrap(switchedBackToCustomer.body())).containsEntry("activeMode", "CUSTOMER");
     }
 
     @Test

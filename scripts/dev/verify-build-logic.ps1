@@ -33,6 +33,7 @@ if (-not $RepoRoot) {
 
 $buildDir = Join-Path $RepoRoot "build-logic\build"
 $jarPath = Join-Path $buildDir "libs\viaverse-build-logic.jar"
+$accessorsMetadataDir = Join-Path $buildDir "kotlin-dsl\precompiled-script-plugins-metadata\accessors"
 
 # Plugin descriptors we expect inside the jar; each maps to its
 # implementation class which Gradle's Java plugin loader will resolve.
@@ -72,7 +73,7 @@ function Test-Jar {
     return $true
 }
 
-if (Test-Jar -Path $jarPath) {
+if ((Test-Jar -Path $jarPath) -and (Test-Path $accessorsMetadataDir)) {
     Write-Host "verify-build-logic: jar is healthy at $jarPath"
     return
 }
@@ -82,7 +83,12 @@ if (-not (Test-Path $jarPath)) {
     return
 }
 
-Write-Host "verify-build-logic: jar at $jarPath is missing one or more plugin classes; cleaning build-logic\build to force a rebuild."
+if (-not (Test-Path $accessorsMetadataDir)) {
+    Write-Host "verify-build-logic: Kotlin DSL accessors metadata is missing; cleaning build-logic\build to force a rebuild."
+}
+else {
+    Write-Host "verify-build-logic: jar at $jarPath is missing one or more plugin classes; cleaning build-logic\build to force a rebuild."
+}
 
 # Stop daemons so files aren't held open by another JVM.
 & "$RepoRoot\gradlew.bat" --stop | Out-Null
