@@ -5,6 +5,7 @@ import app.viaverse.profile.profile.application.port.out.IndividualProviderProfi
 import app.viaverse.profile.profile.application.port.out.BusinessProfileRepository;
 import app.viaverse.profile.profile.application.port.out.ProfileCapabilityRepository;
 import app.viaverse.profile.profile.application.port.out.ProfileRepository;
+import app.viaverse.profile.profile.application.port.out.ProfileTrustSnapshotRepository;
 import app.viaverse.profile.profile.domain.model.Profile;
 import app.viaverse.shared.kernel.error.NotFoundException;
 import app.viaverse.web.logging.ObservedAction;
@@ -18,17 +19,20 @@ public class GetCurrentProfileUseCaseImpl implements GetCurrentProfileUseCase {
     private final ProfileCapabilityRepository profileCapabilityRepository;
     private final IndividualProviderProfileRepository individualProviderProfileRepository;
     private final BusinessProfileRepository businessProfileRepository;
+    private final ProfileTrustSnapshotRepository profileTrustSnapshotRepository;
 
     public GetCurrentProfileUseCaseImpl(
             ProfileRepository profileRepository,
             ProfileCapabilityRepository profileCapabilityRepository,
             IndividualProviderProfileRepository individualProviderProfileRepository,
-            BusinessProfileRepository businessProfileRepository
+            BusinessProfileRepository businessProfileRepository,
+            ProfileTrustSnapshotRepository profileTrustSnapshotRepository
     ) {
         this.profileRepository = profileRepository;
         this.profileCapabilityRepository = profileCapabilityRepository;
         this.individualProviderProfileRepository = individualProviderProfileRepository;
         this.businessProfileRepository = businessProfileRepository;
+        this.profileTrustSnapshotRepository = profileTrustSnapshotRepository;
     }
 
     @Override
@@ -40,7 +44,8 @@ public class GetCurrentProfileUseCaseImpl implements GetCurrentProfileUseCase {
                 profile,
                 profileCapabilityRepository.findAllByAccountId(accountId),
                 individualProviderProfileRepository.findByAccountId(accountId),
-                businessProfileRepository.findByAccountId(accountId)
+                businessProfileRepository.findByAccountId(accountId),
+                profileTrustSnapshotRepository.findByAccountId(accountId)
         );
     }
 }

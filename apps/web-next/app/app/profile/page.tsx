@@ -117,6 +117,7 @@ export default function ProfilePage() {
                                 })
                             }
                         />
+                        <TrustCard profile={profile} />
                         <ModesCard
                             profile={profile}
                             busy={busy}
@@ -163,6 +164,23 @@ export default function ProfilePage() {
                 </Container>
             </main>
         </>
+    );
+}
+
+function TrustCard({ profile }: { profile: CurrentProfileView }) {
+    const { t } = useTranslation();
+
+    return (
+        <article className={styles.card}>
+            <div className={styles.cardHeader}>
+                <h2>{t.profile.trust}</h2>
+                <span>{t.profile.trustLevels[profile.trust.badge]}</span>
+            </div>
+            <p className={styles.muted}>{t.profile.trustHint}</p>
+            <strong>
+                {t.profile.trustScore}: {profile.trust.score}
+            </strong>
+        </article>
     );
 }
 

@@ -88,6 +88,7 @@ class ProfileCapabilitiesIntegrationTest {
         jdbcTemplate.execute("DELETE FROM business_profile");
         jdbcTemplate.execute("DELETE FROM individual_provider_profile");
         jdbcTemplate.execute("DELETE FROM profile_capability");
+        jdbcTemplate.execute("DELETE FROM profile_trust_snapshot");
         jdbcTemplate.execute("DELETE FROM profile");
         jdbcTemplate.execute("DELETE FROM outbox_event");
         accountId = UUID.randomUUID();

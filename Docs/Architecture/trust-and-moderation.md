@@ -77,7 +77,7 @@ The policy engine must be centralized enough that "sakıncalı içerik" means th
 ## Why this matters for the current profile work
 
 - The current manual business queue is an **interim fallback**, not the final operating model.
-- Phase 4 trust read-through should expose a badge/state that can later represent `VERIFIED_HUMAN` and business
+- Phase 4 trust read-through now exposes a badge/state that can later represent `VERIFIED_HUMAN` and business
   verification results without remodeling profile-service again.
 - Future business capability transitions should accept machine decisions from the trust/moderation boundary in
   addition to the existing admin internal endpoint.

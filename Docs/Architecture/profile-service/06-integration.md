@@ -12,6 +12,7 @@ profile-service should **never call identity-service in the hot path**. Two inte
 | Mirror status changes (suspend, reactivate) | **Consume** `account.status.changed.v1` Kafka event | Profile can disable capabilities when the account is suspended, restore on reactivation. |
 | Identifier presence check (does user have a verified email or phone for provider-enable?) | Current implementation calls `GET /api/v1/internal/accounts/{id}/provider-readiness`; later we can replace that read with replicated facts if the flow gets hot. | Keeps account standing + verified-identifier truth inside identity while preserving a small read-only internal contract. |
 | Consent registry (provider terms / business terms versions) | Identity remains the consent registry. profile-service reads `GET /api/v1/internal/consent-policy` and records accepted versions through `POST /api/v1/internal/accounts/{id}/consents`. | Single source of truth for legal documents and consent history. |
+| Trust badge projection | **Consume** `trust.score.updated.v1` from `trust-gamification-service` | Keeps trust ownership outside profile-service while making public/profile reads cheap. |
 
 `/internal/*` endpoints are shared-secret-protected today through `X-Internal-Token` and are not part of the public BFF surface. The config key is shared as `VIAVERSE_INTERNAL_API_TOKEN`; mTLS can replace the header without changing the domain ports.
 
@@ -36,7 +37,7 @@ or submitting business onboarding; versions are never hardcoded in the UI.
 | `marketplace-service` | Synchronous read of `GET /internal/profiles/{accountId}` to validate that a listing author has the `INDIVIDUAL_PROVIDER` or `BUSINESS` capability before accepting a service-side listing. |
 | `messaging-service` | `profile.blocked` events to refuse delivery between blocked pairs; sync `/internal/profiles/{accountId}/header-card` for chat thread headers (cached). |
 | `notification-service` | `profile.created`, `profile.business.approved` to send welcome / approval emails. |
-| `trust-gamification-service` | Reads profile state to compute trust score; emits trust events that profile-service may surface as a badge. |
+| `trust-gamification-service` | Consumes `profile.created.v1`, stores trust state, and emits `trust.score.updated.v1`; later it will also evaluate richer verification and reputation signals. |
 | `payment-service` | Reads provider capability state to know who can receive payouts; emits a `payment.provider.payout_ready.v1` event that profile-service uses to gate the "Hizmet veriyor" badge on whether the user can actually be paid. |
 | `admin-bff` | Approval queue for business onboarding; internal write endpoints under `/internal/admin/profiles/**`. |
 
@@ -56,11 +57,15 @@ Long-term, `GET /me` shrinks to an auth-state read-out (status, roles, has-2fa) 
 
 ## Migration of `display_name / first_name / last_name`
 
-Today these live on `identity_account`. Strategy:
+Current state after Phase 4:
 
-1. **Phase 1 (this slice)** — profile-service mirrors them from `account.created.v1`, writes its own copy. identity-service still owns the source row. Reads can come from either; we let profile-service be the writer going forward via a new identity-service event `account.display_changed.v1` that profile-service consumes if identity ever updates them.
-2. **Phase 2** — admin tool + UI both call profile-service for writes. identity-service's columns become read-only mirrors via an event subscription from profile-service.
-3. **Phase 3** — drop the columns from `identity_account`. `identity-service`'s `AccountView` shrinks to credential state only.
+1. profile-service is the authoritative writer for display fields after provisioning.
+2. identity-service consumes `profile.updated.v1` and keeps its own columns as a **read mirror** for the legacy `/me`
+   contract and first-load UX.
+3. The physical column drop from `identity_account` is intentionally deferred until:
+   - the mirror has proven stable under replay / out-of-order delivery,
+   - clients no longer rely on `/me` for display values,
+   - and the onboarding path has a deliberate replacement for the synchronous first-read guarantee identity gives today.
 
 No big-bang migration. Each phase ships independently.
 
@@ -77,5 +82,8 @@ Same patterns identity-service uses today:
 
 - Service port: `8111` (next free in the current `81xx` allocation; `8102` is already occupied by the existing marketplace-service scaffold).
 - Database: `viaverse_profile`.
-- Kafka topics: `viaverse.profile.events.v1` for outbound, subscribes to `viaverse.identity.account-events`.
+- Kafka topics:
+  - outbound `viaverse.profile.events.v1`
+  - inbound `viaverse.identity.account-events`
+  - inbound `viaverse.trust.score-events.v1`
 - Trace + log shipping: inherit from `packages/observability` and OTel config in `application.yml`, same as identity-service.

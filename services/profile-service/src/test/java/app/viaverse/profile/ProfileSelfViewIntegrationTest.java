@@ -3,6 +3,7 @@ package app.viaverse.profile;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import app.viaverse.contracts.identity.account.IdentityAccountEventTypes;
+import app.viaverse.contracts.trust.score.TrustEventTypes;
 import app.viaverse.profile.support.ProfileTestcontainers;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import java.net.URI;
@@ -69,6 +70,10 @@ class ProfileSelfViewIntegrationTest {
     private Consumer<Message<Map<String, Object>>> consumer;
 
     @Autowired
+    @Qualifier("trustScoreEventsConsumer")
+    private Consumer<Message<Map<String, Object>>> trustConsumer;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     private UUID accountId;
@@ -82,6 +87,7 @@ class ProfileSelfViewIntegrationTest {
         jdbcTemplate.execute("DELETE FROM business_profile");
         jdbcTemplate.execute("DELETE FROM individual_provider_profile");
         jdbcTemplate.execute("DELETE FROM profile_capability");
+        jdbcTemplate.execute("DELETE FROM profile_trust_snapshot");
         jdbcTemplate.execute("DELETE FROM profile");
         jdbcTemplate.execute("DELETE FROM outbox_event");
 
@@ -124,6 +130,18 @@ class ProfileSelfViewIntegrationTest {
         assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
+    @Test
+    void currentProfileSurfacesTrustSummaryWhenTrustScoreArrives() throws Exception {
+        trustConsumer.accept(trustScoreUpdatedMessage(UUID.randomUUID(), accountId, 240, "VERIFIED_HUMAN"));
+
+        Map<String, Object> currentBody = unwrap(get("/api/v1/me/profile", accessToken).body());
+        Map<String, Object> trust = (Map<String, Object>) currentBody.get("trust");
+
+        assertThat(trust).containsEntry("score", 240);
+        assertThat(trust).containsEntry("level", "VERIFIED_HUMAN");
+        assertThat(trust).containsEntry("badge", "VERIFIED_HUMAN");
+    }
+
     private Message<Map<String, Object>> accountCreatedMessage(UUID eventId, UUID currentAccountId) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("eventId", eventId.toString());
@@ -135,6 +153,25 @@ class ProfileSelfViewIntegrationTest {
         payload.put("lastName", "Lovelace");
         return MessageBuilder.withPayload(payload)
                 .setHeader("eventType", IdentityAccountEventTypes.ACCOUNT_CREATED_V1)
+                .build();
+    }
+
+    private Message<Map<String, Object>> trustScoreUpdatedMessage(
+            UUID eventId,
+            UUID currentAccountId,
+            int score,
+            String level
+    ) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("eventId", eventId.toString());
+        payload.put("occurredAt", Instant.parse("2026-05-18T09:00:00Z").toString());
+        payload.put("version", "v1");
+        payload.put("accountId", currentAccountId.toString());
+        payload.put("score", score);
+        payload.put("level", level);
+        payload.put("badge", level);
+        return MessageBuilder.withPayload(payload)
+                .setHeader("eventType", TrustEventTypes.TRUST_SCORE_UPDATED_V1)
                 .build();
     }
 

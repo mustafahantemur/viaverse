@@ -2,6 +2,7 @@ package app.viaverse.profile.profile.application.port.in;
 
 import app.viaverse.profile.profile.domain.enums.ProfileCapabilityEnum;
 import app.viaverse.profile.profile.domain.enums.BusinessSectorEnum;
+import app.viaverse.profile.profile.domain.enums.TrustBadgeEnum;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +20,8 @@ public interface GetPublicProfileUseCase {
             String headline,
             String bio,
             List<ProfileCapabilityEnum> capabilities,
-            BusinessPreview businessProfile
+            BusinessPreview businessProfile,
+            TrustBadgeEnum trustBadge
     ) {
     }
 

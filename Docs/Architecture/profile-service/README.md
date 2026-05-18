@@ -21,4 +21,5 @@ Cross-cutting (apply to every backend service, not just profile-service):
 | [Service communication](../service-communication.md) | Kafka vs gRPC vs REST — which transport for which call shape. |
 | [Trust, verification, and moderation](../trust-and-moderation.md) | Automation-first business approval, human verification, future content moderation. |
 
-Phase 0 through Phase 3 are now implemented on the active branch; Phase 4 is the next boundary.
+Phase 0 through the functional Phase 4 boundary are now implemented on the active branch. The only intentionally
+deferred part is the destructive identity-column drop after mirror burn-in.

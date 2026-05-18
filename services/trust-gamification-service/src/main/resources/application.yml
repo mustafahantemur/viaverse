@@ -4,6 +4,29 @@ server:
 spring:
   application:
     name: trust-gamification-service
+  cloud:
+    function:
+      definition: profileEventsConsumer
+    stream:
+      bindings:
+        profileEventsConsumer-in-0:
+          destination: viaverse.profile.events.v1
+          group: trust-gamification-service
+        trustScoreEvents-out-0:
+          destination: viaverse.trust.score-events.v1
+          producer:
+            useNativeEncoding: true
+      kafka:
+        binder:
+          brokers: ${TRUST_GAMIFICATION_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+          required-acks: all
+          producer-properties:
+            enable.idempotence: true
+            compression.type: lz4
+            linger.ms: 5
+            max.in.flight.requests.per.connection: 5
+            key.serializer: org.apache.kafka.common.serialization.StringSerializer
+            value.serializer: org.springframework.kafka.support.serializer.JsonSerializer
   datasource:
     url: ${TRUST_GAMIFICATION_SERVICE_DB_URL:jdbc:postgresql://localhost:5432/viaverse_trust_gamification}
     username: ${TRUST_GAMIFICATION_SERVICE_DB_USERNAME:viaverse}
@@ -40,6 +63,12 @@ logging:
         environment: ${VIAVERSE_ENV:local}
   level:
     app.viaverse: INFO
+
+viaverse:
+  outbox:
+    poll-interval-ms: ${VIAVERSE_TRUST_GAMIFICATION_OUTBOX_POLL_INTERVAL_MS:2000}
+    batch-size: ${VIAVERSE_TRUST_GAMIFICATION_OUTBOX_BATCH_SIZE:100}
+    max-attempts: ${VIAVERSE_TRUST_GAMIFICATION_OUTBOX_MAX_ATTEMPTS:8}
 
 ---
 spring:

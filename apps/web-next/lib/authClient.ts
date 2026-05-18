@@ -359,6 +359,12 @@ export type CurrentProfileView = {
     activeMode: ActiveMode;
     completenessScore: number;
     publicVisibility: PublicVisibility;
+    trust: {
+        score: number;
+        level: "NONE" | "BASIC" | "VERIFIED_HUMAN" | "ENHANCED";
+        badge: "NONE" | "BASIC" | "VERIFIED_HUMAN" | "ENHANCED";
+        updatedAt?: string;
+    };
     capabilities: CapabilityView[];
     individualProviderProfile?: IndividualProviderProfileView;
     businessProfile?: BusinessProfileView;

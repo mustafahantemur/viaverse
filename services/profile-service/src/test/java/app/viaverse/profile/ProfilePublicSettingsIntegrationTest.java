@@ -3,6 +3,7 @@ package app.viaverse.profile;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import app.viaverse.contracts.identity.account.IdentityAccountEventTypes;
+import app.viaverse.contracts.trust.score.TrustEventTypes;
 import app.viaverse.profile.support.ProfileTestcontainers;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import java.net.URI;
@@ -69,6 +70,10 @@ class ProfilePublicSettingsIntegrationTest {
     private Consumer<Message<Map<String, Object>>> consumer;
 
     @Autowired
+    @Qualifier("trustScoreEventsConsumer")
+    private Consumer<Message<Map<String, Object>>> trustConsumer;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     private UUID ownerId;
@@ -84,6 +89,7 @@ class ProfilePublicSettingsIntegrationTest {
         jdbcTemplate.execute("DELETE FROM business_profile");
         jdbcTemplate.execute("DELETE FROM individual_provider_profile");
         jdbcTemplate.execute("DELETE FROM profile_capability");
+        jdbcTemplate.execute("DELETE FROM profile_trust_snapshot");
         jdbcTemplate.execute("DELETE FROM profile");
         jdbcTemplate.execute("DELETE FROM outbox_event");
 
@@ -125,6 +131,7 @@ class ProfilePublicSettingsIntegrationTest {
         assertThat(blockedView).containsEntry("displayName", "Ada Lovelace");
         assertThat(blockedView.get("headline")).isNull();
         assertThat(blockedView.get("bio")).isNull();
+        assertThat(blockedView).containsEntry("trustBadge", "NONE");
     }
 
     @Test
@@ -160,6 +167,17 @@ class ProfilePublicSettingsIntegrationTest {
         )).isEqualTo(1);
     }
 
+    @Test
+    void publicProfileSurfacesTrustBadgeWhenViewerMaySeeBadges() throws Exception {
+        trustConsumer.accept(trustScoreUpdatedMessage(UUID.randomUUID(), ownerId, 240, "VERIFIED_HUMAN"));
+
+        Map<String, Object> anonymous = unwrap(get("/api/v1/profiles/" + ownerId, null).body());
+        Map<String, Object> authenticated = unwrap(get("/api/v1/profiles/" + ownerId, viewerToken).body());
+
+        assertThat(anonymous).containsEntry("trustBadge", "VERIFIED_HUMAN");
+        assertThat(authenticated).containsEntry("trustBadge", "VERIFIED_HUMAN");
+    }
+
     private Message<Map<String, Object>> accountCreatedMessage(UUID eventId, UUID accountId, String displayName) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("eventId", eventId.toString());
@@ -171,6 +189,25 @@ class ProfilePublicSettingsIntegrationTest {
         payload.put("lastName", displayName.split(" ")[1]);
         return MessageBuilder.withPayload(payload)
                 .setHeader("eventType", IdentityAccountEventTypes.ACCOUNT_CREATED_V1)
+                .build();
+    }
+
+    private Message<Map<String, Object>> trustScoreUpdatedMessage(
+            UUID eventId,
+            UUID accountId,
+            int score,
+            String level
+    ) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("eventId", eventId.toString());
+        payload.put("occurredAt", Instant.parse("2026-05-18T09:00:00Z").toString());
+        payload.put("version", "v1");
+        payload.put("accountId", accountId.toString());
+        payload.put("score", score);
+        payload.put("level", level);
+        payload.put("badge", level);
+        return MessageBuilder.withPayload(payload)
+                .setHeader("eventType", TrustEventTypes.TRUST_SCORE_UPDATED_V1)
                 .build();
     }
 

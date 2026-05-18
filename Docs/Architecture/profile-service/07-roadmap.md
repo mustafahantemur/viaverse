@@ -60,11 +60,21 @@ The active implementation branch has now advanced through:
 - Story 1.1 through Story 1.7
 - Story 2.1 through Story 2.4
 - Story 3.1 through Story 3.3
+- Story 4.1
+- Story 4.2
 - an extra cross-cutting extraction: `security-kernel`, because `profile-service` became the second JWT consumer earlier than originally expected
 - client follow-through for the shipped slice: web profile/business workspace, first admin business queue screen,
   and a real active-mode badge on mobile home
 
-Phase 4 (trust read-through + identity slimming) is the next dependency boundary.
+Phase 4 is now functionally in place:
+
+- `trust-gamification-service` bootstraps a baseline trust snapshot from `profile.created.v1`
+- `profile-service` consumes `trust.score.updated.v1` and surfaces trust on self/public reads
+- `identity-service` consumes `profile.updated.v1` and treats display fields as a read mirror
+
+Story 4.3 is deliberately held behind a migration gate rather than dropped in the same cutover:
+the duplicated identity columns should be physically removed only after the mirror has burned in and clients no
+longer depend on `/me` for display fields.
 
 ## Definition of done (every story)
 

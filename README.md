@@ -5,9 +5,10 @@ Viaverse is a greenfield platform implementation. The repository now contains:
 - a shared backend foundation,
 - local infrastructure and observability,
 - `identity-service`,
-- `profile-service` through the current Phase 3 boundary,
+- `profile-service` through the functional Phase 4 boundary,
+- the first real `trust-gamification-service` slice,
 - first web/admin/mobile client follow-through for that slice,
-- and technical shells for the next backend domains.
+- and technical shells for the remaining backend domains.
 
 ## Module overview
 

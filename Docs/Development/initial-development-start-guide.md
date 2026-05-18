@@ -43,6 +43,7 @@ Open separate terminals from the repository root and start these in order:
 ```powershell
 .\gradlew.bat :services:identity-service:bootRun
 .\gradlew.bat :services:profile-service:bootRun
+.\gradlew.bat :services:trust-gamification-service:bootRun
 .\gradlew.bat :services:web-bff:bootRun
 .\gradlew.bat :services:admin-bff:bootRun
 ```
@@ -64,6 +65,7 @@ This gives you the currently useful product slice:
 
 - `identity-service` on `8101`
 - `profile-service` on `8111`
+- `trust-gamification-service` on `8108`
 - `web-bff` on `8001`
 - `admin-bff` on `8110`
 - `web-next` on `3000`

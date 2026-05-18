@@ -2,6 +2,7 @@ package app.viaverse.profile.profile.infrastructure.adapter.in.web.dto.response;
 
 import app.viaverse.profile.profile.domain.enums.BusinessSectorEnum;
 import app.viaverse.profile.profile.domain.enums.ProfileCapabilityEnum;
+import app.viaverse.profile.profile.domain.enums.TrustBadgeEnum;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,7 +13,8 @@ public record PublicProfileResponse(
         String headline,
         String bio,
         List<ProfileCapabilityEnum> capabilities,
-        BusinessPreviewResponse businessProfile
+        BusinessPreviewResponse businessProfile,
+        TrustBadgeEnum trustBadge
 ) {
     public record BusinessPreviewResponse(
             String tradeName,

@@ -6,11 +6,14 @@ spring:
     name: profile-service
   cloud:
     function:
-      definition: identityAccountEventsConsumer
+      definition: identityAccountEventsConsumer;trustScoreEventsConsumer
     stream:
       bindings:
         identityAccountEventsConsumer-in-0:
           destination: viaverse.identity.account-events
+          group: profile-service
+        trustScoreEventsConsumer-in-0:
+          destination: viaverse.trust.score-events.v1
           group: profile-service
         profileEvents-out-0:
           destination: viaverse.profile.events.v1

@@ -27,6 +27,19 @@ public interface ProfileDtoMapper {
                 profile.getActiveMode(),
                 profile.getCompletenessScore(),
                 profile.getPublicVisibility(),
+                result.trustSnapshot()
+                        .map(snapshot -> new CurrentProfileResponse.TrustSummaryResponse(
+                                snapshot.getScore(),
+                                snapshot.getLevel(),
+                                snapshot.getBadge(),
+                                snapshot.getSourceOccurredAt()
+                        ))
+                        .orElse(new CurrentProfileResponse.TrustSummaryResponse(
+                                0,
+                                app.viaverse.profile.profile.domain.enums.TrustLevelEnum.NONE,
+                                app.viaverse.profile.profile.domain.enums.TrustBadgeEnum.NONE,
+                                null
+                        )),
                 result.capabilities().stream()
                         .map(capability -> new CurrentProfileResponse.CapabilityResponse(
                                 capability.getCapability(),

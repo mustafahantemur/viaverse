@@ -5,8 +5,13 @@ spring:
   application:
     name: identity-service
   cloud:
+    function:
+      definition: profileEventsConsumer
     stream:
       bindings:
+        profileEventsConsumer-in-0:
+          destination: viaverse.profile.events.v1
+          group: identity-service
         identityAccountEvents-out-0:
           destination: viaverse.identity.account-events
           producer:

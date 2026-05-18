@@ -5,9 +5,11 @@ import app.viaverse.profile.profile.application.port.out.BusinessProfileReposito
 import app.viaverse.profile.profile.application.port.out.ProfileBlockRepository;
 import app.viaverse.profile.profile.application.port.out.ProfileCapabilityRepository;
 import app.viaverse.profile.profile.application.port.out.ProfileRepository;
+import app.viaverse.profile.profile.application.port.out.ProfileTrustSnapshotRepository;
 import app.viaverse.profile.profile.domain.enums.BusinessVerificationStatusEnum;
 import app.viaverse.profile.profile.domain.enums.ProfileCapabilityEnum;
 import app.viaverse.profile.profile.domain.enums.PublicVisibilityEnum;
+import app.viaverse.profile.profile.domain.enums.TrustBadgeEnum;
 import app.viaverse.profile.profile.domain.model.BusinessProfile;
 import app.viaverse.profile.profile.domain.model.Profile;
 import app.viaverse.shared.kernel.error.NotFoundException;
@@ -21,17 +23,20 @@ public class GetPublicProfileUseCaseImpl implements GetPublicProfileUseCase {
     private final ProfileBlockRepository profileBlockRepository;
     private final ProfileCapabilityRepository profileCapabilityRepository;
     private final BusinessProfileRepository businessProfileRepository;
+    private final ProfileTrustSnapshotRepository profileTrustSnapshotRepository;
 
     public GetPublicProfileUseCaseImpl(
             ProfileRepository profileRepository,
             ProfileBlockRepository profileBlockRepository,
             ProfileCapabilityRepository profileCapabilityRepository,
-            BusinessProfileRepository businessProfileRepository
+            BusinessProfileRepository businessProfileRepository,
+            ProfileTrustSnapshotRepository profileTrustSnapshotRepository
     ) {
         this.profileRepository = profileRepository;
         this.profileBlockRepository = profileBlockRepository;
         this.profileCapabilityRepository = profileCapabilityRepository;
         this.businessProfileRepository = businessProfileRepository;
+        this.profileTrustSnapshotRepository = profileTrustSnapshotRepository;
     }
 
     @Override
@@ -72,6 +77,11 @@ public class GetPublicProfileUseCaseImpl implements GetPublicProfileUseCase {
                         businessProfile.getLogoMediaId(),
                         businessProfile.getOpeningHoursJson()
                 );
+        TrustBadgeEnum trustBadge = privateView
+                ? TrustBadgeEnum.NONE
+                : profileTrustSnapshotRepository.findByAccountId(profile.getAccountId())
+                        .map(snapshot -> snapshot.getBadge())
+                        .orElse(TrustBadgeEnum.NONE);
         return new Result(
                 profile.getAccountId(),
                 profile.getDisplayName(),
@@ -79,7 +89,8 @@ public class GetPublicProfileUseCaseImpl implements GetPublicProfileUseCase {
                 privateView || limitedAnonymousView ? null : profile.getHeadline(),
                 privateView || limitedAnonymousView ? null : profile.getBio(),
                 publicCapabilities,
-                businessPreview
+                businessPreview,
+                trustBadge
         );
     }
 }

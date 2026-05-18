@@ -73,6 +73,18 @@ Examples of keys: `notifications.email.marketing`, `notifications.push.jobs_near
 
 Consumed by messaging-service and search-service; profile-service is the source of truth.
 
+## `profile_trust_snapshot`
+
+Read model projected from `trust-gamification-service`.
+
+| Field | Notes |
+|---|---|
+| `account_id` | 1:1 with profile. |
+| `score` | Numeric trust score owned by trust-gamification-service. |
+| `trust_level` | `BASIC`, `VERIFIED_HUMAN`, `ENHANCED`. |
+| `badge` | Public badge currently surfaced by profile reads. |
+| `source_occurred_at` | Used to ignore stale out-of-order trust updates. |
+
 ## `profile_event_outbox`
 
 Standard outbox row, identical pattern to `identity-service` (see [shared-modules.md](../shared-modules.md) on extraction).
@@ -88,5 +100,12 @@ Standard outbox row, identical pattern to `identity-service` (see [shared-module
 | `profile.business.submitted.v1` | Business onboarding completed | admin-bff (approval queue) |
 | `profile.business.approved.v1` | Ops approves | notification-service, search-service |
 | `profile.blocked.v1` | New block | messaging-service, search-service |
+
+## Events consumed
+
+| Event | Producer | Why |
+|---|---|---|
+| `account.created.v1` | identity-service | Provision the base profile aggregate. |
+| `trust.score.updated.v1` | trust-gamification-service | Refresh the local trust snapshot used by self/public reads. |
 
 All payloads carry `eventId` (UUID), `occurredAt`, `version`, and the relevant aggregate id. Same envelope shape as `AccountCreatedV1KafkaEvent`.

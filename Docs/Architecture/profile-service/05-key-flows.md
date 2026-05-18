@@ -68,7 +68,7 @@ Output is computed each request from:
 - `profile` (display fields, headline, bio, avatar)
 - `profile_capability` (badges: "Hizmet veriyor", "İşletme")
 - `business_profile` (only if capability is APPROVED — otherwise hidden)
-- Aggregated trust signals (read-through to `trust-gamification-service` later; placeholder field in Phase 1)
+- `profile_trust_snapshot` (read-through projection from `trust-gamification-service`)
 
 Visibility rules:
 - `PUBLIC` — everything below the redaction line is visible to everyone.
@@ -92,3 +92,20 @@ Unblock: `DELETE /me/blocks/{blockedAccountId}` emits `profile.unblocked.v1`.
 ## 8. Preferences
 
 `GET /me/preferences`, `PUT /me/preferences/{key}`. No event emission — preferences are profile-internal. Client-side language/theme reads from this endpoint after login and falls back to the cookie/local choice for first paint.
+
+## 9. Trust bootstrap and read-through
+
+```
+profile-service emits       profile.created.v1
+            │
+            ▼
+trust-gamification-service creates baseline trust_state(BASIC, score=100)
+            │
+            └──── emits     trust.score.updated.v1
+                              │
+                              ▼
+profile-service upserts      profile_trust_snapshot
+```
+
+`GET /me/profile` returns the full trust summary for the owner; `GET /profiles/{accountId}` exposes only the public
+badge and still hides it for private/blocked views.

@@ -178,6 +178,17 @@ public final class Account {
     }
 
     /**
+     * Mirrors display fields owned by profile-service so legacy identity reads stay
+     * compatible while richer user-facing reads move to profile-service.
+     */
+    public void mirrorDisplayFields(String displayName, String firstName, String lastName, Instant now) {
+        this.displayName = Objects.requireNonNull(displayName, "displayName");
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.updatedAt = Objects.requireNonNull(now, "now");
+    }
+
+    /**
      * Transition the account into {@link AccountStatusEnum#SUSPENDED}.
      */
     public void suspend(Instant now) {

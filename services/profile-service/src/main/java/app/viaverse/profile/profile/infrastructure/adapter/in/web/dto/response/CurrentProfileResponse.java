@@ -7,6 +7,8 @@ import app.viaverse.profile.profile.domain.enums.ProviderVerificationLevelEnum;
 import app.viaverse.profile.profile.domain.enums.PublicVisibilityEnum;
 import app.viaverse.profile.profile.domain.enums.BusinessSectorEnum;
 import app.viaverse.profile.profile.domain.enums.BusinessVerificationStatusEnum;
+import app.viaverse.profile.profile.domain.enums.TrustBadgeEnum;
+import app.viaverse.profile.profile.domain.enums.TrustLevelEnum;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -24,10 +26,19 @@ public record CurrentProfileResponse(
         ActiveModeEnum activeMode,
         int completenessScore,
         PublicVisibilityEnum publicVisibility,
+        TrustSummaryResponse trust,
         List<CapabilityResponse> capabilities,
         IndividualProviderProfileResponse individualProviderProfile,
         BusinessProfileResponse businessProfile
 ) {
+    public record TrustSummaryResponse(
+            int score,
+            TrustLevelEnum level,
+            TrustBadgeEnum badge,
+            Instant updatedAt
+    ) {
+    }
+
     public record CapabilityResponse(
             ProfileCapabilityEnum capability,
             ProfileCapabilityStatusEnum status,
