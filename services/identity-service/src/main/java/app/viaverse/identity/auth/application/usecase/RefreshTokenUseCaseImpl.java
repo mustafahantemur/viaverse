@@ -6,7 +6,7 @@ import app.viaverse.identity.auth.application.service.AuthSessionIssuer;
 import app.viaverse.identity.auth.application.service.RefreshTokenRotationService;
 import app.viaverse.identity.auth.application.service.RefreshTokenRotationService.Rotation;
 import app.viaverse.identity.auth.domain.model.AuthSession;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import app.viaverse.identity.shared.audit.AuditEvent;
 import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import java.time.Clock;
@@ -51,3 +51,4 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
         );
     }
 }
+

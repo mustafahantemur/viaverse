@@ -6,11 +6,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "viaverse.bff")
 public class BffProperties {
     private String identityBaseUrl = "http://localhost:8101";
+    private String profileBaseUrl = "http://localhost:8111";
     private final RefreshCookie refreshCookie = new RefreshCookie();
     private final Cors cors = new Cors();
 
     public String getIdentityBaseUrl() { return identityBaseUrl; }
     public void setIdentityBaseUrl(String identityBaseUrl) { this.identityBaseUrl = identityBaseUrl; }
+    public String getProfileBaseUrl() { return profileBaseUrl; }
+    public void setProfileBaseUrl(String profileBaseUrl) { this.profileBaseUrl = profileBaseUrl; }
     public RefreshCookie getRefreshCookie() { return refreshCookie; }
     public Cors getCors() { return cors; }
 

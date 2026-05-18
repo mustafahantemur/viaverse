@@ -1,9 +1,10 @@
 package app.viaverse.identity.shared.error;
 
 import app.viaverse.shared.kernel.error.AppErrorCode;
+import app.viaverse.shared.kernel.error.RetryAfterAware;
 import org.springframework.http.HttpStatus;
 
-public class RateLimitExceededException extends IdentityException {
+public class RateLimitExceededException extends IdentityException implements RetryAfterAware {
     private final long retryAfterSeconds;
 
     public RateLimitExceededException(long retryAfterSeconds) {

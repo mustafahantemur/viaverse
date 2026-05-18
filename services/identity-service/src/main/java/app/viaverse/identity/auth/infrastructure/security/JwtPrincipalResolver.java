@@ -1,6 +1,7 @@
 package app.viaverse.identity.auth.infrastructure.security;
 
 import app.viaverse.identity.shared.error.IdentityErrors;
+import app.viaverse.security.identity.IdentityJwtClaims;
 import java.util.UUID;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;

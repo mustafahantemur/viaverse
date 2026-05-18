@@ -1,0 +1,136 @@
+server:
+  port: ${PROFILE_SERVICE_PORT:8111}
+
+spring:
+  application:
+    name: profile-service
+  cloud:
+    function:
+      definition: identityAccountEventsConsumer
+    stream:
+      bindings:
+        identityAccountEventsConsumer-in-0:
+          destination: viaverse.identity.account-events
+          group: profile-service
+        profileEvents-out-0:
+          destination: viaverse.profile.events.v1
+          producer:
+            useNativeEncoding: true
+      kafka:
+        binder:
+          brokers: ${PROFILE_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+          required-acks: all
+          producer-properties:
+            enable.idempotence: true
+            compression.type: lz4
+            linger.ms: 5
+            max.in.flight.requests.per.connection: 5
+            key.serializer: org.apache.kafka.common.serialization.StringSerializer
+            value.serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  datasource:
+    url: ${PROFILE_SERVICE_DB_URL:jdbc:postgresql://localhost:5432/viaverse_profile}
+    username: ${PROFILE_SERVICE_DB_USERNAME:viaverse}
+    password: ${PROFILE_SERVICE_DB_PASSWORD:viaverse}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  otlp:
+    metrics:
+      export:
+        url: ${OTEL_EXPORTER_OTLP_ENDPOINT_METRICS:http://localhost:4318/v1/metrics}
+  tracing:
+    sampling:
+      probability: ${OTEL_TRACES_SAMPLER_ARG:1.0}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+    logging:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:http://localhost:4318/v1/logs}
+
+logging:
+  structured:
+    format:
+      console: ecs
+    ecs:
+      service:
+        name: ${spring.application.name}
+        environment: ${VIAVERSE_ENV:local}
+  level:
+    app.viaverse: INFO
+
+viaverse:
+  http:
+    trusted-proxies: ${VIAVERSE_HTTP_TRUSTED_PROXIES:}
+    cors:
+      allowed-origins: ${VIAVERSE_HTTP_CORS_ALLOWED_ORIGINS:}
+  outbox:
+    poll-interval-ms: ${VIAVERSE_PROFILE_OUTBOX_POLL_INTERVAL_MS:2000}
+    batch-size: ${VIAVERSE_PROFILE_OUTBOX_BATCH_SIZE:100}
+    max-attempts: ${VIAVERSE_PROFILE_OUTBOX_MAX_ATTEMPTS:8}
+  profile:
+    defaults:
+      locale: ${VIAVERSE_PROFILE_DEFAULT_LOCALE:tr-TR}
+      timezone: ${VIAVERSE_PROFILE_DEFAULT_TIMEZONE:Europe/Istanbul}
+    identity:
+      base-url: ${IDENTITY_SERVICE_BASE_URL:http://localhost:8101}
+      internal-api-token: ${VIAVERSE_INTERNAL_API_TOKEN:local-dev-internal-token-change-me}
+    internal:
+      api-token: ${VIAVERSE_INTERNAL_API_TOKEN:local-dev-internal-token-change-me}
+    security:
+      jwt:
+        secret: ${IDENTITY_JWT_SECRET:}
+        previous-secrets: ${IDENTITY_JWT_PREVIOUS_SECRETS:}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+logging:
+  level:
+    app.viaverse: DEBUG
+viaverse:
+  http:
+    trusted-proxies: ${VIAVERSE_HTTP_TRUSTED_PROXIES:127.0.0.1,::1}
+
+---
+server:
+  port: 0
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: ${PROFILE_SERVICE_TEST_DB_URL:jdbc:postgresql://localhost:5432/viaverse_profile_test}
+viaverse:
+  profile:
+    security:
+      jwt:
+        secret: ${IDENTITY_JWT_SECRET:test-identity-jwt-secret-change-me}

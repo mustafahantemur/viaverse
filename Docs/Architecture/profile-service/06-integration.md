@@ -10,14 +10,14 @@ profile-service should **never call identity-service in the hot path**. Two inte
 |---|---|---|
 | Provision profile on signup | **Consume** `account.created.v1` Kafka event | Already emitted today; this is the trigger to insert the profile row. |
 | Mirror status changes (suspend, reactivate) | **Consume** `account.status.changed.v1` Kafka event | Profile can disable capabilities when the account is suspended, restore on reactivation. |
-| Identifier presence check (does user have a verified phone for provider-enable?) | **Replicate the relevant facts via events**, or call `identity-service`'s `GET /internal/accounts/{id}/identifiers` from a domain service. Prefer events. | We don't want a synchronous internal RPC every time a user enables provider mode. |
-| Consent registry (provider terms / business terms versions) | Identity remains the consent registry. profile-service **calls** identity's `GET /internal/consent-policy` once at boot (or on cache miss) and stamps versions on its capability rows. | Single source of truth for legal documents. |
+| Identifier presence check (does user have a verified email or phone for provider-enable?) | Current implementation calls `GET /api/v1/internal/accounts/{id}/provider-readiness`; later we can replace that read with replicated facts if the flow gets hot. | Keeps account standing + verified-identifier truth inside identity while preserving a small read-only internal contract. |
+| Consent registry (provider terms / business terms versions) | Identity remains the consent registry. profile-service reads `GET /api/v1/internal/consent-policy` and records accepted versions through `POST /api/v1/internal/accounts/{id}/consents`. | Single source of truth for legal documents and consent history. |
 
-`/internal/*` endpoints are mTLS- or shared-secret-protected, not part of the public BFF surface.
+`/internal/*` endpoints are shared-secret-protected today through `X-Internal-Token` and are not part of the public BFF surface. The config key is shared as `VIAVERSE_INTERNAL_API_TOKEN`; mTLS can replace the header without changing the domain ports.
 
 ## Talking to BFFs
 
-`web-bff` and (eventually) `mobile-bff` proxy `/api/profile/**` and `/api/me/profile`, `/api/me/preferences`, `/api/me/blocks`, `/api/me/capabilities/**`. Same pass-through pattern `web-bff` already uses for identity. No business logic in the BFF beyond:
+`web-bff` and (eventually) `mobile-bff` proxy `/api/profile/**`, `/api/me/profile`, `/api/me/preferences`, `/api/me/blocks`, `/api/me/capabilities/**`, `/api/me/individual-provider-profile`, `/api/me/business/**`, and `/api/me/active-mode`. Same pass-through pattern `web-bff` already uses for identity. No business logic in the BFF beyond:
 
 - Adding the `Authorization` header from the session
 - Translating the public `/api/profile` surface to internal `GET /profiles/{accountId}` calls
@@ -34,6 +34,14 @@ profile-service should **never call identity-service in the hot path**. Two inte
 | `trust-gamification-service` | Reads profile state to compute trust score; emits trust events that profile-service may surface as a badge. |
 | `payment-service` | Reads provider capability state to know who can receive payouts; emits a `payment.provider.payout_ready.v1` event that profile-service uses to gate the "Hizmet veriyor" badge on whether the user can actually be paid. |
 | `admin-bff` | Approval queue for business onboarding; internal write endpoints under `/internal/admin/profiles/**`. |
+
+`admin-bff` now fronts the first moderation slice through:
+
+- `GET /api/admin/business-profiles/submissions`
+- `POST /api/admin/business-profiles/{accountId}/approve`
+- `POST /api/admin/business-profiles/{accountId}/reject`
+
+Those routes only proxy profile-service internal endpoints; the approval transition itself stays in profile-service.
 
 ## Compatibility with the existing `/me` surface
 
@@ -62,7 +70,7 @@ Same patterns identity-service uses today:
 
 ## Service config and ports
 
-- Service port: `8102` (next free in the `81xx` range; matches the convention).
+- Service port: `8111` (next free in the current `81xx` allocation; `8102` is already occupied by the existing marketplace-service scaffold).
 - Database: `viaverse_profile`.
-- Kafka topics: `viaverse.profile.events.v1` for outbound, subscribes to `viaverse.identity.events.v1`.
+- Kafka topics: `viaverse.profile.events.v1` for outbound, subscribes to `viaverse.identity.account-events`.
 - Trace + log shipping: inherit from `packages/observability` and OTel config in `application.yml`, same as identity-service.

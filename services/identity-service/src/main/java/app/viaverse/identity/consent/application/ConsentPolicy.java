@@ -60,11 +60,21 @@ public class ConsentPolicy {
         );
     }
 
+    public RequiredConsentDocument providerTermsDocument() {
+        return capabilityTermsDocument(ConsentTypeEnum.PROVIDER_TERMS);
+    }
+
+    public RequiredConsentDocument businessTermsDocument() {
+        return capabilityTermsDocument(ConsentTypeEnum.BUSINESS_TERMS);
+    }
+
     public String currentVersion(ConsentTypeEnum type) {
         return switch (type) {
             case TERMS_OF_SERVICE -> properties.getConsent().getTermsOfServiceVersion();
             case PERSONAL_DATA_PROTECTION_LAW -> properties.getConsent().getPersonalDataProtectionLawVersion();
             case MARKETING_COMMUNICATION -> properties.getConsent().getMarketingVersion();
+            case PROVIDER_TERMS -> properties.getConsent().getProviderTermsVersion();
+            case BUSINESS_TERMS -> properties.getConsent().getBusinessTermsVersion();
         };
     }
 
@@ -73,6 +83,8 @@ public class ConsentPolicy {
             case TERMS_OF_SERVICE -> properties.getConsent().getTermsOfServiceUrl();
             case PERSONAL_DATA_PROTECTION_LAW -> properties.getConsent().getPersonalDataProtectionLawUrl();
             case MARKETING_COMMUNICATION -> properties.getConsent().getMarketingUrl();
+            case PROVIDER_TERMS -> properties.getConsent().getProviderTermsUrl();
+            case BUSINESS_TERMS -> properties.getConsent().getBusinessTermsUrl();
         };
     }
 
@@ -95,5 +107,14 @@ public class ConsentPolicy {
             }
             throw IdentityErrors.requiredConsentsMissing(new TreeMap<>(fieldErrors));
         }
+    }
+
+    private RequiredConsentDocument capabilityTermsDocument(ConsentTypeEnum type) {
+        return new RequiredConsentDocument(
+                type,
+                ConsentCategoryEnum.CAPABILITY_TERMS,
+                currentVersion(type),
+                currentUrl(type)
+        );
     }
 }

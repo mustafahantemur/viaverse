@@ -11,8 +11,8 @@ import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.Veri
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AuthResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.StartRegistrationResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.VerifyRegistrationEmailResponse;
-import app.viaverse.identity.shared.api.ApiResponse;
-import app.viaverse.identity.shared.security.ClientIpResolver;
+import app.viaverse.web.api.ApiResponse;
+import app.viaverse.web.security.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -165,3 +165,4 @@ public class RegistrationController {
         return accountDtoMapper.toView(account);
     }
 }
+

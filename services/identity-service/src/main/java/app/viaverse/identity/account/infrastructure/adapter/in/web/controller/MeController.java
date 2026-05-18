@@ -8,7 +8,7 @@ import app.viaverse.identity.account.infrastructure.adapter.in.web.mapper.Accoun
 import app.viaverse.identity.auth.application.port.in.ChangePasswordUseCase;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
-import app.viaverse.identity.shared.api.ApiResponse;
+import app.viaverse.web.api.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -64,3 +64,4 @@ public class MeController {
         return ApiResponse.ok(null);
     }
 }
+

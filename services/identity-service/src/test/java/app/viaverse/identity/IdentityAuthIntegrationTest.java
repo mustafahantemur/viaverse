@@ -75,6 +75,7 @@ class IdentityAuthIntegrationTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String TEST_PASSWORD = "Pa55word!Pass";
+    private static final String INTERNAL_TOKEN = "local-dev-internal-token-change-me";
 
     @DynamicPropertySource
     static void registerContainerProperties(DynamicPropertyRegistry registry) {
@@ -489,6 +490,37 @@ class IdentityAuthIntegrationTest {
         assertThat(response.getBody()).containsEntry("identityCode", "AUTH_REQUIRED_CONSENTS_MISSING");
     }
 
+    @Test
+    void internalProviderReadinessAndConsentStampingWork() {
+        String email = newEmail();
+        Map<String, Object> registration = registerWithPassword(email);
+        UUID accountId = UUID.fromString((String) ((Map<String, Object>) registration.get("account")).get("id"));
+
+        ResponseEntity<Map> readiness = getInternal(
+                "/api/v1/internal/accounts/" + accountId + "/provider-readiness"
+        );
+        ResponseEntity<Map> policy = getInternal("/api/v1/internal/consent-policy");
+        ResponseEntity<Map> accepted = postInternal(
+                "/api/v1/internal/accounts/" + accountId + "/consents",
+                Map.of("type", "PROVIDER_TERMS", "version", "v1", "source", "profile-service")
+        );
+
+        assertThat(readiness.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(readiness.getBody()).containsEntry("active", true);
+        assertThat(readiness.getBody()).containsEntry("hasVerifiedIdentifier", true);
+        assertThat(policy.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<Map<String, Object>> capabilityTerms =
+                (List<Map<String, Object>>) policy.getBody().get("capabilityTerms");
+        assertThat(capabilityTerms).extracting(document -> document.get("type"))
+                .contains("PROVIDER_TERMS");
+        assertThat(accepted.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM consent_record WHERE account_id = ? AND consent_type = 'PROVIDER_TERMS'",
+                Integer.class,
+                accountId
+        )).isEqualTo(1);
+    }
+
     // ---------- Config validation ----------
 
     @Test
@@ -654,6 +686,39 @@ class IdentityAuthIntegrationTest {
             }
             HttpResponse<String> response = HttpClient.newHttpClient().send(
                     builder.build(),
+                    HttpResponse.BodyHandlers.ofString()
+            );
+            return toResponseEntity(response);
+        } catch (Exception exception) {
+            throw new IllegalStateException(exception);
+        }
+    }
+
+    private ResponseEntity<Map> getInternal(String path) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+                    .header("X-Internal-Token", INTERNAL_TOKEN)
+                    .GET()
+                    .build();
+            HttpResponse<String> response = HttpClient.newHttpClient().send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+            return toResponseEntity(response);
+        } catch (Exception exception) {
+            throw new IllegalStateException(exception);
+        }
+    }
+
+    private ResponseEntity<Map> postInternal(String path, Object body) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+                    .header("Content-Type", "application/json")
+                    .header("X-Internal-Token", INTERNAL_TOKEN)
+                    .POST(HttpRequest.BodyPublishers.ofString(OBJECT_MAPPER.writeValueAsString(body)))
+                    .build();
+            HttpResponse<String> response = HttpClient.newHttpClient().send(
+                    request,
                     HttpResponse.BodyHandlers.ofString()
             );
             return toResponseEntity(response);

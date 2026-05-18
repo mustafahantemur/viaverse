@@ -2,7 +2,7 @@ package app.viaverse.identity.auth.application.usecase;
 
 import app.viaverse.identity.auth.application.port.in.IssueAdminInvitationUseCase;
 import app.viaverse.identity.auth.application.service.AdminInvitationService;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import java.time.Clock;
 import org.springframework.stereotype.Service;
 
@@ -27,3 +27,4 @@ public class IssueAdminInvitationUseCaseImpl implements IssueAdminInvitationUseC
         return new Result(issued.token(), issued.expiresAt());
     }
 }
+

@@ -2,5 +2,4 @@ plugins {
     id("viaverse.java-library")
 }
 
-description = "Empty Gradle module for future shared API contract artifacts."
-
+description = "Shared cross-service API and event contract artifacts."

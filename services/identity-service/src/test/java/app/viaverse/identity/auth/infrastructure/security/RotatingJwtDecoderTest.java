@@ -2,6 +2,8 @@ package app.viaverse.identity.auth.infrastructure.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import app.viaverse.security.identity.IdentityJwtClaims;
+import app.viaverse.security.identity.RotatingJwtDecoder;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;

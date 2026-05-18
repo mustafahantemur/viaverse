@@ -108,11 +108,10 @@ viaverse:
     trusted-proxies: ${VIAVERSE_HTTP_TRUSTED_PROXIES:}
     cors:
       allowed-origins: ${VIAVERSE_HTTP_CORS_ALLOWED_ORIGINS:}
-  identity:
-    outbox:
-      poll-interval-ms: ${VIAVERSE_IDENTITY_OUTBOX_POLL_INTERVAL_MS:2000}
-      batch-size: ${VIAVERSE_IDENTITY_OUTBOX_BATCH_SIZE:100}
-      max-attempts: ${VIAVERSE_IDENTITY_OUTBOX_MAX_ATTEMPTS:8}
+  outbox:
+    poll-interval-ms: ${VIAVERSE_IDENTITY_OUTBOX_POLL_INTERVAL_MS:2000}
+    batch-size: ${VIAVERSE_IDENTITY_OUTBOX_BATCH_SIZE:100}
+    max-attempts: ${VIAVERSE_IDENTITY_OUTBOX_MAX_ATTEMPTS:8}
   auth:
     jwt:
       secret: ${IDENTITY_JWT_SECRET:}
@@ -182,9 +181,15 @@ viaverse:
       terms-of-service-version: ${VIAVERSE_AUTH_CONSENT_TOS_VERSION:v1}
       personal-data-protection-law-version: ${VIAVERSE_AUTH_CONSENT_PDP_VERSION:v1}
       marketing-version: ${VIAVERSE_AUTH_CONSENT_MARKETING_VERSION:v1}
+      provider-terms-version: ${VIAVERSE_AUTH_CONSENT_PROVIDER_TERMS_VERSION:v1}
+      business-terms-version: ${VIAVERSE_AUTH_CONSENT_BUSINESS_TERMS_VERSION:v1}
       terms-of-service-url: ${VIAVERSE_AUTH_CONSENT_TOS_URL:https://viaverse.app/legal/terms}
       personal-data-protection-law-url: ${VIAVERSE_AUTH_CONSENT_PDP_URL:https://viaverse.app/legal/kvkk}
       marketing-url: ${VIAVERSE_AUTH_CONSENT_MARKETING_URL:https://viaverse.app/legal/marketing}
+      provider-terms-url: ${VIAVERSE_AUTH_CONSENT_PROVIDER_TERMS_URL:https://viaverse.app/legal/provider-terms}
+      business-terms-url: ${VIAVERSE_AUTH_CONSENT_BUSINESS_TERMS_URL:https://viaverse.app/legal/business-terms}
+    internal:
+      api-token: ${VIAVERSE_INTERNAL_API_TOKEN:local-dev-internal-token-change-me}
 
 ---
 spring:

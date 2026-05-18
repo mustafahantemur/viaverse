@@ -2,12 +2,13 @@ package app.viaverse.identity.config;
 
 import app.viaverse.identity.auth.infrastructure.security.AccountSecretCipher;
 import app.viaverse.identity.auth.infrastructure.security.JwtAccessTokenService;
-import app.viaverse.identity.auth.infrastructure.security.IdentityJwtValidator;
 import app.viaverse.identity.auth.infrastructure.security.TokenHasher;
-import app.viaverse.identity.auth.infrastructure.security.RotatingJwtDecoder;
+import app.viaverse.security.identity.IdentityJwtValidator;
+import app.viaverse.security.identity.RotatingJwtDecoder;
 import app.viaverse.identity.auth.domain.enums.EmailProviderEnum;
 import app.viaverse.identity.auth.domain.enums.SmsProviderEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
+import app.viaverse.web.http.HttpProperties;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;

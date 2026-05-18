@@ -8,7 +8,7 @@ import app.viaverse.identity.auth.application.port.out.SessionCachePort;
 import app.viaverse.identity.auth.domain.enums.SessionStatusEnum;
 import app.viaverse.identity.auth.domain.model.AuthSession;
 import app.viaverse.identity.shared.error.IdentityErrors;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import java.time.Clock;
 import java.time.Instant;
 import org.springframework.stereotype.Service;
@@ -59,3 +59,4 @@ public class GetCurrentAccountUseCaseImpl implements GetCurrentAccountUseCase {
                 .orElseThrow(IdentityErrors::accountNotActive);
     }
 }
+

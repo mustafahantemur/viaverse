@@ -66,4 +66,36 @@ public class ConsentRecordJpaEntity {
         this.source = source;
         this.createdAt = now;
     }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
+    }
+
+    public ConsentTypeEnum getConsentType() {
+        return consentType;
+    }
+
+    public ConsentCategoryEnum getConsentCategory() {
+        return consentCategory;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public boolean isAccepted() {
+        return accepted;
+    }
+
+    public Instant getRecordedAt() {
+        return recordedAt;
+    }
+
+    public String getSource() {
+        return source;
+    }
 }

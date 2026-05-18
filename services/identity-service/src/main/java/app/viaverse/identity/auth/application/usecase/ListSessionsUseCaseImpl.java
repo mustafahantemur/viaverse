@@ -3,7 +3,7 @@ package app.viaverse.identity.auth.application.usecase;
 import app.viaverse.identity.auth.application.port.in.ListSessionsUseCase;
 import app.viaverse.identity.auth.application.port.out.AuthSessionRepository;
 import app.viaverse.identity.auth.domain.model.AuthSession;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -22,3 +22,4 @@ public class ListSessionsUseCaseImpl implements ListSessionsUseCase {
         return sessionRepository.findActiveByAccountId(command.accountId());
     }
 }
+

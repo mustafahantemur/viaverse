@@ -10,7 +10,7 @@ import app.viaverse.identity.auth.domain.enums.LoginFlowPurposeEnum;
 import app.viaverse.identity.auth.domain.model.AuthLoginFlow;
 import app.viaverse.identity.auth.domain.value.NormalizedIdentifier;
 import app.viaverse.identity.config.AuthProperties;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import app.viaverse.identity.shared.normalization.IdentifierNormalizer;
 import java.time.Clock;
 import java.time.Instant;
@@ -102,3 +102,4 @@ public class StartAuthUseCaseImpl implements StartAuthUseCase {
         );
     }
 }
+

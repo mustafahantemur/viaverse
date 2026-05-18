@@ -7,7 +7,7 @@ import app.viaverse.identity.auth.application.service.AdminInvitationService;
 import app.viaverse.identity.auth.application.service.RegistrationCompletionService;
 import app.viaverse.identity.shared.audit.AuditEvent;
 import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import java.time.Clock;
 import java.util.Set;
 import org.springframework.stereotype.Service;
@@ -58,3 +58,4 @@ public class CompleteAdminRegistrationUseCaseImpl implements CompleteAdminRegist
         );
     }
 }
+

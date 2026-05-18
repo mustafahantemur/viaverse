@@ -3,7 +3,7 @@ package app.viaverse.identity.auth.application.usecase;
 import app.viaverse.identity.account.domain.AccountRoleEnum;
 import app.viaverse.identity.auth.application.port.in.CompleteRegistrationUseCase;
 import app.viaverse.identity.auth.application.service.RegistrationCompletionService;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import app.viaverse.identity.shared.audit.AuditEvent;
 import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import java.util.Set;
@@ -35,3 +35,4 @@ public class CompleteRegistrationUseCaseImpl implements CompleteRegistrationUseC
         );
     }
 }
+

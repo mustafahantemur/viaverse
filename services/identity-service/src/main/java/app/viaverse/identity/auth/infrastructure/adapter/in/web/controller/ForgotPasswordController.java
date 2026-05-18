@@ -8,8 +8,8 @@ import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.Forg
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.request.ForgotPasswordVerifyOtpRequest;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.ForgotPasswordStartResponse;
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.ForgotPasswordTokenResponse;
-import app.viaverse.identity.shared.api.ApiResponse;
-import app.viaverse.identity.shared.security.ClientIpResolver;
+import app.viaverse.web.api.ApiResponse;
+import app.viaverse.web.security.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -94,3 +94,4 @@ public class ForgotPasswordController {
         return ApiResponse.ok(null);
     }
 }
+

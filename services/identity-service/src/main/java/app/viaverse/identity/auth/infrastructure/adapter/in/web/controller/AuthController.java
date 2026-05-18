@@ -31,9 +31,9 @@ import app.viaverse.identity.auth.infrastructure.adapter.in.web.mapper.AuthDtoMa
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
 import app.viaverse.identity.consent.application.ConsentPolicy;
-import app.viaverse.identity.shared.api.ApiResponse;
+import app.viaverse.web.api.ApiResponse;
 import app.viaverse.identity.shared.error.IdentityErrors;
-import app.viaverse.identity.shared.security.ClientIpResolver;
+import app.viaverse.web.security.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -325,3 +325,4 @@ public class AuthController {
         return accountDtoMapper.toView(account);
     }
 }
+

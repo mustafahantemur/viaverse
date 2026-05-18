@@ -10,7 +10,7 @@ import app.viaverse.identity.auth.domain.enums.LoginFlowStatusEnum;
 import app.viaverse.identity.auth.domain.model.AuthLoginFlow;
 import app.viaverse.identity.auth.domain.model.OtpChallenge;
 import app.viaverse.identity.shared.error.IdentityErrors;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
@@ -72,3 +72,4 @@ public class VerifyPasswordResetOtpUseCaseImpl implements VerifyPasswordResetOtp
         return new Result(issued.registrationToken(), issued.expiresAt());
     }
 }
+

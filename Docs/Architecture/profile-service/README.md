@@ -1,6 +1,6 @@
-# profile-service — planning docs
+# profile-service — architecture docs
 
-Concise planning set for the next microservice. Read top-to-bottom on first pass; each file is < 1 screen.
+Concise architecture set for the profile-service rollout. Read top-to-bottom on first pass; each file is < 1 screen.
 
 | # | Doc | Question it answers |
 |---|---|---|
@@ -10,7 +10,7 @@ Concise planning set for the next microservice. Read top-to-bottom on first pass
 | 04 | [Data model](04-data-model.md) | Conceptual entities, persistence shape. |
 | 05 | [Key flows](05-key-flows.md) | Capability transitions, business onboarding, public profile. |
 | 06 | [Integration](06-integration.md) | How profile-service plugs into identity, BFF, future services. |
-| 07 | [Roadmap](07-roadmap.md) | Story breakdown to ship Phase 1. |
+| 07 | [Roadmap](07-roadmap.md) | Story breakdown and current implementation status. |
 
 Cross-cutting (apply to every backend service, not just profile-service):
 
@@ -20,4 +20,4 @@ Cross-cutting (apply to every backend service, not just profile-service):
 | [Engineering standards](../engineering-standards.md) | Layering rules, observability, testing — the bar profile-service must clear. |
 | [Service communication](../service-communication.md) | Kafka vs gRPC vs REST — which transport for which call shape. |
 
-No code lands until these are agreed on. The implementation branch will be a separate story spawned from this one.
+Phase 0 through Phase 3 are now implemented on the active branch; Phase 4 is the next boundary.

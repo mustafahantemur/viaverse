@@ -2,12 +2,13 @@ package app.viaverse.identity.shared.aspect;
 
 import app.viaverse.identity.shared.audit.AuditEvent;
 import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
-import app.viaverse.identity.shared.logging.LogParam;
+import app.viaverse.web.logging.LogParam;
 import app.viaverse.observability.audit.AuditAction;
 import app.viaverse.observability.audit.AuditActor;
 import app.viaverse.observability.audit.AuditContext;
 import app.viaverse.observability.audit.AuditLogger;
 import app.viaverse.observability.correlation.CorrelationIds;
+import app.viaverse.web.security.ClientContextMdc;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.time.Instant;
@@ -42,9 +43,6 @@ public final class AuditEventAspect {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditEventAspect.class);
     private static final String USER_ID_PARAM_KEY = "user.id";
-    public static final String MDC_CLIENT_IP = "client.ip";
-    public static final String MDC_CLIENT_USER_AGENT = "client.user_agent";
-
     private final AuditLogger auditLogger;
 
     public AuditEventAspect(AuditLogger auditLogger) {
@@ -77,8 +75,8 @@ public final class AuditEventAspect {
                         MDC.get(CorrelationIds.MDC_KEY),
                         MDC.get(CorrelationIds.REQUEST_MDC_KEY),
                         "identity",
-                        MDC.get(MDC_CLIENT_IP),
-                        MDC.get(MDC_CLIENT_USER_AGENT)
+                        MDC.get(ClientContextMdc.CLIENT_IP),
+                        MDC.get(ClientContextMdc.CLIENT_USER_AGENT)
                 ),
                 Map.of("event", event.name())
         ));
@@ -111,3 +109,4 @@ public final class AuditEventAspect {
         return null;
     }
 }
+

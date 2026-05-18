@@ -12,7 +12,7 @@ import app.viaverse.identity.auth.domain.policy.PasswordPolicy;
 import app.viaverse.identity.shared.audit.AuditEvent;
 import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
@@ -76,3 +76,4 @@ public class CompletePasswordResetUseCaseImpl implements CompletePasswordResetUs
         return new Result(account.getId());
     }
 }
+

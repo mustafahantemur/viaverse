@@ -52,6 +52,18 @@ Without P0.1, profile-service will copy outbox/audit/api-response code verbatim 
 
 Just **P0.1 + P0.2 + Story 1.1**. That's enough to merge a working `profile-service` skeleton without yet committing to any data model. The remaining stories land one at a time behind that scaffold.
 
+## Current implementation status
+
+The active implementation branch has now advanced through:
+
+- Phase 0 (`web-kernel`, `messaging-kernel`, engineering standards)
+- Story 1.1 through Story 1.7
+- Story 2.1 through Story 2.4
+- Story 3.1 through Story 3.3
+- an extra cross-cutting extraction: `security-kernel`, because `profile-service` became the second JWT consumer earlier than originally expected
+
+Phase 4 (trust read-through + identity slimming) is the next dependency boundary.
+
 ## Definition of done (every story)
 
 - Code follows [engineering-standards.md](../engineering-standards.md).

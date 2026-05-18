@@ -9,8 +9,8 @@ import app.viaverse.identity.auth.application.port.in.DisableTwoFactorUseCase;
 import app.viaverse.identity.auth.application.port.in.StartTwoFactorEnrollmentUseCase;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
-import app.viaverse.identity.shared.api.ApiResponse;
-import app.viaverse.identity.shared.security.ClientIpResolver;
+import app.viaverse.web.api.ApiResponse;
+import app.viaverse.web.security.ClientIpResolver;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -112,3 +112,4 @@ public class TwoFactorController {
         return ApiResponse.ok(null);
     }
 }
+

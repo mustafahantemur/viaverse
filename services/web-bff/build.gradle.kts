@@ -1,5 +1,5 @@
 plugins {
-    id("viaverse.java-spring-service")
+    id("viaverse.java-spring-bff")
 }
 
 description = "Backend-for-Frontend serving Viaverse public web and mobile clients."

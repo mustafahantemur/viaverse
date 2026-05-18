@@ -2,7 +2,7 @@ package app.viaverse.identity.auth.infrastructure.adapter.out.messaging;
 
 import app.viaverse.identity.auth.application.port.out.SessionEventPublisher;
 import app.viaverse.identity.auth.infrastructure.adapter.out.messaging.event.SessionRevokedV1KafkaEvent;
-import app.viaverse.identity.shared.messaging.outbox.OutboxEventWriter;
+import app.viaverse.messaging.outbox.OutboxEventWriter;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;

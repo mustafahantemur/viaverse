@@ -7,7 +7,7 @@ import app.viaverse.identity.auth.application.port.in.RevokeSessionUseCase;
 import app.viaverse.identity.auth.domain.model.AuthSession;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
-import app.viaverse.identity.shared.api.ApiResponse;
+import app.viaverse.web.api.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.List;
 import java.util.UUID;
@@ -64,3 +64,4 @@ public class SessionController {
         return ApiResponse.ok(null);
     }
 }
+

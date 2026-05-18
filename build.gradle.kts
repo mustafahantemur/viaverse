@@ -23,6 +23,7 @@ tasks.register("migrateLocal") {
 
     val serviceProjects = listOf(
         project(":services:identity-service"),
+        project(":services:profile-service"),
         project(":services:marketplace-service"),
         project(":services:payment-service"),
         project(":services:messaging-service"),
@@ -30,9 +31,7 @@ tasks.register("migrateLocal") {
         project(":services:notification-service"),
         project(":services:search-service"),
         project(":services:trust-gamification-service"),
-        project(":services:ads-monetization-service"),
-        project(":services:admin-bff"),
-        project(":services:web-bff")
+        project(":services:ads-monetization-service")
     )
 
     serviceProjects.forEach {

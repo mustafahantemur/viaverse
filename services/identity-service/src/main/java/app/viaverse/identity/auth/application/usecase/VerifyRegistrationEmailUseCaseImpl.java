@@ -19,7 +19,7 @@ import app.viaverse.identity.config.AuthProperties;
 import app.viaverse.identity.shared.audit.AuditEvent;
 import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
@@ -143,3 +143,4 @@ public class VerifyRegistrationEmailUseCaseImpl implements VerifyRegistrationEma
         );
     }
 }
+

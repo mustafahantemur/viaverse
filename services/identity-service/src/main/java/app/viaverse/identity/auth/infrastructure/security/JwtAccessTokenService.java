@@ -2,6 +2,7 @@ package app.viaverse.identity.auth.infrastructure.security;
 
 import app.viaverse.identity.shared.error.IdentityErrors;
 import app.viaverse.identity.account.domain.AccountRoleEnum;
+import app.viaverse.security.identity.IdentityJwtClaims;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;

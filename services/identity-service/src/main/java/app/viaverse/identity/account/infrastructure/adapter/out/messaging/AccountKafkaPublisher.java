@@ -2,9 +2,10 @@ package app.viaverse.identity.account.infrastructure.adapter.out.messaging;
 
 import app.viaverse.identity.account.application.port.out.AccountEventPublisher;
 import app.viaverse.identity.account.domain.AccountStatusEnum;
-import app.viaverse.identity.account.infrastructure.adapter.out.messaging.event.AccountCreatedV1KafkaEvent;
-import app.viaverse.identity.account.infrastructure.adapter.out.messaging.event.AccountStatusChangedV1KafkaEvent;
-import app.viaverse.identity.shared.messaging.outbox.OutboxEventWriter;
+import app.viaverse.contracts.identity.account.AccountCreatedV1KafkaEvent;
+import app.viaverse.contracts.identity.account.AccountStatusChangedV1KafkaEvent;
+import app.viaverse.contracts.identity.account.IdentityAccountEventTypes;
+import app.viaverse.messaging.outbox.OutboxEventWriter;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;
@@ -20,9 +21,6 @@ import org.springframework.stereotype.Component;
 public class AccountKafkaPublisher implements AccountEventPublisher {
 
     private static final String BINDING_NAME = "identityAccountEvents-out-0";
-    private static final String EVENT_TYPE_CREATED = "account.AccountCreated.v1";
-    private static final String EVENT_TYPE_STATUS_CHANGED = "account.AccountStatusChanged.v1";
-
     private final OutboxEventWriter outboxWriter;
     private final Clock clock;
 
@@ -32,14 +30,22 @@ public class AccountKafkaPublisher implements AccountEventPublisher {
     }
 
     @Override
-    public void publishCreated(UUID accountId, String displayName) {
+    public void publishCreated(UUID accountId, String displayName, String firstName, String lastName) {
         UUID eventId = UUID.randomUUID();
         outboxWriter.enqueue(
                 eventId,
-                EVENT_TYPE_CREATED,
+                IdentityAccountEventTypes.ACCOUNT_CREATED_V1,
                 BINDING_NAME,
                 accountId.toString(),
-                new AccountCreatedV1KafkaEvent(eventId, Instant.now(clock), "v1", accountId, displayName)
+                new AccountCreatedV1KafkaEvent(
+                        eventId,
+                        Instant.now(clock),
+                        "v1",
+                        accountId,
+                        displayName,
+                        firstName,
+                        lastName
+                )
         );
     }
 
@@ -48,10 +54,10 @@ public class AccountKafkaPublisher implements AccountEventPublisher {
         UUID eventId = UUID.randomUUID();
         outboxWriter.enqueue(
                 eventId,
-                EVENT_TYPE_STATUS_CHANGED,
+                IdentityAccountEventTypes.ACCOUNT_STATUS_CHANGED_V1,
                 BINDING_NAME,
                 accountId.toString(),
-                new AccountStatusChangedV1KafkaEvent(eventId, Instant.now(clock), "v1", accountId, newStatus)
+                new AccountStatusChangedV1KafkaEvent(eventId, Instant.now(clock), "v1", accountId, newStatus.name())
         );
     }
 }

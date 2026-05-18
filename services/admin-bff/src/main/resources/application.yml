@@ -4,17 +4,6 @@ server:
 spring:
   application:
     name: admin-bff
-  datasource:
-    url: ${ADMIN_BFF_DB_URL:jdbc:postgresql://localhost:5432/viaverse_admin_bff}
-    username: ${ADMIN_BFF_DB_USERNAME:viaverse}
-    password: ${ADMIN_BFF_DB_PASSWORD:viaverse}
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    open-in-view: false
 
 management:
   endpoints:
@@ -41,6 +30,11 @@ logging:
   level:
     app.viaverse: INFO
 
+viaverse:
+  admin-bff:
+    profile-base-url: ${PROFILE_SERVICE_BASE_URL:http://localhost:8111}
+    internal-api-token: ${VIAVERSE_INTERNAL_API_TOKEN:local-dev-internal-token-change-me}
+
 ---
 spring:
   config:
@@ -57,5 +51,3 @@ spring:
   config:
     activate:
       on-profile: test
-  datasource:
-    url: ${ADMIN_BFF_TEST_DB_URL:jdbc:postgresql://localhost:5432/viaverse_admin_bff_test}

@@ -12,7 +12,7 @@ import app.viaverse.identity.auth.domain.value.NormalizedIdentifier;
 import app.viaverse.identity.shared.audit.AuditEvent;
 import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import app.viaverse.identity.shared.normalization.IdentifierNormalizer;
 import java.time.Clock;
 import java.time.Instant;
@@ -104,3 +104,4 @@ public class PasswordLoginUseCaseImpl implements PasswordLoginUseCase {
         );
     }
 }
+

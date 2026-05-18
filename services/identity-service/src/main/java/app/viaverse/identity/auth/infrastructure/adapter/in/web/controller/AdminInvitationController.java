@@ -4,7 +4,7 @@ import app.viaverse.identity.auth.application.port.in.IssueAdminInvitationUseCas
 import app.viaverse.identity.auth.infrastructure.adapter.in.web.dto.response.AdminInvitationResponse;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipal;
 import app.viaverse.identity.auth.infrastructure.security.JwtPrincipalResolver;
-import app.viaverse.identity.shared.api.ApiResponse;
+import app.viaverse.web.api.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -37,3 +37,4 @@ public class AdminInvitationController {
         return ApiResponse.ok(new AdminInvitationResponse(result.invitationToken(), result.expiresAt()));
     }
 }
+

@@ -18,7 +18,7 @@ import app.viaverse.identity.config.AuthProperties;
 import app.viaverse.identity.shared.audit.AuditEvent;
 import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
@@ -128,3 +128,4 @@ public class StartTwoFactorEnrollmentUseCaseImpl implements StartTwoFactorEnroll
         return "***" + value.substring(value.length() - 4);
     }
 }
+

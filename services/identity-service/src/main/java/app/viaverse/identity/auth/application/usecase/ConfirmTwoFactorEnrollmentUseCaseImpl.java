@@ -17,7 +17,7 @@ import app.viaverse.identity.auth.infrastructure.security.TotpService;
 import app.viaverse.identity.shared.audit.AuditEvent;
 import app.viaverse.identity.shared.audit.IdentityAuditEventEnum;
 import app.viaverse.identity.shared.error.IdentityErrors;
-import app.viaverse.identity.shared.logging.ObservedAction;
+import app.viaverse.web.logging.ObservedAction;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -102,3 +102,4 @@ public class ConfirmTwoFactorEnrollmentUseCaseImpl implements ConfirmTwoFactorEn
         return new Result(backupCodes);
     }
 }
+

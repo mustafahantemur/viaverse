@@ -1,33 +1,15 @@
 import org.flywaydb.gradle.FlywayExtension
-import org.gradle.api.plugins.JavaPluginExtension
-import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.configure
-import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
-    id("java")
-    id("org.springframework.boot")
-    id("io.spring.dependency-management")
+    id("viaverse.java-spring-app")
     id("org.flywaydb.flyway")
-    id("viaverse.code-quality")
-}
-
-extensions.configure<JavaPluginExtension> {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(25))
-    }
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
-}
-
-tasks.withType<JavaCompile>().configureEach {
-    options.encoding = "UTF-8"
-    options.release.set(25)
 }
 
 val envPrefix = project.name.replace("-", "_").uppercase()
 val dbMapping = mapOf(
     "identity-service" to "viaverse_identity",
+    "profile-service" to "viaverse_profile",
     "marketplace-service" to "viaverse_marketplace",
     "payment-service" to "viaverse_payment",
     "messaging-service" to "viaverse_messaging",
@@ -35,9 +17,7 @@ val dbMapping = mapOf(
     "notification-service" to "viaverse_notification",
     "search-service" to "viaverse_search",
     "trust-gamification-service" to "viaverse_trust_gamification",
-    "ads-monetization-service" to "viaverse_ads_monetization",
-    "admin-bff" to "viaverse_admin_bff",
-    "web-bff" to "viaverse_web_bff"
+    "ads-monetization-service" to "viaverse_ads_monetization"
 )
 
 val defaultDbName = dbMapping[project.name]
@@ -48,17 +28,24 @@ val defaultDbUsername = "viaverse"
 val defaultDbPassword = "viaverse"
 
 dependencies {
-    add("implementation", project(":packages:observability"))
-    add("implementation", "org.springframework.boot:spring-boot-starter-web")
-    add("implementation", "org.springframework.boot:spring-boot-starter-actuator")
-    add("implementation", "org.springframework.boot:spring-boot-starter-validation")
+    add("implementation", platform("org.springframework.cloud:spring-cloud-dependencies:2025.1.1"))
+    add("implementation", project(":packages:web-kernel"))
+    add("implementation", project(":packages:messaging-kernel"))
+    add("implementation", project(":packages:security-kernel"))
     add("implementation", "org.springframework.boot:spring-boot-starter-data-jpa")
+    add("implementation", "org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     add("implementation", "org.flywaydb:flyway-core")
     add("implementation", "org.flywaydb:flyway-database-postgresql")
-    add("implementation", "io.micrometer:micrometer-core")
-    add("implementation", "io.micrometer:micrometer-registry-prometheus")
+    add("implementation", "org.springframework.cloud:spring-cloud-stream")
+    add("implementation", "org.springframework.cloud:spring-cloud-stream-binder-kafka")
+    add("implementation", "org.mapstruct:mapstruct:1.6.3")
+    add("annotationProcessor", "org.mapstruct:mapstruct-processor:1.6.3")
     add("runtimeOnly", "org.postgresql:postgresql")
-    add("testImplementation", "org.springframework.boot:spring-boot-starter-test")
+
+    add("testImplementation", "org.testcontainers:testcontainers:2.0.4")
+    add("testImplementation", "org.testcontainers:testcontainers-junit-jupiter:2.0.4")
+    add("testImplementation", "org.testcontainers:testcontainers-postgresql:2.0.4")
+    add("testImplementation", "org.testcontainers:testcontainers-kafka:2.0.4")
 }
 
 extensions.configure<FlywayExtension> {
@@ -66,32 +53,4 @@ extensions.configure<FlywayExtension> {
     user = providers.environmentVariable("${envPrefix}_DB_USERNAME").orElse(defaultDbUsername).get()
     password = providers.environmentVariable("${envPrefix}_DB_PASSWORD").orElse(defaultDbPassword).get()
     locations = arrayOf("classpath:db/migration")
-}
-
-tasks.named<BootRun>("bootRun") {
-    systemProperty(
-        "spring.profiles.active",
-        providers.gradleProperty("springProfiles").orElse("local").get()
-    )
-}
-
-tasks.register<BootRun>("bootRunDebug") {
-    group = "application"
-    description = "Runs this Spring Boot service with a debugger socket enabled."
-
-    val bootRun = tasks.named<BootRun>("bootRun")
-    classpath = bootRun.get().classpath
-    mainClass.set(bootRun.flatMap { it.mainClass })
-
-    systemProperty(
-        "spring.profiles.active",
-        providers.gradleProperty("springProfiles").orElse("local").get()
-    )
-
-    debugOptions {
-        enabled.set(true)
-        server.set(true)
-        suspend.set(true)
-        port.set(providers.gradleProperty("debugPort").map(String::toInt).orElse(5005))
-    }
 }

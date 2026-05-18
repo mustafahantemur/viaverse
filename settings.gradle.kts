@@ -25,6 +25,7 @@ rootProject.name = "viaverse"
 
 include(
     ":services:identity-service",
+    ":services:profile-service",
     ":services:marketplace-service",
     ":services:payment-service",
     ":services:messaging-service",
@@ -40,6 +41,9 @@ include(
     ":apps:web-next",
     ":apps:admin-next",
     ":packages:api-contracts",
+    ":packages:messaging-kernel",
+    ":packages:security-kernel",
+    ":packages:web-kernel",
     ":packages:shared-kernel",
     ":packages:observability",
 )

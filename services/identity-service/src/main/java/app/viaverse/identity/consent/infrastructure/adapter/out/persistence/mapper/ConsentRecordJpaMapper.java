@@ -13,4 +13,8 @@ public interface ConsentRecordJpaMapper {
     @Mapping(target = "consentCategory", expression = "java(ConsentCategoryEnum.valueOf(record.category()))")
     @Mapping(target = "now", source = "recordedAt")
     ConsentRecordJpaEntity toEntity(ConsentRecordRepository.Record record);
+
+    @Mapping(target = "type", source = "consentType")
+    @Mapping(target = "category", expression = "java(entity.getConsentCategory().name())")
+    ConsentRecordRepository.Record toRecord(ConsentRecordJpaEntity entity);
 }

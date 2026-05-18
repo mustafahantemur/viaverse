@@ -238,7 +238,12 @@ public class RegistrationCompletionService {
             flowRepository.save(flow);
         }
         AuthSessionIssuer.Issued issued = sessionIssuer.issue(account, userAgent, clientIp, now);
-        accountEventPublisher.publishCreated(account.getId(), account.getDisplayName());
+        accountEventPublisher.publishCreated(
+                account.getId(),
+                account.getDisplayName(),
+                account.getFirstName(),
+                account.getLastName()
+        );
         return new Completed(accountId, issued);
     }
 

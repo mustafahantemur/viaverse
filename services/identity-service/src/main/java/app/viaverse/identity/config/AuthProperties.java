@@ -20,6 +20,7 @@ public class AuthProperties {
     private final Debug debug = new Debug();
     private final RateLimit rateLimit = new RateLimit();
     private final Consent consent = new Consent();
+    private final Internal internal = new Internal();
 
     public Email getEmail() {
         return email;
@@ -69,6 +70,10 @@ public class AuthProperties {
         return consent;
     }
 
+    public Internal getInternal() {
+        return internal;
+    }
+
     /**
      * Required-consent document registry. The server owns versions — clients only
      * acknowledge by {@code type}; the current {@code version} is resolved here
@@ -80,9 +85,13 @@ public class AuthProperties {
         private String termsOfServiceVersion = "v1";
         private String personalDataProtectionLawVersion = "v1";
         private String marketingVersion = "v1";
+        private String providerTermsVersion = "v1";
+        private String businessTermsVersion = "v1";
         private String termsOfServiceUrl = "https://viaverse.app/legal/terms";
         private String personalDataProtectionLawUrl = "https://viaverse.app/legal/kvkk";
         private String marketingUrl = "https://viaverse.app/legal/marketing";
+        private String providerTermsUrl = "https://viaverse.app/legal/provider-terms";
+        private String businessTermsUrl = "https://viaverse.app/legal/business-terms";
 
         public String getTermsOfServiceVersion() {
             return termsOfServiceVersion;
@@ -108,6 +117,22 @@ public class AuthProperties {
             this.marketingVersion = marketingVersion;
         }
 
+        public String getProviderTermsVersion() {
+            return providerTermsVersion;
+        }
+
+        public void setProviderTermsVersion(String providerTermsVersion) {
+            this.providerTermsVersion = providerTermsVersion;
+        }
+
+        public String getBusinessTermsVersion() {
+            return businessTermsVersion;
+        }
+
+        public void setBusinessTermsVersion(String businessTermsVersion) {
+            this.businessTermsVersion = businessTermsVersion;
+        }
+
         public String getTermsOfServiceUrl() {
             return termsOfServiceUrl;
         }
@@ -130,6 +155,34 @@ public class AuthProperties {
 
         public void setMarketingUrl(String marketingUrl) {
             this.marketingUrl = marketingUrl;
+        }
+
+        public String getProviderTermsUrl() {
+            return providerTermsUrl;
+        }
+
+        public void setProviderTermsUrl(String providerTermsUrl) {
+            this.providerTermsUrl = providerTermsUrl;
+        }
+
+        public String getBusinessTermsUrl() {
+            return businessTermsUrl;
+        }
+
+        public void setBusinessTermsUrl(String businessTermsUrl) {
+            this.businessTermsUrl = businessTermsUrl;
+        }
+    }
+
+    public static class Internal {
+        private String apiToken = "local-dev-internal-token-change-me";
+
+        public String getApiToken() {
+            return apiToken;
+        }
+
+        public void setApiToken(String apiToken) {
+            this.apiToken = apiToken;
         }
     }
 
