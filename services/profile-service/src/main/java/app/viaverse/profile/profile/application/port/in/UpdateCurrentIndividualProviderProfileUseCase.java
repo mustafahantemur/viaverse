@@ -1,6 +1,8 @@
 package app.viaverse.profile.profile.application.port.in;
 
+import app.viaverse.contracts.marketplace.MarketplaceServiceCategory;
 import app.viaverse.profile.profile.domain.model.IndividualProviderProfile;
+import java.util.Set;
 import java.util.UUID;
 
 public interface UpdateCurrentIndividualProviderProfileUseCase {
@@ -11,7 +13,8 @@ public interface UpdateCurrentIndividualProviderProfileUseCase {
             UUID accountId,
             String serviceBlurb,
             String availabilitySummary,
-            boolean acceptsRemote
+            boolean acceptsRemote,
+            Set<MarketplaceServiceCategory> serviceCategories
     ) {
     }
 }

@@ -85,6 +85,8 @@ class ProfileCapabilitiesIntegrationTest {
         jdbcTemplate.execute("DELETE FROM consumed_event");
         jdbcTemplate.execute("DELETE FROM profile_block");
         jdbcTemplate.execute("DELETE FROM profile_preference");
+        jdbcTemplate.execute("DELETE FROM business_service_category");
+        jdbcTemplate.execute("DELETE FROM individual_provider_service_category");
         jdbcTemplate.execute("DELETE FROM business_profile");
         jdbcTemplate.execute("DELETE FROM individual_provider_profile");
         jdbcTemplate.execute("DELETE FROM profile_capability");
@@ -126,7 +128,8 @@ class ProfileCapabilitiesIntegrationTest {
                 Map.of(
                         "serviceBlurb", "Weekend errands and deliveries.",
                         "availabilitySummary", "Weekends only",
-                        "acceptsRemote", true
+                        "acceptsRemote", true,
+                        "serviceCategories", List.of("LOCAL_HELP", "LOGISTICS")
                 ),
                 accessToken
         );
@@ -135,6 +138,7 @@ class ProfileCapabilitiesIntegrationTest {
         assertThat(updatedProviderProfile.statusCode()).isEqualTo(HttpStatus.OK.value());
         assertThat(providerProfileBody).containsEntry("availabilitySummary", "Weekends only");
         assertThat(providerProfileBody).containsEntry("acceptsRemote", true);
+        assertThat(providerProfileBody.get("serviceCategories")).asList().containsExactlyInAnyOrder("LOCAL_HELP", "LOGISTICS");
 
         HttpResponse<String> switched = patch(
                 "/api/v1/me/active-mode",

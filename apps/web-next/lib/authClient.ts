@@ -325,6 +325,7 @@ export type IndividualProviderProfileView = {
     serviceBlurb?: string;
     availabilitySummary?: string;
     acceptsRemote: boolean;
+    serviceCategories: ServiceCategory[];
     providerTermsVersionAccepted?: string;
 };
 
@@ -341,6 +342,7 @@ export type BusinessProfileView = {
     emailPublic?: string;
     logoMediaId?: string;
     openingHoursJson?: string;
+    serviceCategories: ServiceCategory[];
     verificationStatus: BusinessVerificationStatus;
     businessTermsVersionAccepted?: string;
     rejectionReason?: string;
@@ -388,6 +390,7 @@ export type UpdateBusinessDraftPayload = {
     emailPublic?: string;
     logoMediaId?: string;
     openingHoursJson?: string;
+    serviceCategories?: ServiceCategory[];
 };
 
 export function currentProfile(): Promise<CurrentProfileView> {
@@ -409,6 +412,23 @@ export function enableIndividualProvider(
     return call("/api/me/capabilities/individual-provider/enable", {
         method: "POST",
         body: JSON.stringify({ acceptedProviderTermsVersion, serviceBlurb }),
+        authed: true,
+    });
+}
+
+export type UpdateIndividualProviderProfilePayload = {
+    serviceBlurb?: string;
+    availabilitySummary?: string;
+    acceptsRemote: boolean;
+    serviceCategories?: ServiceCategory[];
+};
+
+export function updateIndividualProviderProfile(
+    payload: UpdateIndividualProviderProfilePayload,
+): Promise<IndividualProviderProfileView> {
+    return call("/api/me/individual-provider-profile", {
+        method: "PATCH",
+        body: JSON.stringify(payload),
         authed: true,
     });
 }
@@ -443,6 +463,146 @@ export function submitBusinessOnboarding(
     return call("/api/me/capabilities/business/submit", {
         method: "POST",
         body: JSON.stringify({ acceptedBusinessTermsVersion }),
+        authed: true,
+    });
+}
+
+// ---- Marketplace ----
+
+export type ServiceCategory =
+    | "HOME_REPAIR"
+    | "DIGITAL_SOFTWARE"
+    | "CREATIVE_MEDIA"
+    | "EDUCATION"
+    | "CLEANING"
+    | "LOGISTICS"
+    | "CARE_HEALTH"
+    | "PROFESSIONAL_CONSULTING"
+    | "PETS"
+    | "EVENTS"
+    | "LOCAL_HELP";
+
+export type ServiceRequestStatus = "OPEN" | "MATCHED" | "CANCELLED" | "COMPLETED";
+export type OfferStatus = "SUBMITTED" | "ACCEPTED" | "REJECTED" | "WITHDRAWN";
+export type JobStatus = "AGREED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "DISPUTED";
+
+export type ServiceRequestView = {
+    id: string;
+    requesterAccountId: string;
+    title: string;
+    description: string;
+    category: ServiceCategory;
+    budgetMinAmountMinor?: number;
+    budgetMaxAmountMinor?: number;
+    currency: string;
+    remoteAllowed: boolean;
+    district?: string;
+    city?: string;
+    mediaAssetIds: string[];
+    status: ServiceRequestStatus;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type OfferView = {
+    id: string;
+    requestId: string;
+    providerAccountId: string;
+    amountMinor: number;
+    currency: string;
+    message?: string;
+    status: OfferStatus;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type JobView = {
+    id: string;
+    requestId: string;
+    acceptedOfferId: string;
+    requesterAccountId: string;
+    providerAccountId: string;
+    agreedAmountMinor: number;
+    currency: string;
+    status: JobStatus;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type CreateServiceRequestPayload = {
+    title: string;
+    description: string;
+    category: ServiceCategory;
+    budgetMinAmountMinor?: number;
+    budgetMaxAmountMinor?: number;
+    currency?: string;
+    remoteAllowed: boolean;
+    district?: string;
+    city?: string;
+    mediaAssetIds?: string[];
+};
+
+export function createServiceRequest(payload: CreateServiceRequestPayload): Promise<ServiceRequestView> {
+    return call("/api/requests", {
+        method: "POST",
+        body: JSON.stringify(payload),
+        authed: true,
+    });
+}
+
+export function openServiceRequests(): Promise<ServiceRequestView[]> {
+    return call("/api/requests/open", { method: "GET", authed: true });
+}
+
+export function workFeed(): Promise<ServiceRequestView[]> {
+    return call("/api/feed/work", { method: "GET", authed: true });
+}
+
+export function myServiceRequests(): Promise<ServiceRequestView[]> {
+    return call("/api/me/requests", { method: "GET", authed: true });
+}
+
+export function submitOffer(
+    requestId: string,
+    amountMinor: number,
+    currency: string,
+    message?: string,
+): Promise<OfferView> {
+    return call(`/api/requests/${requestId}/offers`, {
+        method: "POST",
+        body: JSON.stringify({ amountMinor, currency, message }),
+        authed: true,
+    });
+}
+
+export function listOffers(requestId: string): Promise<OfferView[]> {
+    return call(`/api/requests/${requestId}/offers`, { method: "GET", authed: true });
+}
+
+export function acceptOffer(requestId: string, offerId: string): Promise<JobView> {
+    return call(`/api/requests/${requestId}/offers/${offerId}/accept`, {
+        method: "POST",
+        body: JSON.stringify({}),
+        authed: true,
+    });
+}
+
+export function myJobs(): Promise<JobView[]> {
+    return call("/api/me/jobs", { method: "GET", authed: true });
+}
+
+export function startJob(jobId: string): Promise<JobView> {
+    return call(`/api/jobs/${jobId}/start`, {
+        method: "POST",
+        body: JSON.stringify({}),
+        authed: true,
+    });
+}
+
+export function completeJob(jobId: string): Promise<JobView> {
+    return call(`/api/jobs/${jobId}/complete`, {
+        method: "POST",
+        body: JSON.stringify({}),
         authed: true,
     });
 }

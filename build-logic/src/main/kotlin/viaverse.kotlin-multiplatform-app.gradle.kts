@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.compose.ComposeExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -19,10 +20,11 @@ extensions.configure<KotlinMultiplatformExtension> {
     jvm("desktop") {
         compilerOptions { jvmTarget.set(JvmTarget.JVM_21) }
     }
-    // AGP's new built-in target — replaces the legacy `androidTarget {}`
-    // and integrates with `com.android.kotlin.multiplatform.library`.
+    // AGP's Android-KMP plugin contributes its own Android target type.
+    // Configure that target directly here so this convention plugin does not
+    // depend on precompiled-script DSL accessors for the nested `android {}` block.
     @Suppress("UnstableApiUsage")
-    androidLibrary {
+    targets.withType(KotlinMultiplatformAndroidLibraryTarget::class.java).configureEach {
         namespace = "app.viaverse.mobile.shared"
         compileSdk = 36
         minSdk = 26
@@ -53,7 +55,7 @@ extensions.configure<KotlinMultiplatformExtension> {
             }
         }
 
-        // The new `androidLibrary` target exposes the source set as
+        // The new Android KMP target exposes the source set as
         // `androidMain` (same naming as androidTarget did).
         val androidMain by getting {
             dependencies {
@@ -69,4 +71,4 @@ extensions.configure<KotlinMultiplatformExtension> {
     }
 }
 
-// Android namespace / SDK live on the `androidLibrary` target above.
+// Android namespace / SDK live on the Android KMP target above.

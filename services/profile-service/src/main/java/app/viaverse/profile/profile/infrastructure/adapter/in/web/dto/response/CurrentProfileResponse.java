@@ -9,8 +9,10 @@ import app.viaverse.profile.profile.domain.enums.BusinessSectorEnum;
 import app.viaverse.profile.profile.domain.enums.BusinessVerificationStatusEnum;
 import app.viaverse.profile.profile.domain.enums.TrustBadgeEnum;
 import app.viaverse.profile.profile.domain.enums.TrustLevelEnum;
+import app.viaverse.contracts.marketplace.MarketplaceServiceCategory;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public record CurrentProfileResponse(
@@ -52,6 +54,7 @@ public record CurrentProfileResponse(
             String serviceBlurb,
             String availabilitySummary,
             boolean acceptsRemote,
+            Set<MarketplaceServiceCategory> serviceCategories,
             String providerTermsVersionAccepted
     ) {
     }
@@ -69,6 +72,7 @@ public record CurrentProfileResponse(
             String emailPublic,
             UUID logoMediaId,
             String openingHoursJson,
+            Set<MarketplaceServiceCategory> serviceCategories,
             BusinessVerificationStatusEnum verificationStatus,
             String businessTermsVersionAccepted,
             String rejectionReason

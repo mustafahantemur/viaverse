@@ -39,6 +39,7 @@ public class UpdateBusinessDraftUseCaseImpl implements UpdateBusinessDraftUseCas
                 command.emailPublic(),
                 command.logoMediaId(),
                 command.openingHoursJson(),
+                command.serviceCategories(),
                 clock.instant()
         ));
     }

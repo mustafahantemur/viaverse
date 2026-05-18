@@ -75,7 +75,8 @@ public class BusinessProfileController {
                         request.phone(),
                         request.emailPublic(),
                         request.logoMediaId(),
-                        request.openingHoursJson()
+                        request.openingHoursJson(),
+                        request.serviceCategories()
                 )
         )));
     }

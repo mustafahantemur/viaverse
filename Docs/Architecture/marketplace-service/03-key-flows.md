@@ -1,0 +1,59 @@
+# Key flows
+
+## 1. Create request
+
+1. Authenticated account submits title, description, category, optional budget, optional media ids.
+2. Marketplace validates the aggregate and persists `OPEN`.
+3. Outbox emits `marketplace.request.created.v1`.
+
+Any authenticated user may do this, including an approved business owner currently using customer mode.
+
+## 2. Submit offer
+
+1. Authenticated account chooses an open request.
+2. Marketplace asks `profile-service` whether the account can offer marketplace work.
+3. If the account has `INDIVIDUAL_PROVIDER` or approved `BUSINESS`, the offer is persisted as `SUBMITTED`.
+4. Outbox emits `marketplace.offer.submitted.v1`.
+
+The initial implementation uses the existing internal HTTP lane; once the first gRPC contract lands, this becomes the
+recommended synchronous profile capability read described in `service-communication.md`.
+
+## 3. Accept offer
+
+1. Only the original requester may accept.
+2. The chosen offer becomes `ACCEPTED`.
+3. Sibling submitted offers become `REJECTED`.
+4. The request becomes `MATCHED`.
+5. A job is created with frozen agreed terms and `AGREED` status.
+6. Outbox emits `marketplace.offer.accepted.v1` and `marketplace.job.created.v1`.
+
+## 4. Execute job
+
+1. Assigned provider starts the job → `IN_PROGRESS`.
+2. Requester confirms completion → `COMPLETED`.
+3. Outbox emits start/completion events.
+
+Payment, messaging, dispute, and review integrations attach to this graph in later slices; this first cut intentionally
+keeps the commercial lifecycle coherent before adding more services around it.
+
+## 5. Work feed
+
+The first cut now exposes both:
+
+- a raw `open requests` list for simple retrieval,
+- a first rule-based `work feed` filtered from profile-owned service categories.
+
+Target behaviour:
+
+- business accounts see requests matching the business service catalog / operating area,
+- individual providers see requests shaped by declared preferences first, then by behavioural ranking signals,
+- the ranking layer is separate from marketplace ownership so personalization can improve without corrupting the core
+  request/offer/job model.
+
+Current implementation boundary:
+
+- active `BUSINESS` mode + approved business capability → business service categories,
+- active `INDIVIDUAL_PROVIDER` mode → individual-provider service categories,
+- customer mode or missing categories → no provider opportunities yet.
+
+That is intentionally conservative: an empty catalog should not quietly degrade into “show every job.”

@@ -70,6 +70,9 @@ export function AppHeader({ me, onLogout }: Props) {
                         </button>
                         {open && (
                             <div role="menu" className={styles.menu}>
+                                <a role="menuitem" className={styles.menuItem} href="/app/marketplace">
+                                    {t.home.profileMenu.marketplace}
+                                </a>
                                 <a role="menuitem" className={styles.menuItem} href="/app/profile">
                                     {t.home.profileMenu.profile}
                                 </a>

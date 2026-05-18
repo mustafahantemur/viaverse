@@ -1,8 +1,10 @@
 package app.viaverse.profile.profile.infrastructure.adapter.in.web.dto.request;
 
+import app.viaverse.contracts.marketplace.MarketplaceServiceCategory;
 import app.viaverse.profile.profile.domain.enums.BusinessSectorEnum;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
+import java.util.Set;
 import java.util.UUID;
 
 public record UpdateBusinessDraftRequest(
@@ -17,6 +19,7 @@ public record UpdateBusinessDraftRequest(
         @Size(max = 64) String phone,
         @Email @Size(max = 320) String emailPublic,
         UUID logoMediaId,
-        @Size(max = 2000) String openingHoursJson
+        @Size(max = 2000) String openingHoursJson,
+        Set<MarketplaceServiceCategory> serviceCategories
 ) {
 }

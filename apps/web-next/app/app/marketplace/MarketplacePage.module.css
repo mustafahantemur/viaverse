@@ -1,0 +1,153 @@
+.page {
+  padding-bottom: 56px;
+}
+
+.loading {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  color: var(--vv-fg-muted);
+}
+
+.hero {
+  padding: 36px 0 24px;
+}
+
+.hero h1 {
+  margin: 8px 0;
+  font-size: clamp(28px, 4vw, 38px);
+  letter-spacing: var(--vv-tracking-tight);
+}
+
+.hero p {
+  margin: 0;
+  color: var(--vv-fg-muted);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.layout {
+  display: grid;
+  gap: 18px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.card,
+.requestCard,
+.jobCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--vv-border-muted);
+  border-radius: var(--vv-radius-lg);
+  background: var(--vv-surface);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.cardHeader h2,
+.requestCard h3,
+.jobCard h3 {
+  margin: 0;
+}
+
+.muted,
+.meta {
+  color: var(--vv-fg-muted);
+  font-size: 13px;
+}
+
+.formGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field span {
+  color: var(--vv-fg-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  border: 1px solid var(--vv-border-muted);
+  border-radius: var(--vv-radius-sm);
+  background: var(--vv-bg);
+  color: var(--vv-fg);
+  font: inherit;
+  padding: 11px 12px;
+}
+
+.field textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--vv-fg-muted);
+  font-size: 14px;
+}
+
+.stack {
+  display: grid;
+  gap: 12px;
+}
+
+.actions,
+.offerRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.offerList {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--vv-border-faint);
+}
+
+.offer {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--vv-radius-md);
+  background: var(--vv-bg);
+}
+
+.message {
+  margin: 0;
+  color: var(--vv-trust-deep);
+}
+
+.empty {
+  color: var(--vv-fg-muted);
+  margin: 0;
+}

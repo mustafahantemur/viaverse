@@ -1,7 +1,9 @@
 package app.viaverse.profile.profile.infrastructure.adapter.in.web.dto.response;
 
+import app.viaverse.contracts.marketplace.MarketplaceServiceCategory;
 import app.viaverse.profile.profile.domain.enums.BusinessSectorEnum;
 import app.viaverse.profile.profile.domain.enums.BusinessVerificationStatusEnum;
+import java.util.Set;
 import java.util.UUID;
 
 public record BusinessProfileResponse(
@@ -18,6 +20,7 @@ public record BusinessProfileResponse(
         String emailPublic,
         UUID logoMediaId,
         String openingHoursJson,
+        Set<MarketplaceServiceCategory> serviceCategories,
         BusinessVerificationStatusEnum verificationStatus,
         String businessTermsVersionAccepted,
         String rejectionReason

@@ -105,11 +105,28 @@ The product direction is documented, but the automation is not implemented yet:
 
 The current architecture direction is captured in `Docs/Architecture/trust-and-moderation.md`.
 
+### marketplace-service
+
+Implemented now:
+
+- request creation and customer request listing
+- offer submission and acceptance
+- accepted-offer → job lifecycle (`AGREED` → `IN_PROGRESS` → `COMPLETED`)
+- transactional outbox events for the lifecycle
+- first rule-based **work feed** using profile-owned service categories
+- `/app/marketplace` web flow for requests, relevant jobs, offers, and active jobs
+
+Important product distinction now reflected in code:
+
+- the marketplace work feed is **not** the local/social home feed,
+- approved businesses use their business service categories,
+- individual providers use their own declared service categories,
+- customer mode does not silently degrade into a generic provider-opportunity feed.
+
 ### Other services
 
 These services are still mostly technical shells:
 
-- marketplace-service
 - payment-service
 - messaging-service
 - media-service
@@ -125,7 +142,7 @@ Still missing or intentionally thin:
 
 - full mobile profile/business management screens
 - richer admin moderation tooling
-- real marketplace/feed/product flows around the new profile capability model
+- local/social feed product flow (`content-service` lane) and richer recommendation behaviour
 
 ## Local-development status after this pass
 
@@ -145,10 +162,17 @@ The local stack is materially healthier than before:
 
 ## Recommended next engineering step
 
-Do **not** jump straight into more business domains yet.
+The active lane is now **marketplace hardening + then content/media**.
 
-The next clean boundary is no longer more profile work. It is deciding the next product lane:
+The first marketplace vertical slice is live; the next meaningful work is to deepen it without mixing domains:
 
-1. marketplace / listings / offer lifecycle,
-2. richer trust automation (business auto-review, human verification, moderation contracts),
-3. or the search/payment spine those flows will depend on.
+1. keep marketplace focused on the commercial graph,
+2. keep events / announcements / organic business promotion in a future content domain,
+3. keep media bytes centralized in `media-service` over SeaweedFS and referenced by id elsewhere,
+4. evolve ranking from explicit categories to behaviour-aware recommendation later.
+
+See:
+
+- `Docs/Architecture/marketplace-service/`
+- `Docs/Architecture/content-and-media-boundaries.md`
+- `Docs/Architecture/feed-and-recommendation.md`

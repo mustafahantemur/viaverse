@@ -17,18 +17,33 @@ import {
     submitBusinessOnboarding,
     updateActiveMode,
     updateBusinessDraft,
+    updateIndividualProviderProfile,
     updateProfile,
     type ActiveMode,
     type BusinessSector,
     type CapabilityTerms,
     type CurrentProfileView,
     type MeView,
+    type ServiceCategory,
     type UpdateBusinessDraftPayload,
 } from "@/lib/authClient";
 import { useTranslation } from "@/lib/i18n/I18nProvider";
 import styles from "./ProfilePage.module.css";
 
 const SECTORS: BusinessSector[] = ["PHARMACY", "CLINIC", "AGENCY", "SHOP", "SOFTWARE", "OTHER"];
+const SERVICE_CATEGORIES: ServiceCategory[] = [
+    "HOME_REPAIR",
+    "DIGITAL_SOFTWARE",
+    "CREATIVE_MEDIA",
+    "EDUCATION",
+    "CLEANING",
+    "LOGISTICS",
+    "CARE_HEALTH",
+    "PROFESSIONAL_CONSULTING",
+    "PETS",
+    "EVENTS",
+    "LOCAL_HELP",
+];
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -134,6 +149,12 @@ export default function ProfilePage() {
                             onEnable={(version, serviceBlurb) =>
                                 run(async () => {
                                     setProfile(await enableIndividualProvider(version, serviceBlurb));
+                                })
+                            }
+                            onSave={(payload) =>
+                                run(async () => {
+                                    await updateIndividualProviderProfile(payload);
+                                    setProfile(await currentProfile());
                                 })
                             }
                         />
@@ -295,15 +316,29 @@ function ProviderCard({
     terms,
     busy,
     onEnable,
+    onSave,
 }: {
     profile: CurrentProfileView;
     terms?: CapabilityTerms["capabilityTerms"][number];
     busy: boolean;
     onEnable: (version: string, serviceBlurb: string) => Promise<void>;
+    onSave: (payload: {
+        serviceBlurb?: string;
+        availabilitySummary?: string;
+        acceptsRemote: boolean;
+        serviceCategories?: ServiceCategory[];
+    }) => Promise<void>;
 }) {
     const { t } = useTranslation();
     const provider = profile.capabilities.find((capability) => capability.capability === "INDIVIDUAL_PROVIDER");
     const [serviceBlurb, setServiceBlurb] = useState(profile.individualProviderProfile?.serviceBlurb ?? "");
+    const [availabilitySummary, setAvailabilitySummary] = useState(
+        profile.individualProviderProfile?.availabilitySummary ?? "",
+    );
+    const [acceptsRemote, setAcceptsRemote] = useState(profile.individualProviderProfile?.acceptsRemote ?? false);
+    const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>(
+        profile.individualProviderProfile?.serviceCategories ?? [],
+    );
     const [accepted, setAccepted] = useState(false);
 
     return (
@@ -313,7 +348,43 @@ function ProviderCard({
                 {provider && <span>{provider.status}</span>}
             </div>
             {provider?.status === "ENABLED" ? (
-                <p className={styles.muted}>{t.profile.providerEnabled}</p>
+                <>
+                    <p className={styles.muted}>{t.profile.providerEnabled}</p>
+                    <div className={styles.formGrid}>
+                        <Field label={t.profile.serviceBlurb} value={serviceBlurb} onChange={setServiceBlurb} />
+                        <Field
+                            label={t.profile.availabilitySummary}
+                            value={availabilitySummary}
+                            onChange={setAvailabilitySummary}
+                        />
+                        <CategoryPicker
+                            label={t.profile.serviceCategories}
+                            selected={serviceCategories}
+                            onChange={setServiceCategories}
+                        />
+                        <label className={styles.terms}>
+                            <input
+                                type="checkbox"
+                                checked={acceptsRemote}
+                                onChange={(event) => setAcceptsRemote(event.target.checked)}
+                            />
+                            <span>{t.profile.acceptsRemote}</span>
+                        </label>
+                    </div>
+                    <Button
+                        disabled={busy}
+                        onClick={() =>
+                            onSave({
+                                serviceBlurb,
+                                availabilitySummary,
+                                acceptsRemote,
+                                serviceCategories,
+                            })
+                        }
+                    >
+                        {t.common.save}
+                    </Button>
+                </>
             ) : (
                 <>
                     <Field
@@ -370,6 +441,7 @@ function BusinessCard({
         phone: business?.phone ?? "",
         emailPublic: business?.emailPublic ?? "",
         openingHoursJson: business?.openingHoursJson ?? "",
+        serviceCategories: business?.serviceCategories ?? [],
     }));
     const canEdit = !business || business.verificationStatus === "DRAFT" || business.verificationStatus === "REJECTED";
     const fields = useMemo(
@@ -431,6 +503,14 @@ function BusinessCard({
                                 ))}
                             </select>
                         </label>
+                        <CategoryPicker
+                            label={t.profile.serviceCategories}
+                            selected={draft.serviceCategories ?? []}
+                            onChange={(serviceCategories) =>
+                                setDraft((current) => ({ ...current, serviceCategories }))
+                            }
+                            disabled={!canEdit}
+                        />
                     </div>
                     {canEdit && (
                         <>
@@ -457,6 +537,52 @@ function BusinessCard({
                 </>
             )}
         </article>
+    );
+}
+
+function CategoryPicker({
+    label,
+    selected,
+    onChange,
+    disabled = false,
+}: {
+    label: string;
+    selected: ServiceCategory[];
+    onChange: (next: ServiceCategory[]) => void;
+    disabled?: boolean;
+}) {
+    const { t } = useTranslation();
+
+    function toggle(category: ServiceCategory) {
+        if (selected.includes(category)) {
+            onChange(selected.filter((item) => item !== category));
+            return;
+        }
+        onChange([...selected, category]);
+    }
+
+    return (
+        <div className={styles.field}>
+            <span>{label}</span>
+            <div className={styles.modeRow}>
+                {SERVICE_CATEGORIES.map((category) => (
+                    <button
+                        key={category}
+                        type="button"
+                        className={[
+                            styles.modeChip,
+                            selected.includes(category) && styles.modeChipActive,
+                        ]
+                            .filter(Boolean)
+                            .join(" ")}
+                        disabled={disabled}
+                        onClick={() => toggle(category)}
+                    >
+                        {t.marketplace.categoryNames[category]}
+                    </button>
+                ))}
+            </div>
+        </div>
     );
 }
 

@@ -37,6 +37,7 @@ viaverse:
     # HTTP calls; downstream paths and DTOs are owned by those services.
     identity-base-url: ${IDENTITY_SERVICE_BASE_URL:http://localhost:8101}
     profile-base-url: ${PROFILE_SERVICE_BASE_URL:http://localhost:8111}
+    marketplace-base-url: ${MARKETPLACE_SERVICE_BASE_URL:http://localhost:8102}
     # Cookie domain/secure/sameSite controlled here so the deploy can flip
     # to .viaverse.app / Secure / Strict without code changes.
     refresh-cookie:

@@ -54,6 +54,7 @@ public interface ProfileDtoMapper {
                                 providerProfile.getServiceBlurb(),
                                 providerProfile.getAvailabilitySummary(),
                                 providerProfile.isAcceptsRemote(),
+                                providerProfile.getServiceCategories(),
                                 providerProfile.getProviderTermsVersionAccepted()
                         ))
                         .orElse(null),
@@ -71,6 +72,7 @@ public interface ProfileDtoMapper {
                                 businessProfile.getEmailPublic(),
                                 businessProfile.getLogoMediaId(),
                                 businessProfile.getOpeningHoursJson(),
+                                businessProfile.getServiceCategories(),
                                 businessProfile.getVerificationStatus(),
                                 businessProfile.getBusinessTermsVersionAccepted(),
                                 businessProfile.getRejectionReason()

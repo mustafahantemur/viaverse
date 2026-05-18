@@ -1,10 +1,12 @@
 package app.viaverse.profile.profile.domain.model;
 
+import app.viaverse.contracts.marketplace.MarketplaceServiceCategory;
 import app.viaverse.profile.profile.domain.enums.BusinessSectorEnum;
 import app.viaverse.profile.profile.domain.enums.BusinessVerificationStatusEnum;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 public final class BusinessProfile {
@@ -22,6 +24,7 @@ public final class BusinessProfile {
     private final String emailPublic;
     private final UUID logoMediaId;
     private final String openingHoursJson;
+    private final Set<MarketplaceServiceCategory> serviceCategories;
     private final BusinessVerificationStatusEnum verificationStatus;
     private final String businessTermsVersionAccepted;
     private final String rejectionReason;
@@ -43,6 +46,7 @@ public final class BusinessProfile {
             String emailPublic,
             UUID logoMediaId,
             String openingHoursJson,
+            Set<MarketplaceServiceCategory> serviceCategories,
             BusinessVerificationStatusEnum verificationStatus,
             String businessTermsVersionAccepted,
             String rejectionReason,
@@ -63,6 +67,7 @@ public final class BusinessProfile {
         this.emailPublic = optionalText(emailPublic, "emailPublic", 320);
         this.logoMediaId = logoMediaId;
         this.openingHoursJson = optionalText(openingHoursJson, "openingHoursJson", 2000);
+        this.serviceCategories = Set.copyOf(serviceCategories == null ? Set.of() : serviceCategories);
         this.verificationStatus = Objects.requireNonNull(verificationStatus, "verificationStatus");
         this.businessTermsVersionAccepted = optionalText(
                 businessTermsVersionAccepted,
@@ -90,6 +95,7 @@ public final class BusinessProfile {
                 null,
                 null,
                 null,
+                Set.of(),
                 BusinessVerificationStatusEnum.DRAFT,
                 null,
                 null,
@@ -151,6 +157,10 @@ public final class BusinessProfile {
         return openingHoursJson;
     }
 
+    public Set<MarketplaceServiceCategory> getServiceCategories() {
+        return serviceCategories;
+    }
+
     public BusinessVerificationStatusEnum getVerificationStatus() {
         return verificationStatus;
     }
@@ -188,6 +198,7 @@ public final class BusinessProfile {
             String nextEmailPublic,
             UUID nextLogoMediaId,
             String nextOpeningHoursJson,
+            Set<MarketplaceServiceCategory> nextServiceCategories,
             Instant now
     ) {
         if (verificationStatus == BusinessVerificationStatusEnum.APPROVED) {
@@ -207,6 +218,7 @@ public final class BusinessProfile {
                 nextEmailPublic,
                 nextLogoMediaId,
                 nextOpeningHoursJson,
+                nextServiceCategories,
                 BusinessVerificationStatusEnum.DRAFT,
                 businessTermsVersionAccepted,
                 null,
@@ -232,6 +244,7 @@ public final class BusinessProfile {
                 emailPublic,
                 logoMediaId,
                 openingHoursJson,
+                serviceCategories,
                 BusinessVerificationStatusEnum.SUBMITTED,
                 requireText(acceptedBusinessTermsVersion, "acceptedBusinessTermsVersion", 64),
                 null,
@@ -273,6 +286,9 @@ public final class BusinessProfile {
         requirePresent(errors, "country", country);
         requirePresent(errors, "phone", phone);
         requirePresent(errors, "emailPublic", emailPublic);
+        if (serviceCategories.isEmpty()) {
+            errors.put("serviceCategories", "must not be empty");
+        }
         return Map.copyOf(errors);
     }
 
@@ -302,6 +318,7 @@ public final class BusinessProfile {
                 emailPublic,
                 logoMediaId,
                 openingHoursJson,
+                serviceCategories,
                 nextStatus,
                 businessTermsVersionAccepted,
                 nextRejectionReason,

@@ -49,7 +49,8 @@ public class IndividualProviderProfileController {
                         accountId(jwt),
                         request.serviceBlurb(),
                         request.availabilitySummary(),
-                        request.acceptsRemote()
+                        request.acceptsRemote(),
+                        request.serviceCategories()
                 )
         )));
     }

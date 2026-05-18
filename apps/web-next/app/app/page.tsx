@@ -89,15 +89,8 @@ export default function AppHomePage() {
                         isFreshSignup={isFreshSignup}
                     />
                     <QuickActions
-                        // Wired-up handlers land per-feature; for now the
-                        // primary CTA at least gives haptic feedback by
-                        // scrolling to the empty feed. Provider/settings
-                        // are visible but inert until their flows ship.
-                        onPostRequest={() => {
-                            document.getElementById("empty-feed")?.scrollIntoView({
-                                behavior: "smooth",
-                            });
-                        }}
+                        onPostRequest={() => router.push("/app/marketplace#create")}
+                        onBrowseJobs={() => router.push("/app/marketplace#open")}
                         onBecomeProvider={() => router.push("/app/profile#provider")}
                         onOpenSettings={() => router.push("/app/profile#settings")}
                     />

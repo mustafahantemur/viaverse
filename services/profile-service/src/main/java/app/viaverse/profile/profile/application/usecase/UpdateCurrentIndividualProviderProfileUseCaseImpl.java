@@ -34,6 +34,7 @@ public class UpdateCurrentIndividualProviderProfileUseCaseImpl
                 command.serviceBlurb(),
                 command.availabilitySummary(),
                 command.acceptsRemote(),
+                command.serviceCategories(),
                 clock.instant()
         ));
     }

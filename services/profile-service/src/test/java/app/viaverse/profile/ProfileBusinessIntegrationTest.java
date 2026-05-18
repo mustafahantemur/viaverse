@@ -86,6 +86,8 @@ class ProfileBusinessIntegrationTest {
         jdbcTemplate.execute("DELETE FROM consumed_event");
         jdbcTemplate.execute("DELETE FROM profile_block");
         jdbcTemplate.execute("DELETE FROM profile_preference");
+        jdbcTemplate.execute("DELETE FROM business_service_category");
+        jdbcTemplate.execute("DELETE FROM individual_provider_service_category");
         jdbcTemplate.execute("DELETE FROM business_profile");
         jdbcTemplate.execute("DELETE FROM individual_provider_profile");
         jdbcTemplate.execute("DELETE FROM profile_capability");
@@ -176,7 +178,8 @@ class ProfileBusinessIntegrationTest {
                 Map.entry("country", "TR"),
                 Map.entry("phone", "+905551112233"),
                 Map.entry("emailPublic", "hello@adapharmacy.example"),
-                Map.entry("openingHoursJson", "{\"mon\":\"09:00-18:00\"}")
+                Map.entry("openingHoursJson", "{\"mon\":\"09:00-18:00\"}"),
+                Map.entry("serviceCategories", List.of("CARE_HEALTH"))
         );
     }
 

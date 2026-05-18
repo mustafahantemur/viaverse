@@ -2,5 +2,12 @@ plugins {
     id("viaverse.java-spring-service")
 }
 
-description = "Empty Gradle module for the future Viaverse marketplace service."
+description = "Marketplace service owning requests, offers, and jobs."
 
+springBoot {
+    mainClass.set("app.viaverse.marketplace.MarketplaceServiceApplication")
+}
+
+dependencies {
+    implementation(project(":packages:api-contracts"))
+}

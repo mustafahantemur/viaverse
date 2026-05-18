@@ -1,7 +1,9 @@
 package app.viaverse.profile.profile.domain.model;
 
+import app.viaverse.contracts.marketplace.MarketplaceServiceCategory;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 public final class IndividualProviderProfile {
@@ -10,6 +12,7 @@ public final class IndividualProviderProfile {
     private final String serviceBlurb;
     private final String availabilitySummary;
     private final boolean acceptsRemote;
+    private final Set<MarketplaceServiceCategory> serviceCategories;
     private final String providerTermsVersionAccepted;
     private final Instant createdAt;
     private final Instant updatedAt;
@@ -20,6 +23,7 @@ public final class IndividualProviderProfile {
             String serviceBlurb,
             String availabilitySummary,
             boolean acceptsRemote,
+            Set<MarketplaceServiceCategory> serviceCategories,
             String providerTermsVersionAccepted,
             Instant createdAt,
             Instant updatedAt,
@@ -29,6 +33,7 @@ public final class IndividualProviderProfile {
         this.serviceBlurb = optionalText(serviceBlurb, "serviceBlurb", 200);
         this.availabilitySummary = optionalText(availabilitySummary, "availabilitySummary", 160);
         this.acceptsRemote = acceptsRemote;
+        this.serviceCategories = Set.copyOf(serviceCategories == null ? Set.of() : serviceCategories);
         this.providerTermsVersionAccepted = requireText(
                 providerTermsVersionAccepted,
                 "providerTermsVersionAccepted",
@@ -50,6 +55,7 @@ public final class IndividualProviderProfile {
                 serviceBlurb,
                 null,
                 false,
+                Set.of(),
                 providerTermsVersionAccepted,
                 now,
                 now,
@@ -73,6 +79,10 @@ public final class IndividualProviderProfile {
         return acceptsRemote;
     }
 
+    public Set<MarketplaceServiceCategory> getServiceCategories() {
+        return serviceCategories;
+    }
+
     public String getProviderTermsVersionAccepted() {
         return providerTermsVersionAccepted;
     }
@@ -93,6 +103,7 @@ public final class IndividualProviderProfile {
             String nextServiceBlurb,
             String nextAvailabilitySummary,
             boolean nextAcceptsRemote,
+            Set<MarketplaceServiceCategory> nextServiceCategories,
             Instant now
     ) {
         return new IndividualProviderProfile(
@@ -100,6 +111,7 @@ public final class IndividualProviderProfile {
                 nextServiceBlurb,
                 nextAvailabilitySummary,
                 nextAcceptsRemote,
+                nextServiceCategories,
                 providerTermsVersionAccepted,
                 createdAt,
                 Objects.requireNonNull(now, "now"),
@@ -113,6 +125,7 @@ public final class IndividualProviderProfile {
                 serviceBlurb,
                 availabilitySummary,
                 acceptsRemote,
+                serviceCategories,
                 version,
                 createdAt,
                 Objects.requireNonNull(now, "now"),

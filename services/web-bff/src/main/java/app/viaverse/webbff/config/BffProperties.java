@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class BffProperties {
     private String identityBaseUrl = "http://localhost:8101";
     private String profileBaseUrl = "http://localhost:8111";
+    private String marketplaceBaseUrl = "http://localhost:8102";
     private final RefreshCookie refreshCookie = new RefreshCookie();
     private final Cors cors = new Cors();
 
@@ -14,6 +15,8 @@ public class BffProperties {
     public void setIdentityBaseUrl(String identityBaseUrl) { this.identityBaseUrl = identityBaseUrl; }
     public String getProfileBaseUrl() { return profileBaseUrl; }
     public void setProfileBaseUrl(String profileBaseUrl) { this.profileBaseUrl = profileBaseUrl; }
+    public String getMarketplaceBaseUrl() { return marketplaceBaseUrl; }
+    public void setMarketplaceBaseUrl(String marketplaceBaseUrl) { this.marketplaceBaseUrl = marketplaceBaseUrl; }
     public RefreshCookie getRefreshCookie() { return refreshCookie; }
     public Cors getCors() { return cors; }
 

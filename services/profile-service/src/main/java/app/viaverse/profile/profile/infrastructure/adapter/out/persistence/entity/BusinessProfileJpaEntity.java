@@ -1,15 +1,22 @@
 package app.viaverse.profile.profile.infrastructure.adapter.out.persistence.entity;
 
+import app.viaverse.contracts.marketplace.MarketplaceServiceCategory;
 import app.viaverse.profile.profile.domain.enums.BusinessSectorEnum;
 import app.viaverse.profile.profile.domain.enums.BusinessVerificationStatusEnum;
 import app.viaverse.web.persistence.BaseJpaEntity;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -57,6 +64,15 @@ public class BusinessProfileJpaEntity extends BaseJpaEntity {
     @Column(name = "opening_hours_json", length = 2000)
     private String openingHoursJson;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "business_service_category",
+            joinColumns = @JoinColumn(name = "account_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", nullable = false, length = 64)
+    private Set<MarketplaceServiceCategory> serviceCategories = new LinkedHashSet<>();
+
     @Enumerated(EnumType.STRING)
     @Column(name = "verification_status", nullable = false, length = 32)
     private BusinessVerificationStatusEnum verificationStatus;
@@ -84,6 +100,7 @@ public class BusinessProfileJpaEntity extends BaseJpaEntity {
             String emailPublic,
             UUID logoMediaId,
             String openingHoursJson,
+            Set<MarketplaceServiceCategory> serviceCategories,
             BusinessVerificationStatusEnum verificationStatus,
             String businessTermsVersionAccepted,
             String rejectionReason,
@@ -105,6 +122,7 @@ public class BusinessProfileJpaEntity extends BaseJpaEntity {
         this.emailPublic = emailPublic;
         this.logoMediaId = logoMediaId;
         this.openingHoursJson = openingHoursJson;
+        this.serviceCategories = new LinkedHashSet<>(serviceCategories == null ? Set.of() : serviceCategories);
         this.verificationStatus = verificationStatus;
         this.businessTermsVersionAccepted = businessTermsVersionAccepted;
         this.rejectionReason = rejectionReason;
@@ -123,6 +141,7 @@ public class BusinessProfileJpaEntity extends BaseJpaEntity {
     public String getEmailPublic() { return emailPublic; }
     public UUID getLogoMediaId() { return logoMediaId; }
     public String getOpeningHoursJson() { return openingHoursJson; }
+    public Set<MarketplaceServiceCategory> getServiceCategories() { return serviceCategories; }
     public BusinessVerificationStatusEnum getVerificationStatus() { return verificationStatus; }
     public String getBusinessTermsVersionAccepted() { return businessTermsVersionAccepted; }
     public String getRejectionReason() { return rejectionReason; }
