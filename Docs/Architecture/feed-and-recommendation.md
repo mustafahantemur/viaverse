@@ -99,12 +99,18 @@ Ads should be personalized through the **same contextual understanding**, but ke
 - Final feed assembly can interleave sponsored items after safety checks and eligibility checks.
 - Users should still have transparency controls such as “neden bu reklamı görüyorum?” and preference management.
 
-## First implementation consequence
+## Current first implementation
 
-The marketplace implementation now exposes two different reads on purpose:
+The codebase now exposes two different reads on purpose:
 
 - `/requests/open` remains the raw bootstrap retrieval,
 - `/feed/work` is the first rule-based work feed, shaped by the active mode plus profile-owned service categories.
+- `/feed/social` is the first rule-based social feed, scored by locality, recency, and near-term event relevance.
 
-That is still only the first step toward the later recommendation layer, but it prevents the product from silently
-turning “all open jobs” into the long-term UX model. It must not be mistaken for the final social home feed.
+The social lane also records typed behaviour signals through `/posts/{postId}/interactions` and emits
+`content.interaction.recorded.v1`. That contract is intentionally useful before any ML exists: the current rule-based
+feed can improve incrementally, and a later `recommendation-service` can consume the same signal stream without forcing
+the source-of-truth content model to change.
+
+This is still only the first step toward the later recommendation layer, but it prevents the product from silently
+turning either “all open jobs” or “all published posts” into the long-term UX model.

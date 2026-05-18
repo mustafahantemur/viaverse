@@ -55,6 +55,32 @@ public class BffContentController {
         return ResponseEntity.status(proxied.status()).body(proxied.body());
     }
 
+    @GetMapping("/feed/social")
+    public ResponseEntity<Map<String, Object>> socialFeed(
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String district,
+            @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/api/v1/feed/social");
+        if (city != null && !city.isBlank()) {
+            builder.queryParam("city", city);
+        }
+        if (district != null && !district.isBlank()) {
+            builder.queryParam("district", district);
+        }
+        ContentProxy.ProxyResponse proxied = contentProxy.get(builder.build().encode().toUriString(), authorization);
+        return ResponseEntity.status(proxied.status()).body(proxied.body());
+    }
+
+    @PostMapping("/posts/{postId}/interactions")
+    public ResponseEntity<Map<String, Object>> recordInteraction(
+            @org.springframework.web.bind.annotation.PathVariable String postId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        return forward(HttpMethod.POST, "/api/v1/posts/" + postId + "/interactions", body, authorization);
+    }
+
     private ResponseEntity<Map<String, Object>> forward(
             HttpMethod method,
             String path,

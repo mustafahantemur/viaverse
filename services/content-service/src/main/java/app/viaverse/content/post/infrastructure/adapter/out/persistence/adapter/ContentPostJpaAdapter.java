@@ -6,6 +6,7 @@ import app.viaverse.content.post.domain.model.ContentPost;
 import app.viaverse.content.post.infrastructure.adapter.out.persistence.mapper.ContentJpaMapper;
 import app.viaverse.content.post.infrastructure.adapter.out.persistence.repository.ContentPostJpaRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,12 @@ public class ContentPostJpaAdapter implements ContentPostRepository {
     @Override
     public ContentPost save(ContentPost post) {
         return mapper.toDomain(repository.save(mapper.toEntity(post)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ContentPost> findById(UUID postId) {
+        return repository.findById(postId).map(mapper::toDomain);
     }
 
     @Override

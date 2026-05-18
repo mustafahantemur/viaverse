@@ -78,6 +78,8 @@ Implemented now:
 - author-mode snapshotting so an account can publish as customer / provider / business without splitting accounts
 - event-specific invariants and publish events through the outbox
 - current-user and published-post reads
+- first rule-based `/feed/social`
+- typed interaction capture for impressions, opens, dwell, engagement, hide/report, and video milestones
 
 ### media-service
 
@@ -163,7 +165,7 @@ Still missing or intentionally thin:
 
 - full mobile profile/business management screens
 - richer admin moderation tooling
-- richer recommendation behaviour over the social feed
+- ML-backed recommendation behaviour over the social feed
 
 ## Local-development status after this pass
 
@@ -189,8 +191,8 @@ The first marketplace slice and first organic content/media slice are live; the 
 without mixing domains:
 
 1. keep marketplace focused on the commercial graph,
-2. evolve the social lane from raw published posts into a proper feed surface,
-3. capture behaviour signals before adding ML ranking,
+2. evolve the social lane from the current rule-based feed into richer ranking,
+3. reuse the captured behaviour stream before adding ML ranking,
 4. keep media bytes centralized in `media-service` over SeaweedFS and referenced by id elsewhere.
 
 See:

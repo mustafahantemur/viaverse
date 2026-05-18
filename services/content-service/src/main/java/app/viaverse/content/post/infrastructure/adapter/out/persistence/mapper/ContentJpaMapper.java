@@ -1,6 +1,8 @@
 package app.viaverse.content.post.infrastructure.adapter.out.persistence.mapper;
 
 import app.viaverse.content.post.domain.model.ContentPost;
+import app.viaverse.content.post.domain.model.ContentInteraction;
+import app.viaverse.content.post.infrastructure.adapter.out.persistence.entity.ContentInteractionJpaEntity;
 import app.viaverse.content.post.infrastructure.adapter.out.persistence.entity.ContentPostJpaEntity;
 import org.springframework.stereotype.Component;
 
@@ -44,6 +46,40 @@ public class ContentJpaMapper {
                 entity.getStatus(),
                 entity.getModerationStatus(),
                 entity.getPublishedAt(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt(),
+                entity.getVersion()
+        );
+    }
+
+    public ContentInteractionJpaEntity toEntity(ContentInteraction interaction) {
+        return new ContentInteractionJpaEntity(
+                interaction.getId(),
+                interaction.getViewerAccountId(),
+                interaction.getPostId(),
+                interaction.getSignalType(),
+                interaction.getSurface(),
+                interaction.getPosition(),
+                interaction.getDwellTimeMs(),
+                interaction.getSessionId(),
+                interaction.getOccurredAt(),
+                interaction.getCreatedAt(),
+                interaction.getUpdatedAt(),
+                interaction.getVersion()
+        );
+    }
+
+    public ContentInteraction toDomain(ContentInteractionJpaEntity entity) {
+        return new ContentInteraction(
+                entity.getId(),
+                entity.getViewerAccountId(),
+                entity.getPostId(),
+                entity.getSignalType(),
+                entity.getSurface(),
+                entity.getPosition(),
+                entity.getDwellTimeMs(),
+                entity.getSessionId(),
+                entity.getOccurredAt(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
                 entity.getVersion()

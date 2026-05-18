@@ -12,13 +12,14 @@ import {
     currentProfile,
     getAccessToken,
     me,
-    publishedPosts,
+    recordContentInteraction,
     refresh,
+    socialFeed,
     setAccessToken,
     type ContentAuthorMode,
     type ContentPostType,
-    type ContentPostView,
     type MeView,
+    type SocialFeedItemView,
 } from "@/lib/authClient";
 import styles from "./FeedPage.module.css";
 
@@ -34,7 +35,7 @@ export default function FeedPage() {
     const router = useRouter();
     const [meView, setMeView] = useState<MeView | null>(null);
     const [authorMode, setAuthorMode] = useState<ContentAuthorMode>("CUSTOMER");
-    const [posts, setPosts] = useState<ContentPostView[]>([]);
+    const [posts, setPosts] = useState<SocialFeedItemView[]>([]);
     const [status, setStatus] = useState<"loading" | "ready">("loading");
     const [busy, setBusy] = useState(false);
 
@@ -43,7 +44,7 @@ export default function FeedPage() {
         async function bootstrap() {
             try {
                 if (!getAccessToken()) await refresh();
-                const [fetchedMe, profile, fetchedPosts] = await Promise.all([me(), currentProfile(), publishedPosts()]);
+                const [fetchedMe, profile, fetchedPosts] = await Promise.all([me(), currentProfile(), socialFeed()]);
                 if (!cancelled) {
                     setMeView(fetchedMe);
                     setAuthorMode(profile.activeMode);
@@ -64,7 +65,7 @@ export default function FeedPage() {
     }, [router]);
 
     async function reload() {
-        setPosts(await publishedPosts());
+        setPosts(await socialFeed());
     }
 
     if (status !== "ready") {
@@ -100,21 +101,67 @@ export default function FeedPage() {
                             }}
                         />
                         <div className={styles.stack}>
-                            {posts.map((post) => (
-                                <article key={post.id} className={styles.postCard}>
-                                    <span className={styles.pill}>{post.postType}</span>
-                                    <h3>{post.title || "Başlıksız paylaşım"}</h3>
-                                    <p>{post.body}</p>
-                                    <p className={styles.meta}>
-                                        {post.authorMode} · {[post.district, post.city].filter(Boolean).join(", ") || "Konum yok"}
-                                    </p>
-                                </article>
+                            {posts.map((item, index) => (
+                                <FeedPostCard key={item.post.id} item={item} position={index} onHidden={reload} />
                             ))}
                         </div>
                     </section>
                 </Container>
             </main>
         </>
+    );
+}
+
+function FeedPostCard({
+    item,
+    position,
+    onHidden,
+}: {
+    item: SocialFeedItemView;
+    position: number;
+    onHidden: () => Promise<void>;
+}) {
+    const [tracked, setTracked] = useState(false);
+
+    useEffect(() => {
+        if (tracked) return;
+        setTracked(true);
+        void recordContentInteraction(item.post.id, "IMPRESSION", "SOCIAL_FEED", { position });
+    }, [item.post.id, position, tracked]);
+
+    return (
+        <article className={styles.postCard}>
+            <span className={styles.pill}>{item.post.postType}</span>
+            <h3>{item.post.title || "Başlıksız paylaşım"}</h3>
+            <p>{item.post.body}</p>
+            <p className={styles.meta}>
+                {item.post.authorMode} · {[item.post.district, item.post.city].filter(Boolean).join(", ") || "Konum yok"} ·{" "}
+                {item.reason}
+            </p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <Button
+                    variant="outline"
+                    onClick={() => recordContentInteraction(item.post.id, "OPEN", "SOCIAL_FEED", { position })}
+                >
+                    Aç
+                </Button>
+                <Button
+                    variant="outline"
+                    onClick={() => recordContentInteraction(item.post.id, "LIKE", "SOCIAL_FEED", { position })}
+                >
+                    Beğen
+                </Button>
+                <Button
+                    variant="outline"
+                    onClick={async () => {
+                        await recordContentInteraction(item.post.id, "HIDE", "SOCIAL_FEED", { position });
+                        await onHidden();
+                    }}
+                >
+                    Gizle
+                </Button>
+            </div>
+        </article>
     );
 }
 

@@ -64,6 +64,7 @@ class ContentPostIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM content_interaction");
         jdbcTemplate.execute("DELETE FROM content_post_media");
         jdbcTemplate.execute("DELETE FROM content_post");
         jdbcTemplate.execute("DELETE FROM outbox_event");
@@ -83,14 +84,37 @@ class ContentPostIntegrationTest {
         ), token).body());
 
         HttpResponse<String> published = get("/api/v1/posts/published?city=İstanbul&district=Kadıköy", token);
+        HttpResponse<String> socialFeed = get("/api/v1/feed/social?city=İstanbul&district=Kadıköy", token);
         HttpResponse<String> mine = get("/api/v1/me/posts", token);
+        post(
+                "/api/v1/posts/" + created.get("id") + "/interactions",
+                Map.of(
+                        "signalType", "IMPRESSION",
+                        "surface", "SOCIAL_FEED",
+                        "position", 0
+                ),
+                token
+        );
+        post(
+                "/api/v1/posts/" + created.get("id") + "/interactions",
+                Map.of(
+                        "signalType", "HIDE",
+                        "surface", "SOCIAL_FEED",
+                        "position", 0
+                ),
+                token
+        );
+        HttpResponse<String> hiddenFeed = get("/api/v1/feed/social?city=İstanbul&district=Kadıköy", token);
 
         assertThat(published.statusCode()).isEqualTo(HttpStatus.OK.value());
+        assertThat(socialFeed.statusCode()).isEqualTo(HttpStatus.OK.value());
         assertThat(mine.statusCode()).isEqualTo(HttpStatus.OK.value());
         assertThat(unwrapList(published.body())).hasSize(1);
+        assertThat(unwrapList(socialFeed.body())).hasSize(1);
         assertThat(unwrapList(mine.body())).hasSize(1);
+        assertThat(unwrapList(hiddenFeed.body())).isEmpty();
         assertThat(created).containsEntry("moderationStatus", "AUTO_APPROVED");
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM outbox_event", Integer.class)).isEqualTo(2);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM outbox_event", Integer.class)).isEqualTo(4);
     }
 
     private String accessToken(UUID accountId) {

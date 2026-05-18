@@ -1,8 +1,10 @@
 package app.viaverse.content.post.infrastructure.adapter.out.messaging;
 
 import app.viaverse.content.post.application.port.out.ContentEventPublisher;
+import app.viaverse.content.post.domain.model.ContentInteraction;
 import app.viaverse.content.post.domain.model.ContentPost;
 import app.viaverse.contracts.content.ContentEventTypes;
+import app.viaverse.contracts.content.ContentInteractionRecordedV1KafkaEvent;
 import app.viaverse.contracts.content.ContentPostCreatedV1KafkaEvent;
 import app.viaverse.contracts.content.ContentPostPublishedV1KafkaEvent;
 import app.viaverse.messaging.outbox.OutboxEventWriter;
@@ -64,6 +66,30 @@ public class ContentKafkaPublisher implements ContentEventPublisher {
                         post.getCity(),
                         post.getDistrict(),
                         post.getPublishedAt()
+                )
+        );
+    }
+
+    @Override
+    public void publishInteractionRecorded(ContentInteraction interaction) {
+        UUID eventId = UUID.randomUUID();
+        outboxWriter.enqueue(
+                eventId,
+                ContentEventTypes.INTERACTION_RECORDED_V1,
+                BINDING_NAME,
+                interaction.getViewerAccountId().toString(),
+                new ContentInteractionRecordedV1KafkaEvent(
+                        eventId,
+                        Instant.now(clock),
+                        "v1",
+                        interaction.getId(),
+                        interaction.getViewerAccountId(),
+                        interaction.getPostId(),
+                        interaction.getSignalType().name(),
+                        interaction.getSurface(),
+                        interaction.getPosition(),
+                        interaction.getDwellTimeMs(),
+                        interaction.getSessionId()
                 )
         );
     }

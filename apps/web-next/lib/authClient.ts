@@ -633,6 +633,27 @@ export type ContentPostView = {
     updatedAt: string;
 };
 
+export type SocialFeedItemView = {
+    post: ContentPostView;
+    score: number;
+    reason: string;
+};
+
+export type ContentSignalType =
+    | "IMPRESSION"
+    | "OPEN"
+    | "DWELL"
+    | "LIKE"
+    | "SAVE"
+    | "SHARE"
+    | "HIDE"
+    | "REPORT"
+    | "VIDEO_START"
+    | "VIDEO_25"
+    | "VIDEO_50"
+    | "VIDEO_75"
+    | "VIDEO_COMPLETE";
+
 export type CreateContentPostPayload = {
     authorMode: ContentAuthorMode;
     postType: ContentPostType;
@@ -688,6 +709,32 @@ export function publishedPosts(city?: string, district?: string): Promise<Conten
 
 export function myPosts(): Promise<ContentPostView[]> {
     return call("/api/me/posts", { method: "GET", authed: true });
+}
+
+export function socialFeed(city?: string, district?: string): Promise<SocialFeedItemView[]> {
+    const params = new URLSearchParams();
+    if (city) params.set("city", city);
+    if (district) params.set("district", district);
+    const suffix = params.size ? `?${params.toString()}` : "";
+    return call(`/api/feed/social${suffix}`, { method: "GET", authed: true });
+}
+
+export function recordContentInteraction(
+    postId: string,
+    signalType: ContentSignalType,
+    surface: string,
+    options: {
+        position?: number;
+        dwellTimeMs?: number;
+        sessionId?: string;
+        occurredAt?: string;
+    } = {},
+): Promise<unknown> {
+    return call(`/api/posts/${postId}/interactions`, {
+        method: "POST",
+        body: JSON.stringify({ signalType, surface, ...options }),
+        authed: true,
+    });
 }
 
 export function createUploadSession(
