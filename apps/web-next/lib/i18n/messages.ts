@@ -102,6 +102,10 @@ export const tr = {
                 title: "Açık işlere göz at",
                 description: "Çevrendeki taleplere teklif ver.",
             },
+            openFeed: {
+                title: "Çevrede neler oluyor?",
+                description: "Duyuru, etkinlik ve yerel paylaşımlara bak.",
+            },
             becomeProvider: {
                 title: "Hizmet vermeye başla",
                 description: "Tek tıkla provider modunu aç.",
@@ -113,6 +117,7 @@ export const tr = {
         },
         profileMenu: {
             marketplace: "İşlerim",
+            feed: "Sosyal akış",
             profile: "Profilim",
             settings: "Ayarlar",
             language: "Dil",
@@ -421,6 +426,10 @@ export const en: Translations = {
                 title: "Browse open jobs",
                 description: "Send offers on local requests.",
             },
+            openFeed: {
+                title: "What's happening nearby?",
+                description: "See announcements, events, and local posts.",
+            },
             becomeProvider: {
                 title: "Become a provider",
                 description: "Turn on provider mode in one tap.",
@@ -432,6 +441,7 @@ export const en: Translations = {
         },
         profileMenu: {
             marketplace: "My jobs",
+            feed: "Social feed",
             profile: "My profile",
             settings: "Settings",
             language: "Language",

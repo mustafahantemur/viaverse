@@ -106,8 +106,13 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >
-        aws --endpoint-url http://seaweedfs:8333 s3api head-bucket --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA" 2>/dev/null
-        || aws --endpoint-url http://seaweedfs:8333 s3api create-bucket --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA"
+        (
+          aws --endpoint-url http://seaweedfs:8333 s3api head-bucket --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA" 2>/dev/null
+          || aws --endpoint-url http://seaweedfs:8333 s3api create-bucket --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA"
+        )
+        && aws --endpoint-url http://seaweedfs:8333 s3api put-bucket-cors
+        --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA"
+        --cors-configuration '{"CORSRules":[{"AllowedHeaders":["*"],"AllowedMethods":["PUT","GET","HEAD"],"AllowedOrigins":["http://localhost:3000","http://localhost:5173","http://localhost:4000"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3600}]}'
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.141.0

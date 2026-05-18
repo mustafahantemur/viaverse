@@ -91,6 +91,7 @@ export default function AppHomePage() {
                     <QuickActions
                         onPostRequest={() => router.push("/app/marketplace#create")}
                         onBrowseJobs={() => router.push("/app/marketplace#open")}
+                        onOpenFeed={() => router.push("/app/feed")}
                         onBecomeProvider={() => router.push("/app/profile#provider")}
                         onOpenSettings={() => router.push("/app/profile#settings")}
                     />

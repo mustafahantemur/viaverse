@@ -73,6 +73,9 @@ export function AppHeader({ me, onLogout }: Props) {
                                 <a role="menuitem" className={styles.menuItem} href="/app/marketplace">
                                     {t.home.profileMenu.marketplace}
                                 </a>
+                                <a role="menuitem" className={styles.menuItem} href="/app/feed">
+                                    {t.home.profileMenu.feed}
+                                </a>
                                 <a role="menuitem" className={styles.menuItem} href="/app/profile">
                                     {t.home.profileMenu.profile}
                                 </a>

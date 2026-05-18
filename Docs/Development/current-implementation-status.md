@@ -8,6 +8,7 @@ The repository is no longer only a shell. The active product slice is:
 
 - identity/auth foundation
 - profile-service through the **functional Phase 4 boundary**
+- first organic content + media vertical slice
 - shared backend extractions for reusable cross-service infrastructure
 - first usable web and admin surfaces for the profile/business flow
 
@@ -69,11 +70,32 @@ Implemented now:
 
 This is the first real trust foundation; automatic verification and moderation are still future work.
 
+### content-service
+
+Implemented now:
+
+- organic social posts for local updates, announcements, advice, events, and business promotion
+- author-mode snapshotting so an account can publish as customer / provider / business without splitting accounts
+- event-specific invariants and publish events through the outbox
+- current-user and published-post reads
+
+### media-service
+
+Implemented now:
+
+- media asset records and upload-session lifecycle
+- direct object-storage uploads through presigned URLs
+- SeaweedFS-backed S3-compatible local storage integration
+- completion verification through object metadata before an asset becomes `READY`
+- typed `media.asset.ready.v1` outbox event
+
 ### Client follow-through already present
 
 - Web:
   - authenticated `/app`
   - `/app/profile`
+  - `/app/feed`
+  - organic post creation with direct media upload path
   - profile editing
   - provider enablement
   - business draft / submission
@@ -129,7 +151,6 @@ These services are still mostly technical shells:
 
 - payment-service
 - messaging-service
-- media-service
 - notification-service
 - search-service
 - ads-monetization-service
@@ -142,7 +163,7 @@ Still missing or intentionally thin:
 
 - full mobile profile/business management screens
 - richer admin moderation tooling
-- local/social feed product flow (`content-service` lane) and richer recommendation behaviour
+- richer recommendation behaviour over the social feed
 
 ## Local-development status after this pass
 
@@ -162,14 +183,15 @@ The local stack is materially healthier than before:
 
 ## Recommended next engineering step
 
-The active lane is now **marketplace hardening + then content/media**.
+The active lane is now **social-feed ranking signals + marketplace hardening**.
 
-The first marketplace vertical slice is live; the next meaningful work is to deepen it without mixing domains:
+The first marketplace slice and first organic content/media slice are live; the next meaningful work is to deepen them
+without mixing domains:
 
 1. keep marketplace focused on the commercial graph,
-2. keep events / announcements / organic business promotion in a future content domain,
-3. keep media bytes centralized in `media-service` over SeaweedFS and referenced by id elsewhere,
-4. evolve ranking from explicit categories to behaviour-aware recommendation later.
+2. evolve the social lane from raw published posts into a proper feed surface,
+3. capture behaviour signals before adding ML ranking,
+4. keep media bytes centralized in `media-service` over SeaweedFS and referenced by id elsewhere.
 
 See:
 

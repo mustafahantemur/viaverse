@@ -6,6 +6,7 @@ Viaverse is a greenfield platform implementation. The repository now contains:
 - local infrastructure and observability,
 - `identity-service`,
 - `profile-service` through the functional Phase 4 boundary,
+- first real `content-service` and `media-service` slices,
 - the first real `trust-gamification-service` slice,
 - first web/admin/mobile client follow-through for that slice,
 - and technical shells for the remaining backend domains.
@@ -50,6 +51,8 @@ Then start the minimum currently useful product stack in separate terminals:
 ```powershell
 .\gradlew.bat :services:identity-service:bootRun
 .\gradlew.bat :services:profile-service:bootRun
+.\gradlew.bat :services:content-service:bootRun
+.\gradlew.bat :services:media-service:bootRun
 .\gradlew.bat :services:web-bff:bootRun
 .\gradlew.bat :services:admin-bff:bootRun
 ```
@@ -98,6 +101,7 @@ If VS Code shows stale unresolved imports after shared-module changes, run **Jav
 ```powershell
 .\gradlew.bat :services:identity-service:bootRun
 .\gradlew.bat :services:profile-service:bootRun
+.\gradlew.bat :services:content-service:bootRun
 .\gradlew.bat :services:marketplace-service:bootRun
 .\gradlew.bat :services:payment-service:bootRun
 .\gradlew.bat :services:messaging-service:bootRun
@@ -128,6 +132,7 @@ If VS Code shows stale unresolved imports after shared-module changes, run **Jav
 | ads-monetization-service | 8109 |
 | admin-bff | 8110 |
 | profile-service | 8111 |
+| content-service | 8112 |
 
 Health checks use `/actuator/health` across the backend. `profile-service` additionally exposes `/health`.
 

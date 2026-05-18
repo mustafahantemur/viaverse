@@ -19,7 +19,7 @@ They are **not the same bounded context**, and the product should expose **two d
 | Concern | Owning service |
 |---|---|
 | Service requests, offers, accepted jobs, commercial lifecycle | `marketplace-service` |
-| Organic posts: announcements, events, advice, local updates, organic business promotion | future `content-service` |
+| Organic posts: announcements, events, advice, local updates, organic business promotion | `content-service` |
 | File bytes, upload lifecycle, object keys, transforms, thumbnails, variants | `media-service` |
 | Paid campaign setup, spend, targeting, delivery policy, reporting | `ads-monetization-service` |
 | Shared policy decisions for unsafe text/image/video | future `moderation-service` |
@@ -50,8 +50,17 @@ Domain services store **media ids, never bytes**.
 - A future moderation lane receives the text/image/video payload before broad visibility, but the owning domain service
   keeps its own publish decision snapshot.
 
-This keeps photos on service requests, business logos, event covers, ad videos, and future feed posts on one reusable
+This keeps photos on service requests, business logos, event covers, ad videos, and feed posts on one reusable
 storage foundation without collapsing their business rules together.
+
+## Current first implementation
+
+The first production-oriented cut now exists:
+
+- `content-service` owns organic post records and emits typed lifecycle events,
+- `media-service` owns asset/upload-session records and emits `media.asset.ready.v1`,
+- browser clients upload bytes directly to SeaweedFS through short-lived presigned URLs,
+- domain services still persist only media ids.
 
 ## Product consequence
 

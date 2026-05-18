@@ -59,6 +59,32 @@ public class BffConfiguration {
     }
 
     @Bean
+    RestClient contentRestClient(BffProperties properties) {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(CONNECT_TIMEOUT)
+                .build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(READ_TIMEOUT);
+        return RestClient.builder()
+                .baseUrl(properties.getContentBaseUrl())
+                .requestFactory(factory)
+                .build();
+    }
+
+    @Bean
+    RestClient mediaRestClient(BffProperties properties) {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(CONNECT_TIMEOUT)
+                .build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(READ_TIMEOUT);
+        return RestClient.builder()
+                .baseUrl(properties.getMediaBaseUrl())
+                .requestFactory(factory)
+                .build();
+    }
+
+    @Bean
     CorsConfigurationSource bffCorsConfigurationSource(BffProperties properties) {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(properties.getCors().getAllowedOrigins());

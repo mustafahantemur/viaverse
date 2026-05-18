@@ -26,6 +26,7 @@ rootProject.name = "viaverse"
 include(
     ":services:identity-service",
     ":services:profile-service",
+    ":services:content-service",
     ":services:marketplace-service",
     ":services:payment-service",
     ":services:messaging-service",

@@ -66,6 +66,13 @@
       "problemMatcher": []
     },
     {
+      "label": "backend: ready content-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["backend: ready", "ports: free content-service"],
+      "problemMatcher": []
+    },
+    {
       "label": "debug: start identity-service target",
       "type": "shell",
       "dependsOrder": "sequence",
@@ -260,6 +267,13 @@
       "type": "shell",
       "command": "powershell",
       "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8111,5007"],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free content-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1", "-Ports", "8112"],
       "problemMatcher": []
     },
     {

@@ -47,11 +47,13 @@ function ActionCard({ title, description, icon, accent = "neutral", onClick, dis
 export function QuickActions({
     onPostRequest,
     onBrowseJobs,
+    onOpenFeed,
     onBecomeProvider,
     onOpenSettings,
 }: {
     onPostRequest?: () => void;
     onBrowseJobs?: () => void;
+    onOpenFeed?: () => void;
     onBecomeProvider?: () => void;
     onOpenSettings?: () => void;
 }) {
@@ -73,6 +75,13 @@ export function QuickActions({
                 icon={<CompassIcon />}
                 onClick={onBrowseJobs}
                 disabled={!onBrowseJobs}
+            />
+            <ActionCard
+                title={a.openFeed.title}
+                description={a.openFeed.description}
+                icon={<ChatIcon />}
+                onClick={onOpenFeed}
+                disabled={!onOpenFeed}
             />
             <ActionCard
                 title={a.becomeProvider.title}
@@ -116,6 +125,14 @@ function BoltIcon() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
             <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" />
+        </svg>
+    );
+}
+
+function ChatIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+            <path d="M21 15a4 4 0 0 1-4 4H8l-5 3 2-5a4 4 0 0 1-2-3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
         </svg>
     );
 }

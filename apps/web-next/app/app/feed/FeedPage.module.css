@@ -1,0 +1,93 @@
+.page {
+    padding: 28px 0 48px;
+}
+
+.hero {
+    margin-bottom: 24px;
+}
+
+.hero h1 {
+    margin: 6px 0 8px;
+    font-size: clamp(28px, 4vw, 38px);
+}
+
+.eyebrow {
+    color: var(--vv-brand);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.layout {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+}
+
+.card,
+.postCard {
+    border: 1px solid var(--vv-border);
+    border-radius: 20px;
+    background: var(--vv-surface);
+    padding: 18px;
+}
+
+.stack,
+.form {
+    display: grid;
+    gap: 12px;
+}
+
+.field {
+    display: grid;
+    gap: 6px;
+    color: var(--vv-fg-muted);
+    font-size: 13px;
+}
+
+.field input,
+.field textarea,
+.field select {
+    border: 1px solid var(--vv-border);
+    border-radius: 12px;
+    background: var(--vv-bg);
+    color: var(--vv-fg);
+    padding: 10px 12px;
+}
+
+.field textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.postCard h3 {
+    margin: 0;
+}
+
+.meta {
+    color: var(--vv-fg-muted);
+    font-size: 13px;
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--vv-brand) 14%, transparent);
+    color: var(--vv-brand);
+    padding: 4px 9px;
+    font-size: 12px;
+}
+
+.loading {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+}
+
+@media (max-width: 860px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+}

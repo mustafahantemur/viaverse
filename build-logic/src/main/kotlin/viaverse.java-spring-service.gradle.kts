@@ -10,6 +10,7 @@ val envPrefix = project.name.replace("-", "_").uppercase()
 val dbMapping = mapOf(
     "identity-service" to "viaverse_identity",
     "profile-service" to "viaverse_profile",
+    "content-service" to "viaverse_content",
     "marketplace-service" to "viaverse_marketplace",
     "payment-service" to "viaverse_payment",
     "messaging-service" to "viaverse_messaging",

@@ -23,7 +23,8 @@ From the repository root:
 .\scripts\dev\migrate-local.ps1
 ```
 
-`start-core-infra.ps1` starts the local Docker dependencies and creates the service databases, including `viaverse_profile` and `viaverse_profile_test`.
+`start-core-infra.ps1` starts the local Docker dependencies and creates the service databases, including
+`viaverse_profile`, `viaverse_content`, and their test databases.
 
 Useful local consoles:
 
@@ -43,6 +44,8 @@ Open separate terminals from the repository root and start these in order:
 ```powershell
 .\gradlew.bat :services:identity-service:bootRun
 .\gradlew.bat :services:profile-service:bootRun
+.\gradlew.bat :services:content-service:bootRun
+.\gradlew.bat :services:media-service:bootRun
 .\gradlew.bat :services:trust-gamification-service:bootRun
 .\gradlew.bat :services:web-bff:bootRun
 .\gradlew.bat :services:admin-bff:bootRun
@@ -65,6 +68,8 @@ This gives you the currently useful product slice:
 
 - `identity-service` on `8101`
 - `profile-service` on `8111`
+- `content-service` on `8112`
+- `media-service` on `8105`
 - `trust-gamification-service` on `8108`
 - `web-bff` on `8001`
 - `admin-bff` on `8110`
@@ -80,6 +85,7 @@ If you want every backend process running, use separate terminals and start:
 ```powershell
 .\gradlew.bat :services:identity-service:bootRun
 .\gradlew.bat :services:profile-service:bootRun
+.\gradlew.bat :services:content-service:bootRun
 .\gradlew.bat :services:marketplace-service:bootRun
 .\gradlew.bat :services:payment-service:bootRun
 .\gradlew.bat :services:messaging-service:bootRun
@@ -100,6 +106,8 @@ Import the repository as a Gradle project, then create run/debug configurations 
 |---|---|
 | identity-service | `app.viaverse.identity.IdentityServiceApplication` |
 | profile-service | `app.viaverse.profile.ProfileServiceApplication` |
+| content-service | `app.viaverse.content.ContentServiceApplication` |
+| media-service | `app.viaverse.media.MediaServiceApplication` |
 | web-bff | `app.viaverse.webbff.WebBffApplication` |
 | admin-bff | `app.viaverse.adminbff.AdminBffApplication` |
 
@@ -118,6 +126,8 @@ Use the actuator endpoint for every backend service:
 ```powershell
 Invoke-WebRequest http://localhost:8101/actuator/health
 Invoke-WebRequest http://localhost:8111/actuator/health
+Invoke-WebRequest http://localhost:8112/actuator/health
+Invoke-WebRequest http://localhost:8105/actuator/health
 Invoke-WebRequest http://localhost:8001/actuator/health
 Invoke-WebRequest http://localhost:8110/actuator/health
 ```

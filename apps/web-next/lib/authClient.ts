@@ -606,3 +606,106 @@ export function completeJob(jobId: string): Promise<JobView> {
         authed: true,
     });
 }
+
+// ---- Content & media ----
+
+export type ContentAuthorMode = "CUSTOMER" | "INDIVIDUAL_PROVIDER" | "BUSINESS";
+export type ContentPostType = "LOCAL_UPDATE" | "ANNOUNCEMENT" | "EVENT" | "ADVICE" | "BUSINESS_PROMOTION";
+export type ContentPostStatus = "PUBLISHED" | "WITHDRAWN" | "REJECTED";
+export type ContentModerationStatus = "AUTO_APPROVED" | "PENDING_REVIEW" | "REJECTED";
+
+export type ContentPostView = {
+    id: string;
+    authorAccountId: string;
+    authorMode: ContentAuthorMode;
+    postType: ContentPostType;
+    title?: string;
+    body: string;
+    city?: string;
+    district?: string;
+    eventStartsAt?: string;
+    eventEndsAt?: string;
+    mediaAssetIds: string[];
+    status: ContentPostStatus;
+    moderationStatus: ContentModerationStatus;
+    publishedAt: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type CreateContentPostPayload = {
+    authorMode: ContentAuthorMode;
+    postType: ContentPostType;
+    title?: string;
+    body: string;
+    city?: string;
+    district?: string;
+    eventStartsAt?: string;
+    eventEndsAt?: string;
+    mediaAssetIds?: string[];
+};
+
+export type MediaAssetKind = "IMAGE" | "VIDEO";
+export type MediaAssetStatus = "INITIATED" | "READY" | "FAILED";
+
+export type UploadSessionView = {
+    assetId: string;
+    uploadSessionId: string;
+    uploadUrl: string;
+    requiredHeaders: Record<string, string>;
+    expiresAt: string;
+};
+
+export type MediaAssetView = {
+    id: string;
+    ownerAccountId: string;
+    assetKind: MediaAssetKind;
+    contentType: string;
+    originalFileName?: string;
+    objectKey: string;
+    byteSize?: number;
+    checksumSha256?: string;
+    status: MediaAssetStatus;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export function createContentPost(payload: CreateContentPostPayload): Promise<ContentPostView> {
+    return call("/api/posts", {
+        method: "POST",
+        body: JSON.stringify(payload),
+        authed: true,
+    });
+}
+
+export function publishedPosts(city?: string, district?: string): Promise<ContentPostView[]> {
+    const params = new URLSearchParams();
+    if (city) params.set("city", city);
+    if (district) params.set("district", district);
+    const suffix = params.size ? `?${params.toString()}` : "";
+    return call(`/api/posts/published${suffix}`, { method: "GET", authed: true });
+}
+
+export function myPosts(): Promise<ContentPostView[]> {
+    return call("/api/me/posts", { method: "GET", authed: true });
+}
+
+export function createUploadSession(
+    assetKind: MediaAssetKind,
+    contentType: string,
+    originalFileName?: string,
+): Promise<UploadSessionView> {
+    return call("/api/assets/upload-sessions", {
+        method: "POST",
+        body: JSON.stringify({ assetKind, contentType, originalFileName }),
+        authed: true,
+    });
+}
+
+export function completeUpload(assetId: string, checksumSha256?: string): Promise<MediaAssetView> {
+    return call(`/api/assets/${assetId}/complete`, {
+        method: "POST",
+        body: JSON.stringify({ checksumSha256 }),
+        authed: true,
+    });
+}
