@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --color-brand: #F97316;
+  --color-anthracite: #111827;
+  
+  --color-base: var(--bg-color);
+  --color-surface: var(--bg-card);
+  --color-surface-muted: var(--bg-muted);
+  --color-content: var(--text-color);
+  --color-content-muted: var(--text-muted);
+  --color-border-subtle: var(--border-color);
+  --color-border-muted: var(--border-muted);
+  --color-border-faint: var(--border-faint);
+  --color-surface-hover: var(--hover-bg);
+}
+
+:root {
+  --bg-color: #F8F4EC;
+  --bg-card: #FAF6F0;
+  --text-color: #222222;
+  --text-muted: #717171;
+  --border-color: #E6DFD6;
+  --bg-muted: #EFE9E0;
+  --border-muted: rgba(0, 0, 0, 0.08);
+  --border-faint: rgba(0, 0, 0, 0.05);
+  --hover-bg: #EAE3DA;
+}
+
+.dark {
+  --bg-color: #0d1a12;
+  --bg-card: #14281c;
+  --text-color: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border-color: #1f3d2a;
+  --bg-muted: #1e3625;
+  --border-muted: rgba(255, 255, 255, 0.1);
+  --border-faint: rgba(255, 255, 255, 0.05);
+  --hover-bg: #2d5238;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.04em;
+}
+
+/* Remove explicitly set font-family blocks elsewhere to let Inter take over globally */
+input, button, textarea, select {
+  font-family: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
