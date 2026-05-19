@@ -80,7 +80,12 @@ export default function AppHomePage() {
 
     return (
         <>
-            <AppHeader me={view} onLogout={() => setView(null)} />
+            <AppHeader
+                me={view}
+                profile={profileView}
+                onProfileChange={setProfileView}
+                onLogout={() => setView(null)}
+            />
             <main style={{ paddingBottom: 48 }}>
                 <Container>
                     <WelcomeHero

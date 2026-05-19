@@ -5,12 +5,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { BrandMark } from "@/components/primitives/BrandMark";
 import { Container } from "@/components/primitives/Container";
 import { HeaderToggles } from "@/components/landing/HeaderToggles";
+import { ModeSwitcher } from "./ModeSwitcher";
 import { useTranslation } from "@/lib/i18n/I18nProvider";
-import { logout, type MeView } from "@/lib/authClient";
+import { logout, type CurrentProfileView, type MeView } from "@/lib/authClient";
 import styles from "./AppHeader.module.css";
 
 interface Props {
     me: MeView | null;
+    /** Optional — when provided, the header renders the active-mode pill. */
+    profile?: CurrentProfileView | null;
+    /** Called when the user picks a new active mode. Parent re-renders with the new view. */
+    onProfileChange?: (next: CurrentProfileView) => void;
     onLogout: () => void;
 }
 
@@ -22,7 +27,7 @@ interface Props {
  * pages today — those screens land in the next slice; the entries
  * exist so the navigation doesn't feel like a dead-end.
  */
-export function AppHeader({ me, onLogout }: Props) {
+export function AppHeader({ me, profile, onProfileChange, onLogout }: Props) {
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement | null>(null);
@@ -56,6 +61,9 @@ export function AppHeader({ me, onLogout }: Props) {
                     <BrandMark size={40} />
                 </a>
                 <div className={styles.actions}>
+                    {profile && onProfileChange && (
+                        <ModeSwitcher profile={profile} onChange={onProfileChange} />
+                    )}
                     <HeaderToggles />
                     <div className={styles.userWrap} ref={menuRef}>
                         <button

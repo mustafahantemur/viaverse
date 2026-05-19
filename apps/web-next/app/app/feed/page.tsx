@@ -18,6 +18,7 @@ import {
     setAccessToken,
     type ContentAuthorMode,
     type ContentPostType,
+    type CurrentProfileView,
     type MeView,
     type SocialFeedItemView,
 } from "@/lib/authClient";
@@ -34,6 +35,7 @@ const POST_TYPES: ContentPostType[] = [
 export default function FeedPage() {
     const router = useRouter();
     const [meView, setMeView] = useState<MeView | null>(null);
+    const [profile, setProfile] = useState<CurrentProfileView | null>(null);
     const [authorMode, setAuthorMode] = useState<ContentAuthorMode>("CUSTOMER");
     const [posts, setPosts] = useState<SocialFeedItemView[]>([]);
     const [status, setStatus] = useState<"loading" | "ready">("loading");
@@ -44,10 +46,15 @@ export default function FeedPage() {
         async function bootstrap() {
             try {
                 if (!getAccessToken()) await refresh();
-                const [fetchedMe, profile, fetchedPosts] = await Promise.all([me(), currentProfile(), socialFeed()]);
+                const [fetchedMe, fetchedProfile, fetchedPosts] = await Promise.all([
+                    me(),
+                    currentProfile(),
+                    socialFeed(),
+                ]);
                 if (!cancelled) {
                     setMeView(fetchedMe);
-                    setAuthorMode(profile.activeMode);
+                    setProfile(fetchedProfile);
+                    setAuthorMode(fetchedProfile.activeMode);
                     setPosts(fetchedPosts);
                     setStatus("ready");
                 }
@@ -78,7 +85,15 @@ export default function FeedPage() {
 
     return (
         <>
-            <AppHeader me={meView} onLogout={() => setMeView(null)} />
+            <AppHeader
+                me={meView}
+                profile={profile}
+                onProfileChange={(next) => {
+                    setProfile(next);
+                    setAuthorMode(next.activeMode);
+                }}
+                onLogout={() => setMeView(null)}
+            />
             <main className={styles.page}>
                 <Container>
                     <header className={styles.hero}>

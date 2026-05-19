@@ -46,6 +46,7 @@ Open separate terminals from the repository root and start these in order:
 .\gradlew.bat :services:profile-service:bootRun
 .\gradlew.bat :services:content-service:bootRun
 .\gradlew.bat :services:media-service:bootRun
+.\gradlew.bat :services:marketplace-service:bootRun
 .\gradlew.bat :services:trust-gamification-service:bootRun
 .\gradlew.bat :services:web-bff:bootRun
 .\gradlew.bat :services:admin-bff:bootRun
@@ -70,6 +71,7 @@ This gives you the currently useful product slice:
 - `profile-service` on `8111`
 - `content-service` on `8112`
 - `media-service` on `8105`
+- `marketplace-service` on `8102`
 - `trust-gamification-service` on `8108`
 - `web-bff` on `8001`
 - `admin-bff` on `8110`
@@ -128,6 +130,7 @@ Invoke-WebRequest http://localhost:8101/actuator/health
 Invoke-WebRequest http://localhost:8111/actuator/health
 Invoke-WebRequest http://localhost:8112/actuator/health
 Invoke-WebRequest http://localhost:8105/actuator/health
+Invoke-WebRequest http://localhost:8102/actuator/health
 Invoke-WebRequest http://localhost:8001/actuator/health
 Invoke-WebRequest http://localhost:8110/actuator/health
 ```
@@ -152,6 +155,12 @@ Mobile shared code:
 
 ```powershell
 .\gradlew.bat :apps:mobile-kmp:check
+```
+
+Android debug APK:
+
+```powershell
+.\gradlew.bat :apps:mobile-android:assembleDebug
 ```
 
 Web clients:

@@ -19,7 +19,7 @@ import app.viaverse.mobile.core.theme.LocalAppTheme
 import app.viaverse.mobile.core.theme.rememberAppThemeState
 import app.viaverse.mobile.designsystem.ViaverseTheme
 import app.viaverse.mobile.designsystem.VvTopBar
-import app.viaverse.mobile.feature.home.HomeScreen
+import app.viaverse.mobile.feature.app.AppShell
 import app.viaverse.mobile.feature.splash.SplashScreen
 import io.ktor.client.HttpClient
 
@@ -85,7 +85,7 @@ fun AuthShell(
                                 onBackToLogin = { screen = Screen.Login },
                             )
 
-                            is Screen.Home -> HomeScreen(
+                            is Screen.Home -> AppShell(
                                 authApi = authApi,
                                 onLogout = {
                                     AuthTokens.clear()

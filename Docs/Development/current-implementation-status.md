@@ -1,6 +1,6 @@
 # Current implementation status
 
-Status date: **2026-05-18**
+Status date: **2026-05-19**
 
 ## What is implemented now
 
@@ -102,10 +102,16 @@ Implemented now:
   - provider enablement
   - business draft / submission
   - active-mode switching
+  - header mode switcher that lets enabled users move between customer, provider, and business modes
+  - `/app/marketplace` request/offer/job screens backed by the work-feed APIs
 - Admin web:
   - first business approval queue
 - Mobile:
-  - home shell reads the real active mode instead of showing a placeholder
+  - authenticated four-tab app shell
+  - home shell reads the real active mode
+  - social feed read/create surface
+  - marketplace work-feed, request creation, offer, cancellation, withdrawal, and job actions
+  - profile screen for active-mode switching and individual-provider enablement
 
 ## What is still intentionally incomplete
 
@@ -164,7 +170,7 @@ They compile, migrate, and expose health, but they do not yet contain their futu
 
 Still missing or intentionally thin:
 
-- full mobile profile/business management screens
+- full mobile business onboarding/management screens
 - richer admin moderation tooling
 - ML-backed recommendation behaviour over the social feed
 
@@ -186,15 +192,14 @@ The local stack is materially healthier than before:
 
 ## Recommended next engineering step
 
-The active lane is now **social-feed ranking signals + marketplace hardening**.
+The active lane is now **marketplace transaction depth**.
 
-The first marketplace slice and first organic content/media slice are live; the next meaningful work is to deepen them
-without mixing domains:
+The next meaningful work is to move from request/offer/job skeleton into the real service-delivery loop:
 
-1. keep marketplace focused on the commercial graph,
-2. evolve the social lane from the current rule-based feed into richer ranking,
-3. reuse the captured behaviour stream before adding ML ranking,
-4. keep media bytes centralized in `media-service` over SeaweedFS and referenced by id elsewhere.
+1. job-scoped messaging and status timeline,
+2. payment authorization / escrow-style hold before job start,
+3. dispute/cancellation rules around in-progress jobs,
+4. search over requests, providers, businesses, and local posts.
 
 See:
 

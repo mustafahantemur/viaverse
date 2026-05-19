@@ -143,7 +143,12 @@ export default function MarketplacePage() {
 
     return (
         <>
-            <AppHeader me={meView} onLogout={() => setMeView(null)} />
+            <AppHeader
+                me={meView}
+                profile={profile}
+                onProfileChange={setProfile}
+                onLogout={() => setMeView(null)}
+            />
             <main className={styles.page}>
                 <Container>
                     <header className={styles.hero}>

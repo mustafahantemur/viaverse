@@ -124,6 +124,13 @@ export const tr = {
             theme: "Tema",
             logout: "Çıkış yap",
         },
+        modeSwitch: {
+            label: "Mod",
+            customer: "Müşteri",
+            individualProvider: "Hizmet veren",
+            business: "İşletme",
+            tooltipEnable: "Bu modu profil ekranından açabilirsin.",
+        },
     },
     profile: {
         title: "Profil ve modlar",
@@ -452,6 +459,13 @@ export const en: Translations = {
             language: "Language",
             theme: "Theme",
             logout: "Log out",
+        },
+        modeSwitch: {
+            label: "Mode",
+            customer: "Customer",
+            individualProvider: "Provider",
+            business: "Business",
+            tooltipEnable: "Enable this mode from the profile screen.",
         },
     },
     profile: {

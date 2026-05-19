@@ -1,0 +1,119 @@
+.wrap {
+  position: relative;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 10px;
+  border: 1px solid var(--vv-border-muted);
+  border-radius: var(--vv-radius-pill);
+  background: var(--vv-surface);
+  color: var(--vv-fg);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.pill:hover:not(:disabled) {
+  background: var(--vv-surface-hover);
+}
+
+.pill:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.pillLabel {
+  white-space: nowrap;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.accentCustomer {
+  color: var(--vv-primary);
+}
+
+.accentProvider {
+  color: var(--vv-trust);
+}
+
+.accentBusiness {
+  color: var(--vv-fg-strong);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--vv-border-muted);
+  border-radius: var(--vv-radius-md);
+  background: var(--vv-surface);
+  box-shadow: var(--vv-shadow-md);
+  z-index: 2;
+}
+
+.menuTitle {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--vv-fg-muted);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--vv-radius-sm);
+  text-align: left;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vv-fg);
+  cursor: pointer;
+}
+
+.option:hover:not(:disabled) {
+  background: var(--vv-surface-muted);
+}
+
+.option:disabled {
+  cursor: not-allowed;
+  color: var(--vv-fg-faint);
+}
+
+.optionActive {
+  background: var(--vv-primary-soft);
+  font-weight: 700;
+}
+
+.optionLocked {
+  font-style: italic;
+}
+
+.optionDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  flex-shrink: 0;
+}

@@ -194,6 +194,113 @@ object AppStrings {
         else -> customerModeBadge()
     }
 
+    // Bottom nav
+    @Composable @ReadOnlyComposable
+    fun navHome(): String = pick("Ana sayfa", "Home")
+
+    @Composable @ReadOnlyComposable
+    fun navFeed(): String = pick("Akış", "Feed")
+
+    @Composable @ReadOnlyComposable
+    fun navMarketplace(): String = pick("İşler", "Jobs")
+
+    @Composable @ReadOnlyComposable
+    fun navProfile(): String = pick("Profil", "Profile")
+
+    // Profile screen
+    @Composable @ReadOnlyComposable
+    fun profileTitle(): String = pick("Profil ve modlar", "Profile & modes")
+
+    @Composable @ReadOnlyComposable
+    fun profileSubtitle(): String =
+        pick("Aynı hesapla müşteri, hizmet veren ve işletme yüzlerini yönet.",
+             "Same account, three faces — customer, provider, business.")
+
+    @Composable @ReadOnlyComposable
+    fun providerCapability(): String = pick("Hizmet veren modu", "Provider mode")
+
+    @Composable @ReadOnlyComposable
+    fun providerEnableCta(): String =
+        pick("Hizmet vermeye başla", "Become a provider")
+
+    @Composable @ReadOnlyComposable
+    fun providerEnabled(): String = pick("Açık", "Enabled")
+
+    @Composable @ReadOnlyComposable
+    fun businessCapability(): String = pick("İşletme modu", "Business mode")
+
+    @Composable @ReadOnlyComposable
+    fun businessOnboardingHint(): String =
+        pick("İşletme açmak için web tarafından devam et.",
+             "Continue business onboarding on the web for now.")
+
+    @Composable @ReadOnlyComposable
+    fun modeSwitchHint(): String =
+        pick("İşletme hesabın olsa bile istediğin an müşteri moduna dönebilirsin.",
+             "Even with a business account, you can drop back to customer mode anytime.")
+
+    @Composable @ReadOnlyComposable
+    fun completenessLabel(): String = pick("Profil tamamlanma", "Profile completeness")
+
+    // Marketplace screen
+    @Composable @ReadOnlyComposable
+    fun marketplaceTitle(): String = pick("İşler", "Marketplace")
+
+    @Composable @ReadOnlyComposable
+    fun marketplaceSubtitle(): String =
+        pick("Talep oluştur, açık işlere teklif ver, kabul edilen işleri takip et.",
+             "Create requests, send offers on open jobs, track accepted work.")
+
+    @Composable @ReadOnlyComposable
+    fun marketplaceOpen(): String = pick("Açık talepler", "Open requests")
+
+    @Composable @ReadOnlyComposable
+    fun marketplaceMine(): String = pick("Benim taleplerim", "My requests")
+
+    @Composable @ReadOnlyComposable
+    fun marketplaceMyOffers(): String = pick("Benim tekliflerim", "My offers")
+
+    @Composable @ReadOnlyComposable
+    fun marketplaceMyJobs(): String = pick("Aktif işlerim", "My jobs")
+
+    @Composable @ReadOnlyComposable
+    fun marketplaceNoOpen(): String =
+        pick("Şu an açık talep yok.", "No open requests right now.")
+
+    @Composable @ReadOnlyComposable
+    fun marketplaceNoMine(): String =
+        pick("Henüz bir talep oluşturmadın.", "You haven't posted any requests yet.")
+
+    @Composable @ReadOnlyComposable
+    fun marketplaceNoOffers(): String =
+        pick("Aktif teklifin yok.", "You have no active offers.")
+
+    @Composable @ReadOnlyComposable
+    fun marketplaceNoJobs(): String =
+        pick("Aktif işin yok.", "No active jobs.")
+
+    // Feed
+    @Composable @ReadOnlyComposable
+    fun feedTitle(): String = pick("Sosyal akış", "Social feed")
+
+    @Composable @ReadOnlyComposable
+    fun feedSubtitle(): String =
+        pick("Çevrendeki duyurular, etkinlikler ve organik paylaşımlar.",
+             "Announcements, events, and organic posts from your area.")
+
+    @Composable @ReadOnlyComposable
+    fun feedEmpty(): String =
+        pick("Çevrende henüz paylaşım yok.", "Nothing posted around you yet.")
+
+    @Composable @ReadOnlyComposable
+    fun feedCreate(): String = pick("Yeni paylaşım", "New post")
+
+    @Composable @ReadOnlyComposable
+    fun feedPostBody(): String = pick("Ne paylaşmak istersin?", "What's on your mind?")
+
+    @Composable @ReadOnlyComposable
+    fun feedPostSubmit(): String = pick("Paylaş", "Post")
+
     @Composable @ReadOnlyComposable
     fun emptyFeed(): String =
         pick("Çevrende henüz aktivite yok — ilk talebi sen oluştur.",
