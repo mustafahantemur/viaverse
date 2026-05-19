@@ -21,6 +21,7 @@ extensions.configure<JavaPluginExtension> {
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
     options.release.set(25)
+    options.compilerArgs.add("-parameters")
 }
 
 dependencies {
@@ -41,6 +42,7 @@ tasks.named<BootRun>("bootRun") {
         "spring.profiles.active",
         providers.gradleProperty("springProfiles").orElse("local").get()
     )
+    jvmArgs("--sun-misc-unsafe-memory-access=allow")
 }
 
 tasks.register<BootRun>("bootRunDebug") {
@@ -55,6 +57,7 @@ tasks.register<BootRun>("bootRunDebug") {
         "spring.profiles.active",
         providers.gradleProperty("springProfiles").orElse("local").get()
     )
+    jvmArgs("--sun-misc-unsafe-memory-access=allow")
 
     debugOptions {
         enabled.set(true)

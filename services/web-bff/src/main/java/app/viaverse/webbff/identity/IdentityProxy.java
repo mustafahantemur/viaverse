@@ -2,6 +2,7 @@ package app.viaverse.webbff.identity;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
@@ -32,7 +33,10 @@ public class IdentityProxy {
     private final RestClient identityRestClient;
     private final JsonBodyParser jsonBodyParser;
 
-    public IdentityProxy(RestClient identityRestClient, JsonBodyParser jsonBodyParser) {
+    public IdentityProxy(
+            @Qualifier("identityRestClient") RestClient identityRestClient,
+            JsonBodyParser jsonBodyParser
+    ) {
         this.identityRestClient = identityRestClient;
         this.jsonBodyParser = jsonBodyParser;
     }

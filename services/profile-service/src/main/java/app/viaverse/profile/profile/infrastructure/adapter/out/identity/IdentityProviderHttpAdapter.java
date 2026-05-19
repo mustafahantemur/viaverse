@@ -4,6 +4,7 @@ import app.viaverse.profile.config.ProfileIdentityProperties;
 import app.viaverse.profile.profile.application.port.out.IdentityProviderGateway;
 import app.viaverse.shared.kernel.error.TechnicalException;
 import app.viaverse.web.api.ApiResponse;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,6 +19,8 @@ import org.springframework.web.client.RestClient;
 public class IdentityProviderHttpAdapter implements IdentityProviderGateway {
 
     private static final String INTERNAL_TOKEN_HEADER = "X-Internal-Token";
+    private static final ParameterizedTypeReference<ApiResponse<AccountSnapshotResponse>> ACCOUNT_BODY =
+            new ParameterizedTypeReference<>() {};
     private static final ParameterizedTypeReference<ApiResponse<ProviderReadinessResponse>> READINESS_BODY =
             new ParameterizedTypeReference<>() {};
     private static final ParameterizedTypeReference<ApiResponse<ConsentPolicyResponse>> POLICY_BODY =
@@ -32,6 +35,26 @@ public class IdentityProviderHttpAdapter implements IdentityProviderGateway {
     ) {
         this.restClient = restClient;
         this.properties = properties;
+    }
+
+    @Override
+    public AccountSnapshot getAccountSnapshot(UUID accountId) {
+        try {
+            AccountSnapshotResponse account = requireData(restClient.get()
+                    .uri("/api/v1/internal/accounts/{accountId}", accountId)
+                    .header(INTERNAL_TOKEN_HEADER, properties.getInternalApiToken())
+                    .retrieve()
+                    .body(ACCOUNT_BODY));
+            return new AccountSnapshot(
+                    account.accountId(),
+                    account.displayName(),
+                    account.firstName(),
+                    account.lastName(),
+                    account.createdAt()
+            );
+        } catch (HttpStatusCodeException | ResourceAccessException exception) {
+            throw unavailable("Identity account snapshot is unavailable", exception);
+        }
     }
 
     @Override
@@ -133,6 +156,15 @@ public class IdentityProviderHttpAdapter implements IdentityProviderGateway {
             UUID accountId,
             boolean active,
             boolean hasVerifiedIdentifier
+    ) {
+    }
+
+    private record AccountSnapshotResponse(
+            UUID accountId,
+            String displayName,
+            String firstName,
+            String lastName,
+            Instant createdAt
     ) {
     }
 

@@ -9,173 +9,102 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug identity-service",
+      "type": "node-terminal",
+      "name": "run backend: all services",
       "request": "launch",
-      "projectName": "identity-service",
-      "mainClass": "app.viaverse.identity.IdentityServiceApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/identity-service/src/main/resources/",
-      "preLaunchTask": "backend: ready identity-service"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-backend-services.ps1\"",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug profile-service",
+      "type": "node-terminal",
+      "name": "run identity-service",
       "request": "launch",
-      "projectName": "profile-service",
-      "mainClass": "app.viaverse.profile.ProfileServiceApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/profile-service/src/main/resources/",
-      "preLaunchTask": "backend: ready profile-service"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:identity-service\" -Ports \"8101\"",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug content-service",
+      "type": "node-terminal",
+      "name": "run profile-service",
       "request": "launch",
-      "projectName": "content-service",
-      "mainClass": "app.viaverse.content.ContentServiceApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/content-service/src/main/resources/",
-      "preLaunchTask": "backend: ready content-service"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:profile-service\" -Ports \"8111\"",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug marketplace-service",
+      "type": "node-terminal",
+      "name": "run content-service",
       "request": "launch",
-      "projectName": "marketplace-service",
-      "mainClass": "app.viaverse.marketplace.MarketplaceServiceApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/marketplace-service/src/main/resources/",
-      "preLaunchTask": "backend: ready marketplace-service"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:content-service\" -Ports \"8112\"",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug payment-service",
+      "type": "node-terminal",
+      "name": "run marketplace-service",
       "request": "launch",
-      "projectName": "payment-service",
-      "mainClass": "app.viaverse.payment.PaymentServiceApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/payment-service/src/main/resources/",
-      "preLaunchTask": "backend: ready payment-service"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:marketplace-service\" -Ports \"8102\"",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug messaging-service",
+      "type": "node-terminal",
+      "name": "run payment-service",
       "request": "launch",
-      "projectName": "messaging-service",
-      "mainClass": "app.viaverse.messaging.MessagingServiceApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/messaging-service/src/main/resources/",
-      "preLaunchTask": "backend: ready messaging-service"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:payment-service\" -Ports \"8103\"",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug media-service",
+      "type": "node-terminal",
+      "name": "run messaging-service",
       "request": "launch",
-      "projectName": "media-service",
-      "mainClass": "app.viaverse.media.MediaServiceApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/media-service/src/main/resources/",
-      "preLaunchTask": "backend: ready media-service"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:messaging-service\" -Ports \"8104\"",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug notification-service",
+      "type": "node-terminal",
+      "name": "run media-service",
       "request": "launch",
-      "projectName": "notification-service",
-      "mainClass": "app.viaverse.notification.NotificationServiceApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/notification-service/src/main/resources/",
-      "preLaunchTask": "backend: ready notification-service"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:media-service\" -Ports \"8105\"",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug search-service",
+      "type": "node-terminal",
+      "name": "run notification-service",
       "request": "launch",
-      "projectName": "search-service",
-      "mainClass": "app.viaverse.search.SearchServiceApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/search-service/src/main/resources/",
-      "preLaunchTask": "backend: ready search-service"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:notification-service\" -Ports \"8106\"",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug trust-gamification-service",
+      "type": "node-terminal",
+      "name": "run search-service",
       "request": "launch",
-      "projectName": "trust-gamification-service",
-      "mainClass": "app.viaverse.trustgamification.TrustGamificationServiceApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/trust-gamification-service/src/main/resources/",
-      "preLaunchTask": "backend: ready trust-gamification-service"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:search-service\" -Ports \"8107\"",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug ads-monetization-service",
+      "type": "node-terminal",
+      "name": "run trust-gamification-service",
       "request": "launch",
-      "projectName": "ads-monetization-service",
-      "mainClass": "app.viaverse.adsmonetization.AdsMonetizationServiceApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/ads-monetization-service/src/main/resources/",
-      "preLaunchTask": "backend: ready ads-monetization-service"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:trust-gamification-service\" -Ports \"8108\"",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug admin-bff",
+      "type": "node-terminal",
+      "name": "run ads-monetization-service",
       "request": "launch",
-      "projectName": "admin-bff",
-      "mainClass": "app.viaverse.adminbff.AdminBffApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/admin-bff/src/main/resources/",
-      "preLaunchTask": "backend: ready admin-bff"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:ads-monetization-service\" -Ports \"8109\"",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "type": "java",
-      "name": "debug web-bff",
+      "type": "node-terminal",
+      "name": "run admin-bff",
       "request": "launch",
-      "projectName": "web-bff",
-      "mainClass": "app.viaverse.webbff.WebBffApplication",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "shortenCommandLine": "argfile",
-      "envFile": "${workspaceFolder}/.env.local",
-      "vmArgs": "-Dspring.profiles.active=local -Dspring.config.additional-location=file:${workspaceFolder}/services/web-bff/src/main/resources/",
-      "preLaunchTask": "backend: ready web-bff"
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:admin-bff\" -Ports \"8110\"",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node-terminal",
+      "name": "run web-bff",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:web-bff\" -Ports \"8001\"",
+      "cwd": "${workspaceFolder}"
     },
     {
       "type": "node-terminal",
@@ -201,48 +130,17 @@
   ],
   "compounds": [
     {
-      "name": "debug backend: all services",
+      "name": "run local stack: backend + web apps",
       "configurations": [
-        "debug identity-service",
-        "debug profile-service",
-        "debug content-service",
-        "debug marketplace-service",
-        "debug payment-service",
-        "debug messaging-service",
-        "debug media-service",
-        "debug notification-service",
-        "debug search-service",
-        "debug trust-gamification-service",
-        "debug ads-monetization-service",
-        "debug admin-bff",
-        "debug web-bff"
-      ],
-      "stopAll": true
-    },
-    {
-      "name": "run web apps",
-      "configurations": [
+        "run backend: all services",
         "run web-next",
         "run admin-next"
       ],
       "stopAll": true
     },
     {
-      "name": "run local stack: backend + web apps",
+      "name": "run web apps",
       "configurations": [
-        "debug identity-service",
-        "debug profile-service",
-        "debug content-service",
-        "debug marketplace-service",
-        "debug payment-service",
-        "debug messaging-service",
-        "debug media-service",
-        "debug notification-service",
-        "debug search-service",
-        "debug trust-gamification-service",
-        "debug ads-monetization-service",
-        "debug admin-bff",
-        "debug web-bff",
         "run web-next",
         "run admin-next"
       ],
