@@ -105,14 +105,21 @@ services:
       OBJECT_STORAGE_BUCKET_MEDIA: ${OBJECT_STORAGE_BUCKET_MEDIA:-viaverse-media-local}
     entrypoint: ["/bin/sh", "-c"]
     command:
-      - >
-        (
-          aws --endpoint-url http://seaweedfs:8333 s3api head-bucket --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA" 2>/dev/null
-          || aws --endpoint-url http://seaweedfs:8333 s3api create-bucket --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA"
-        )
-        && aws --endpoint-url http://seaweedfs:8333 s3api put-bucket-cors
-        --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA"
-        --cors-configuration '{"CORSRules":[{"AllowedHeaders":["*"],"AllowedMethods":["PUT","GET","HEAD"],"AllowedOrigins":["http://localhost:3000","http://localhost:5173","http://localhost:4000"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3600}]}'
+      - |
+        set -eu
+        if aws --endpoint-url http://seaweedfs:8333 s3api head-bucket --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA" >/dev/null 2>&1; then
+          echo "Bucket $$OBJECT_STORAGE_BUCKET_MEDIA already exists."
+        else
+          aws --endpoint-url http://seaweedfs:8333 s3api create-bucket --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA"
+        fi
+        if aws --endpoint-url http://seaweedfs:8333 s3api put-bucket-cors \
+          --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA" \
+          --cors-configuration '{"CORSRules":[{"AllowedHeaders":["*"],"AllowedMethods":["PUT","GET","HEAD"],"AllowedOrigins":["http://localhost:3000","http://localhost:5173","http://localhost:4000"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3600}]}' 2>/tmp/seaweedfs-cors-error.log; then
+          echo "Bucket CORS configured for $$OBJECT_STORAGE_BUCKET_MEDIA."
+        else
+          cat /tmp/seaweedfs-cors-error.log
+          echo "Bucket CORS is not supported by this local SeaweedFS S3 adapter; continuing."
+        fi
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.141.0
