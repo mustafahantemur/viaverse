@@ -12,6 +12,7 @@
 | First work feed | `/feed/work` filters jobs by active mode + profile-owned service categories |
 | Provider offer inbox | `/me/offers` lets providers track and withdraw their own live bids |
 | Cancellation / withdrawal | Open requests can be cancelled and submitted offers can be withdrawn safely |
+| Job timeline | Participants can read lifecycle history and add job notes |
 | Web UI | `/app/marketplace` supports the whole flow |
 | Events | Marketplace lifecycle emits through the transactional outbox |
 
@@ -23,6 +24,7 @@
 - expiry and reopen policies
 - search projections and locality filters
 - messaging thread creation
+- richer timeline event types for payments, disputes, and reviews
 - richer provider/job summary cards
 
 ## Phase 3 — money and safety

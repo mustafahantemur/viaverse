@@ -80,6 +80,7 @@ class MarketplaceLifecycleIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM job_timeline_entry");
         jdbcTemplate.execute("DELETE FROM job");
         jdbcTemplate.execute("DELETE FROM offer");
         jdbcTemplate.execute("DELETE FROM service_request_media");
@@ -145,9 +146,24 @@ class MarketplaceLifecycleIntegrationTest {
         ).body());
         String jobId = createdJob.get("id").toString();
         assertThat(createdJob).containsEntry("status", "AGREED");
+        assertThat(unwrapList(get("/api/v1/jobs/" + jobId + "/timeline", requesterToken).body()))
+                .extracting(entry -> entry.get("eventType"))
+                .containsExactly("JOB_CREATED");
 
         Map<String, Object> startedJob = unwrap(post("/api/v1/jobs/" + jobId + "/start", Map.of(), providerToken).body());
         assertThat(startedJob).containsEntry("status", "IN_PROGRESS");
+        assertThat(unwrapList(get("/api/v1/jobs/" + jobId + "/timeline", providerToken).body()))
+                .extracting(entry -> entry.get("eventType"))
+                .containsExactly("JOB_CREATED", "JOB_STARTED");
+
+        Map<String, Object> note = unwrap(post(
+                "/api/v1/jobs/" + jobId + "/timeline/notes",
+                Map.of("message", "Parça temin edildi, yola çıkıyorum."),
+                providerToken
+        ).body());
+        assertThat(note)
+                .containsEntry("eventType", "NOTE_ADDED")
+                .containsEntry("message", "Parça temin edildi, yola çıkıyorum.");
 
         Map<String, Object> completedJob = unwrap(post(
                 "/api/v1/jobs/" + jobId + "/complete",
@@ -155,6 +171,9 @@ class MarketplaceLifecycleIntegrationTest {
                 requesterToken
         ).body());
         assertThat(completedJob).containsEntry("status", "COMPLETED");
+        assertThat(unwrapList(get("/api/v1/jobs/" + jobId + "/timeline", requesterToken).body()))
+                .extracting(entry -> entry.get("eventType"))
+                .containsExactly("JOB_CREATED", "JOB_STARTED", "NOTE_ADDED", "JOB_COMPLETED");
         assertThat(jdbcTemplate.queryForObject("SELECT status FROM service_request WHERE id = ?::uuid", String.class, requestId))
                 .isEqualTo("MATCHED");
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM outbox_event", Integer.class))

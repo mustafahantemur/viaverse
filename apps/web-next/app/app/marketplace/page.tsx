@@ -7,6 +7,7 @@ import { Button } from "@/components/primitives/Button";
 import { Container } from "@/components/primitives/Container";
 import {
     acceptOffer,
+    addJobTimelineNote,
     cancelServiceRequest,
     completeJob,
     createServiceRequest,
@@ -22,8 +23,10 @@ import {
     startJob,
     submitOffer,
     withdrawOffer,
+    jobTimeline,
     workFeed,
     type CurrentProfileView,
+    type JobTimelineEntryView,
     type JobView,
     type MeView,
     type OfferView,
@@ -57,6 +60,7 @@ export default function MarketplacePage() {
     const [jobs, setJobs] = useState<JobView[]>([]);
     const [offers, setOffers] = useState<OfferView[]>([]);
     const [offersByRequest, setOffersByRequest] = useState<Record<string, OfferView[]>>({});
+    const [timelinesByJob, setTimelinesByJob] = useState<Record<string, JobTimelineEntryView[]>>({});
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [busy, setBusy] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
@@ -131,6 +135,11 @@ export default function MarketplacePage() {
         } finally {
             setBusy(false);
         }
+    }
+
+    async function loadTimeline(jobId: string) {
+        const timeline = await jobTimeline(jobId);
+        setTimelinesByJob((current) => ({ ...current, [jobId]: timeline }));
     }
 
     if (status !== "ready") {
@@ -259,16 +268,30 @@ export default function MarketplacePage() {
                                                 job={job}
                                                 meId={meView?.id}
                                                 busy={busy}
+                                                timeline={timelinesByJob[job.id]}
+                                                onLoadTimeline={() =>
+                                                    run(async () => {
+                                                        await loadTimeline(job.id);
+                                                    })
+                                                }
+                                                onAddNote={(note) =>
+                                                    run(async () => {
+                                                        await addJobTimelineNote(job.id, note);
+                                                        await loadTimeline(job.id);
+                                                    })
+                                                }
                                                 onStart={() =>
                                                     run(async () => {
                                                         await startJob(job.id);
                                                         await refreshLists();
+                                                        await loadTimeline(job.id);
                                                     })
                                                 }
                                                 onComplete={() =>
                                                     run(async () => {
                                                         await completeJob(job.id);
                                                         await refreshLists();
+                                                        await loadTimeline(job.id);
                                                     })
                                                 }
                                             />
@@ -513,16 +536,23 @@ function JobCard({
     job,
     meId,
     busy,
+    timeline,
+    onLoadTimeline,
+    onAddNote,
     onStart,
     onComplete,
 }: {
     job: JobView;
     meId?: string;
     busy: boolean;
+    timeline?: JobTimelineEntryView[];
+    onLoadTimeline: () => Promise<void>;
+    onAddNote: (note: string) => Promise<void>;
     onStart: () => Promise<void>;
     onComplete: () => Promise<void>;
 }) {
     const { t } = useTranslation();
+    const [note, setNote] = useState("");
     const isProvider = meId === job.providerAccountId;
     const isRequester = meId === job.requesterAccountId;
 
@@ -547,7 +577,38 @@ function JobCard({
                         {t.marketplace.completeJob}
                     </Button>
                 )}
+                <Button variant="outline" disabled={busy} onClick={onLoadTimeline}>
+                    İş geçmişi
+                </Button>
             </div>
+            {timeline && (
+                <div className={styles.timeline}>
+                    {timeline.length === 0 ? (
+                        <p className={styles.empty}>Henüz iş geçmişi yok.</p>
+                    ) : (
+                        timeline.map((entry) => (
+                            <div key={entry.id} className={styles.timelineEntry}>
+                                <span className={styles.meta}>{timelineLabel(entry.eventType)}</span>
+                                {entry.message && <p>{entry.message}</p>}
+                                <time className={styles.meta}>{formatDateTime(entry.occurredAt)}</time>
+                            </div>
+                        ))
+                    )}
+                    <div className={styles.formGrid}>
+                        <Field label="İş notu" value={note} onChange={setNote} />
+                        <Button
+                            variant="outline"
+                            disabled={busy || !note.trim()}
+                            onClick={async () => {
+                                await onAddNote(note);
+                                setNote("");
+                            }}
+                        >
+                            Not ekle
+                        </Button>
+                    </div>
+                </div>
+            )}
         </article>
     );
 }
@@ -604,4 +665,24 @@ function formatBudget(request: ServiceRequestView): string {
 
 function shortId(value: string): string {
     return value.slice(0, 8);
+}
+
+function timelineLabel(eventType: JobTimelineEntryView["eventType"]): string {
+    switch (eventType) {
+        case "JOB_CREATED":
+            return "İş oluşturuldu";
+        case "JOB_STARTED":
+            return "İş başladı";
+        case "JOB_COMPLETED":
+            return "İş tamamlandı";
+        case "NOTE_ADDED":
+            return "Not eklendi";
+    }
+}
+
+function formatDateTime(value: string): string {
+    return new Intl.DateTimeFormat("tr-TR", {
+        dateStyle: "medium",
+        timeStyle: "short",
+    }).format(new Date(value));
 }

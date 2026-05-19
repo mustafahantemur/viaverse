@@ -142,6 +142,25 @@
   background: var(--vv-bg);
 }
 
+.timeline {
+  display: grid;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--vv-border-faint);
+}
+
+.timelineEntry {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: var(--vv-radius-md);
+  background: var(--vv-bg);
+}
+
+.timelineEntry p {
+  margin: 0;
+}
+
 .message {
   margin: 0;
   color: var(--vv-trust-deep);

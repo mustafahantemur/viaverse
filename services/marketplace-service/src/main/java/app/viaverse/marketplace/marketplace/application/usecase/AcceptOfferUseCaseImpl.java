@@ -2,10 +2,13 @@ package app.viaverse.marketplace.marketplace.application.usecase;
 
 import app.viaverse.marketplace.marketplace.application.port.in.AcceptOfferUseCase;
 import app.viaverse.marketplace.marketplace.application.port.out.JobRepository;
+import app.viaverse.marketplace.marketplace.application.port.out.JobTimelineRepository;
 import app.viaverse.marketplace.marketplace.application.port.out.MarketplaceEventPublisher;
 import app.viaverse.marketplace.marketplace.application.port.out.OfferRepository;
 import app.viaverse.marketplace.marketplace.application.port.out.ServiceRequestRepository;
+import app.viaverse.marketplace.marketplace.domain.enums.JobTimelineEventTypeEnum;
 import app.viaverse.marketplace.marketplace.domain.model.Job;
+import app.viaverse.marketplace.marketplace.domain.model.JobTimelineEntry;
 import app.viaverse.marketplace.marketplace.domain.model.Offer;
 import app.viaverse.shared.kernel.error.ConflictException;
 import app.viaverse.shared.kernel.error.ForbiddenException;
@@ -23,6 +26,7 @@ public class AcceptOfferUseCaseImpl implements AcceptOfferUseCase {
     private final ServiceRequestRepository requestRepository;
     private final OfferRepository offerRepository;
     private final JobRepository jobRepository;
+    private final JobTimelineRepository timelineRepository;
     private final MarketplaceEventPublisher eventPublisher;
     private final Clock clock;
 
@@ -30,12 +34,14 @@ public class AcceptOfferUseCaseImpl implements AcceptOfferUseCase {
             ServiceRequestRepository requestRepository,
             OfferRepository offerRepository,
             JobRepository jobRepository,
+            JobTimelineRepository timelineRepository,
             MarketplaceEventPublisher eventPublisher,
             Clock clock
     ) {
         this.requestRepository = requestRepository;
         this.offerRepository = offerRepository;
         this.jobRepository = jobRepository;
+        this.timelineRepository = timelineRepository;
         this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
@@ -67,6 +73,7 @@ public class AcceptOfferUseCaseImpl implements AcceptOfferUseCase {
         offerRepository.saveAll(updatedOffers);
         var matchedRequest = requestRepository.save(request.markMatched(now));
         Job job = jobRepository.save(Job.create(matchedRequest, accepted, now));
+        timelineRepository.save(JobTimelineEntry.system(job.getId(), JobTimelineEventTypeEnum.JOB_CREATED, now));
         eventPublisher.publishOfferAccepted(matchedRequest, accepted);
         eventPublisher.publishJobCreated(job);
         return job;

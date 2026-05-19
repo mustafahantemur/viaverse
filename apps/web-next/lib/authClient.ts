@@ -529,6 +529,18 @@ export type JobView = {
     updatedAt: string;
 };
 
+export type JobTimelineEventType = "JOB_CREATED" | "JOB_STARTED" | "JOB_COMPLETED" | "NOTE_ADDED";
+
+export type JobTimelineEntryView = {
+    id: string;
+    jobId: string;
+    actorAccountId?: string;
+    eventType: JobTimelineEventType;
+    message?: string;
+    occurredAt: string;
+    createdAt: string;
+};
+
 export type CreateServiceRequestPayload = {
     title: string;
     description: string;
@@ -623,6 +635,18 @@ export function completeJob(jobId: string): Promise<JobView> {
     return call(`/api/jobs/${jobId}/complete`, {
         method: "POST",
         body: JSON.stringify({}),
+        authed: true,
+    });
+}
+
+export function jobTimeline(jobId: string): Promise<JobTimelineEntryView[]> {
+    return call(`/api/jobs/${jobId}/timeline`, { method: "GET", authed: true });
+}
+
+export function addJobTimelineNote(jobId: string, message: string): Promise<JobTimelineEntryView> {
+    return call(`/api/jobs/${jobId}/timeline/notes`, {
+        method: "POST",
+        body: JSON.stringify({ message }),
         authed: true,
     });
 }

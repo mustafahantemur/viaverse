@@ -1,9 +1,11 @@
 package app.viaverse.marketplace.marketplace.infrastructure.adapter.in.web.mapper;
 
 import app.viaverse.marketplace.marketplace.domain.model.Job;
+import app.viaverse.marketplace.marketplace.domain.model.JobTimelineEntry;
 import app.viaverse.marketplace.marketplace.domain.model.Offer;
 import app.viaverse.marketplace.marketplace.domain.model.ServiceRequest;
 import app.viaverse.marketplace.marketplace.infrastructure.adapter.in.web.dto.response.JobResponse;
+import app.viaverse.marketplace.marketplace.infrastructure.adapter.in.web.dto.response.JobTimelineEntryResponse;
 import app.viaverse.marketplace.marketplace.infrastructure.adapter.in.web.dto.response.OfferResponse;
 import app.viaverse.marketplace.marketplace.infrastructure.adapter.in.web.dto.response.ServiceRequestResponse;
 import org.springframework.stereotype.Component;
@@ -57,6 +59,18 @@ public class MarketplaceDtoMapper {
                 job.getStatus(),
                 job.getCreatedAt(),
                 job.getUpdatedAt()
+        );
+    }
+
+    public JobTimelineEntryResponse toResponse(JobTimelineEntry entry) {
+        return new JobTimelineEntryResponse(
+                entry.getId(),
+                entry.getJobId(),
+                entry.getActorAccountId(),
+                entry.getEventType(),
+                entry.getMessage(),
+                entry.getOccurredAt(),
+                entry.getCreatedAt()
         );
     }
 }

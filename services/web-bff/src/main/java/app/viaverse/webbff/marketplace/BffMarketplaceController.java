@@ -136,6 +136,27 @@ public class BffMarketplaceController {
         return forward(HttpMethod.POST, "/api/v1/jobs/" + jobId + "/complete", Map.of(), authorization);
     }
 
+    @GetMapping("/jobs/{jobId}/timeline")
+    public ResponseEntity<Map<String, Object>> jobTimeline(
+            @PathVariable String jobId,
+            @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        MarketplaceProxy.ProxyResponse proxied = marketplaceProxy.get(
+                "/api/v1/jobs/" + jobId + "/timeline",
+                authorization
+        );
+        return ResponseEntity.status(proxied.status()).body(proxied.body());
+    }
+
+    @PostMapping("/jobs/{jobId}/timeline/notes")
+    public ResponseEntity<Map<String, Object>> addJobTimelineNote(
+            @PathVariable String jobId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        return forward(HttpMethod.POST, "/api/v1/jobs/" + jobId + "/timeline/notes", body, authorization);
+    }
+
     private ResponseEntity<Map<String, Object>> forward(
             HttpMethod method,
             String path,

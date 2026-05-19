@@ -1,9 +1,11 @@
 package app.viaverse.marketplace.marketplace.infrastructure.adapter.out.persistence.mapper;
 
 import app.viaverse.marketplace.marketplace.domain.model.Job;
+import app.viaverse.marketplace.marketplace.domain.model.JobTimelineEntry;
 import app.viaverse.marketplace.marketplace.domain.model.Offer;
 import app.viaverse.marketplace.marketplace.domain.model.ServiceRequest;
 import app.viaverse.marketplace.marketplace.infrastructure.adapter.out.persistence.entity.JobJpaEntity;
+import app.viaverse.marketplace.marketplace.infrastructure.adapter.out.persistence.entity.JobTimelineEntryJpaEntity;
 import app.viaverse.marketplace.marketplace.infrastructure.adapter.out.persistence.entity.OfferJpaEntity;
 import app.viaverse.marketplace.marketplace.infrastructure.adapter.out.persistence.entity.ServiceRequestJpaEntity;
 import org.springframework.stereotype.Component;
@@ -112,6 +114,30 @@ public class MarketplaceJpaMapper {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
                 entity.getVersion()
+        );
+    }
+
+    public JobTimelineEntryJpaEntity toEntity(JobTimelineEntry entry) {
+        return new JobTimelineEntryJpaEntity(
+                entry.getId(),
+                entry.getJobId(),
+                entry.getActorAccountId(),
+                entry.getEventType(),
+                entry.getMessage(),
+                entry.getOccurredAt(),
+                entry.getCreatedAt()
+        );
+    }
+
+    public JobTimelineEntry toDomain(JobTimelineEntryJpaEntity entity) {
+        return new JobTimelineEntry(
+                entity.getId(),
+                entity.getJobId(),
+                entity.getActorAccountId(),
+                entity.getEventType(),
+                entity.getMessage(),
+                entity.getOccurredAt(),
+                entity.getCreatedAt()
         );
     }
 }

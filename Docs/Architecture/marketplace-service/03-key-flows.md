@@ -38,12 +38,24 @@ recommended synchronous profile capability read described in `service-communicat
 
 1. Assigned provider starts the job → `IN_PROGRESS`.
 2. Requester confirms completion → `COMPLETED`.
-3. Outbox emits start/completion events.
+3. Marketplace appends lifecycle entries to the job timeline.
+4. Outbox emits start/completion events.
 
 Payment, messaging, dispute, and review integrations attach to this graph in later slices; this first cut intentionally
 keeps the commercial lifecycle coherent before adding more services around it.
 
-## 6. Work feed
+## 6. Job timeline
+
+1. Accepting an offer creates a `JOB_CREATED` timeline entry.
+2. Starting/completing a job appends `JOB_STARTED` / `JOB_COMPLETED`.
+3. Requester and assigned provider can both read the timeline.
+4. Requester and assigned provider can add short participant notes through `NOTE_ADDED`.
+5. Non-participants cannot read or write the timeline.
+
+This is intentionally not a chat replacement. It is the auditable work history that later messaging, payment, dispute,
+and review surfaces can reference.
+
+## 7. Work feed
 
 The first cut now exposes both:
 

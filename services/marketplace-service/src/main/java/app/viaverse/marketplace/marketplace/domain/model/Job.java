@@ -73,6 +73,10 @@ public final class Job {
     public Instant getUpdatedAt() { return updatedAt; }
     public long getVersion() { return version; }
 
+    public boolean hasParticipant(UUID accountId) {
+        return requesterAccountId.equals(accountId) || providerAccountId.equals(accountId);
+    }
+
     public Job start(Instant now) {
         if (status != JobStatusEnum.AGREED) {
             throw new IllegalStateException("Only agreed jobs can be started");

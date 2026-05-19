@@ -241,7 +241,9 @@ fun MarketplaceScreen(authApi: AuthApi) {
             heading = AppStrings.marketplaceMyJobs(),
             items = myJobs,
             empty = AppStrings.marketplaceNoJobs(),
-            row = { job -> JobRow(job,
+            row = { job -> JobRow(
+                job = job,
+                authApi = authApi,
                 onStart = {
                     scope.launch { runCatching { authApi.startJob(it) }; reloadAll() }
                 },
@@ -395,9 +397,15 @@ private fun OfferRow(offer: JsonObject, onWithdraw: (String) -> Unit) {
 @Composable
 private fun JobRow(
     job: JsonObject,
+    authApi: AuthApi,
     onStart: (String) -> Unit,
     onComplete: (String) -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+    var timeline by remember { mutableStateOf<JsonArray?>(null) }
+    var note by remember { mutableStateOf("") }
+    var timelineError by remember { mutableStateOf<String?>(null) }
+
     Card {
         val id = job["id"]?.jsonPrimitive?.contentOrNull() ?: ""
         val status = job["status"]?.jsonPrimitive?.contentOrNull() ?: ""
@@ -414,8 +422,91 @@ private fun JobRow(
                     VvPrimaryButton(text = "Tamamla", onClick = { onComplete(id) })
                 }
             }
+            Spacer(Modifier.height(10.dp))
+            VvOutlineButton(
+                text = "İş geçmişi",
+                onClick = {
+                    scope.launch {
+                        timelineError = null
+                        try {
+                            timeline = authApi.jobTimeline(id)
+                        } catch (t: Throwable) {
+                            timelineError = t.message ?: t::class.simpleName
+                        }
+                    }
+                },
+            )
+            timelineError?.let {
+                Spacer(Modifier.height(6.dp))
+                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+            timeline?.let { entries ->
+                Spacer(Modifier.height(8.dp))
+                if (entries.isEmpty()) {
+                    Text("Henüz iş geçmişi yok.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        entries.forEach { entry ->
+                            TimelineEntry(entry.jsonObject)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                VvTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    label = "İş notu",
+                    placeholder = "Kısa bir güncelleme ekle",
+                )
+                Spacer(Modifier.height(8.dp))
+                VvOutlineButton(
+                    text = "Not ekle",
+                    enabled = note.isNotBlank(),
+                    onClick = {
+                        scope.launch {
+                            timelineError = null
+                            try {
+                                authApi.addJobTimelineNote(id, note)
+                                note = ""
+                                timeline = authApi.jobTimeline(id)
+                            } catch (t: Throwable) {
+                                timelineError = t.message ?: t::class.simpleName
+                            }
+                        }
+                    },
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun TimelineEntry(entry: JsonObject) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            timelineLabel(entry["eventType"]?.jsonPrimitive?.contentOrNull() ?: ""),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        entry["message"]?.jsonPrimitive?.contentOrNull()?.takeIf { it.isNotBlank() }?.let {
+            Text(it, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+private fun timelineLabel(eventType: String): String = when (eventType) {
+    "JOB_CREATED" -> "İş oluşturuldu"
+    "JOB_STARTED" -> "İş başladı"
+    "JOB_COMPLETED" -> "İş tamamlandı"
+    "NOTE_ADDED" -> "Not eklendi"
+    else -> eventType
 }
 
 private fun JsonPrimitive.contentOrNull(): String? =

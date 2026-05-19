@@ -223,6 +223,14 @@ class AuthApi(
     suspend fun completeJob(jobId: String): JsonObject =
         postJson("/api/jobs/$jobId/complete", buildJsonObject {})
 
+    suspend fun jobTimeline(jobId: String): JsonArray =
+        getJsonArrayAuthed("/api/jobs/$jobId/timeline")
+
+    suspend fun addJobTimelineNote(jobId: String, message: String): JsonObject =
+        postJson("/api/jobs/$jobId/timeline/notes", buildJsonObject {
+            put("message", JsonPrimitive(message))
+        })
+
     // ---- Content (social feed) ----
 
     suspend fun socialFeed(city: String? = null, district: String? = null): JsonArray {

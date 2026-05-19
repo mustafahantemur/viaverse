@@ -143,9 +143,10 @@ Implemented now:
 - offer submission, withdrawal, current-provider offer listing, and acceptance
 - open-request cancellation with pending-offer cleanup
 - accepted-offer → job lifecycle (`AGREED` → `IN_PROGRESS` → `COMPLETED`)
+- append-only job timeline with lifecycle entries and participant notes
 - transactional outbox events for the lifecycle
 - first rule-based **work feed** using profile-owned service categories plus own-request suppression and business locality
-- `/app/marketplace` web flow for requests, relevant jobs, provider offers, and active jobs
+- `/app/marketplace` web flow for requests, relevant jobs, provider offers, active jobs, and job timelines
 
 Important product distinction now reflected in code:
 

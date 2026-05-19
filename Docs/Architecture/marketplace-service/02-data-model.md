@@ -41,10 +41,25 @@ Marketplace never stores raw images or video bytes.
 | `status` | `AGREED`, `IN_PROGRESS`, `COMPLETED`, later `CANCELLED`, `DISPUTED` |
 | timestamps/version | standard aggregate metadata |
 
+## `job_timeline_entry`
+
+Append-only job timeline visible only to job participants.
+
+| Field | Meaning |
+|---|---|
+| `id` | Timeline entry id |
+| `job_id` | Owning job |
+| `actor_account_id` | Participant who wrote a note; `NULL` for system lifecycle entries |
+| `event_type` | `JOB_CREATED`, `JOB_STARTED`, `JOB_COMPLETED`, `NOTE_ADDED` |
+| `message` | Required for participant notes, empty for lifecycle events |
+| `occurred_at`, `created_at` | Ordering and audit timestamps |
+
 ## Future-facing columns intentionally prepared now
 
 - `service_request_media` exists before upload UI lands so request photos/videos do not force a schema rewrite later.
 - Money is stored in **minor units** from day one so payment integration does not need a currency remodel.
+- Job timeline is append-only so payments, messages, dispute notes, and review hooks can attach to one auditable work
+  history without changing the core `job` state machine.
 - Content moderation is intentionally not hard-coded here yet; the owning service will later persist moderation decisions
   once the shared moderation lane exists.
 
