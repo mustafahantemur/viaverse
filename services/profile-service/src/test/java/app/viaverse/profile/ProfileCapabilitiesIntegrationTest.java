@@ -253,6 +253,17 @@ class ProfileCapabilitiesIntegrationTest {
         IdentityProviderGateway identityProviderGateway() {
             return new IdentityProviderGateway() {
                 @Override
+                public AccountSnapshot getAccountSnapshot(UUID accountId) {
+                    return new AccountSnapshot(
+                            accountId,
+                            "Ada Lovelace",
+                            "Ada",
+                            "Lovelace",
+                            Instant.parse("2026-05-18T08:00:00Z")
+                    );
+                }
+
+                @Override
                 public ProviderEnablementFacts getProviderEnablementFacts(UUID accountId) {
                     return new ProviderEnablementFacts(true, true, "v1");
                 }
