@@ -5,7 +5,7 @@
   gap: 8px;
   font-family: var(--vv-font-sans);
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   border-radius: var(--vv-radius-md);
   cursor: pointer;
   border: 1px solid transparent;

@@ -37,6 +37,7 @@ include(
     ":services:ads-monetization-service",
     ":services:admin-bff",
     ":services:web-bff",
+    ":services:mock-web-bff",
     ":apps:mobile-kmp",
     ":apps:mobile-android",
     ":apps:web-next",

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import {
     DEFAULT_LOCALE,
@@ -10,9 +11,9 @@ import {
 import { ThemeProvider, type Theme } from "@/lib/theme/ThemeProvider";
 
 export const metadata: Metadata = {
-    title: "Viaverse — yakındaki yardımı, küçük işleri, hizmet verenleri buluştur",
+    title: "Viaverse — yakınındaki paylaşımlar, talepler ve hizmetler",
     description:
-        "Hyperlokal sosyal & küçük-iş ağı. Bir el iste, paylaş, teklif al — ya da yeteneğini işe dönüştür.",
+        "Yakınındaki paylaşımları, hizmetleri, talepleri ve işletmeleri tek üründe keşfet.",
 };
 
 export default async function RootLayout({

@@ -9,6 +9,7 @@ Viaverse is a greenfield platform implementation. The repository now contains:
 - first real `content-service` and `media-service` slices,
 - the first real `trust-gamification-service` slice,
 - first web/admin/mobile client follow-through for that slice,
+- a standalone `mock-web-bff` for the web product prototype,
 - and technical shells for the remaining backend domains.
 
 ## Module overview
@@ -63,6 +64,23 @@ Then start the clients:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\dev\start-next-app.ps1 -App web-next
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\dev\start-next-app.ps1 -App admin-next
 ```
+
+For the product-prototype web app backed by the standalone Mock Web BFF:
+
+```powershell
+.\gradlew.bat :services:mock-web-bff:bootRun
+cd apps\web-next
+$env:NEXT_PUBLIC_MOCK_APP_BFF_BASE_URL="http://localhost:8120"
+npm run dev
+```
+
+Seeded mock sign-in accounts for this prototype:
+
+- `deniz@viaverse.test` / `Password123!`
+- `ece@viaverse.test` / `Password123!`
+- `mert@viaverse.test` / `Password123!`
+
+The mock service owns its own local H2-backed state for demo posts, comments, requests, offers, conversations, payments, and mock identity drafts. Use `POST http://localhost:8120/api/app/dev/reset` to reseed it.
 
 For Android:
 
@@ -121,6 +139,7 @@ If VS Code shows stale unresolved imports after shared-module changes, run **Jav
 | web-next | 3000 |
 | admin-next | 3001 |
 | web-bff | 8001 |
+| mock-web-bff | 8120 |
 | identity-service | 8101 |
 | marketplace-service | 8102 |
 | payment-service | 8103 |

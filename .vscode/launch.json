@@ -108,6 +108,13 @@
     },
     {
       "type": "node-terminal",
+      "name": "run mock-web-bff",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:mock-web-bff\" -Ports \"8120\"",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node-terminal",
       "name": "run web-next",
       "request": "launch",
       "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-next-app.ps1\" -App web-next",

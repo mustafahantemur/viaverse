@@ -9,12 +9,16 @@
  *     via cookie on /api/auth/refresh and /api/auth/logout.
  *   - `credentials: 'include'` on every call so the cookie travels.
  *
- * The BFF base URL points at our Spring Boot service on :8001 in local;
- * override with NEXT_PUBLIC_BFF_BASE_URL in deployed environments.
+ * In the product-prototype branch this client defaults to the standalone
+ * Mock Web BFF on :8120, so landing sign-in/sign-up can run without the
+ * real/proxy web-bff. Deployed or non-prototype environments can still
+ * override with NEXT_PUBLIC_BFF_BASE_URL.
  */
 
 const BFF_BASE_URL =
-    process.env.NEXT_PUBLIC_BFF_BASE_URL ?? "http://localhost:8001";
+    process.env.NEXT_PUBLIC_MOCK_APP_BFF_BASE_URL ??
+    process.env.NEXT_PUBLIC_BFF_BASE_URL ??
+    "http://localhost:8120";
 
 let accessToken: string | null = null;
 

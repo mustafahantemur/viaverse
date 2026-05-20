@@ -1,0 +1,61 @@
+server:
+  port: ${MOCK_WEB_BFF_PORT:8120}
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: mock-web-bff
+  datasource:
+    url: ${MOCK_WEB_BFF_DB_URL:jdbc:h2:file:./build/mock-web-bff/mock-app-db;AUTO_SERVER=TRUE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE}
+    driver-class-name: org.h2.Driver
+    username: ${MOCK_WEB_BFF_DB_USERNAME:sa}
+    password: ${MOCK_WEB_BFF_DB_PASSWORD:}
+  sql:
+    init:
+      mode: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  structured:
+    format:
+      console: ecs
+    ecs:
+      service:
+        name: ${spring.application.name}
+        environment: ${VIAVERSE_ENV:local}
+  level:
+    app.viaverse: INFO
+
+viaverse:
+  mock-web-bff:
+    cors:
+      allowed-origins: ${MOCK_WEB_BFF_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:5173}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+logging:
+  level:
+    app.viaverse: DEBUG
+
+---
+server:
+  port: 0
+spring:
+  config:
+    activate:
+      on-profile: test

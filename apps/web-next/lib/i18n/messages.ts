@@ -47,7 +47,7 @@ export const tr = {
         },
         features: {
             f1Title: "Çevrendeki canlı akış",
-            f1Body: "Mahalleni saran küçük talepler, duyurular ve hizmet ilanları — hepsi tek bir akışta, mesafeye göre sıralı.",
+            f1Body: "Yakınındaki küçük talepler, duyurular ve hizmet ilanları — hepsi tek bir akışta, mesafeye göre sıralı.",
             f2Title: "Hızlı teklif, hızlı dönüş",
             f2Body: "Talep oluştur, doğrulanmış ustalardan saatler içinde teklif al. Ya da kendi yeteneğinle teklif vermeye başla.",
             f3Title: "Şeffaf ücretlendirme",

@@ -1,657 +1,169 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { AppHeader } from "@/components/app/AppHeader";
+import { useEffect, useState } from "react";
+import { ShieldCheck, UserRound } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
-import { Container } from "@/components/primitives/Container";
+import { SelectField, TextField } from "@/components/product/ProductControls";
+import styles from "@/components/product/ProductPages.module.css";
+import { useAppSession } from "@/components/product/ProductAppShell";
 import {
-    currentProfile,
-    enableIndividualProvider,
-    getAccessToken,
-    getCapabilityTerms,
-    me,
-    refresh,
-    setAccessToken,
-    startBusinessOnboarding,
-    submitBusinessOnboarding,
-    updateActiveMode,
-    updateBusinessDraft,
-    updateIndividualProviderProfile,
-    updateProfile,
-    type ActiveMode,
-    type BusinessSector,
-    type CapabilityTerms,
-    type CurrentProfileView,
-    type MeView,
-    type ServiceCategory,
-    type UpdateBusinessDraftPayload,
-} from "@/lib/authClient";
-import { useTranslation } from "@/lib/i18n/I18nProvider";
-import styles from "./ProfilePage.module.css";
-
-const SECTORS: BusinessSector[] = ["PHARMACY", "CLINIC", "AGENCY", "SHOP", "SOFTWARE", "OTHER"];
-const SERVICE_CATEGORIES: ServiceCategory[] = [
-    "HOME_REPAIR",
-    "DIGITAL_SOFTWARE",
-    "CREATIVE_MEDIA",
-    "EDUCATION",
-    "CLEANING",
-    "LOGISTICS",
-    "CARE_HEALTH",
-    "PROFESSIONAL_CONSULTING",
-    "PETS",
-    "EVENTS",
-    "LOCAL_HELP",
-];
+    mockAppApi,
+    type CapabilityView,
+    type ProfileView,
+} from "@/lib/mockAppClient";
 
 export default function ProfilePage() {
-    const router = useRouter();
-    const { t } = useTranslation();
-    const [meView, setMeView] = useState<MeView | null>(null);
-    const [profile, setProfile] = useState<CurrentProfileView | null>(null);
-    const [terms, setTerms] = useState<CapabilityTerms | null>(null);
-    const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+    const { reloadSession } = useAppSession();
+    const [profile, setProfile] = useState<ProfileView | null>(null);
+    const [displayName, setDisplayName] = useState("");
+    const [headline, setHeadline] = useState("");
+    const [bio, setBio] = useState("");
+    const [locationLabel, setLocationLabel] = useState("");
+    const [activeCapability, setActiveCapability] = useState<CapabilityView["key"]>("STANDARD");
     const [message, setMessage] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
 
-    useEffect(() => {
-        let cancelled = false;
-        async function bootstrap() {
-            try {
-                if (!getAccessToken()) {
-                    await refresh();
-                }
-                const [fetchedMe, fetchedProfile, fetchedTerms] = await Promise.all([
-                    me(),
-                    currentProfile(),
-                    getCapabilityTerms(),
-                ]);
-                if (!cancelled) {
-                    setMeView(fetchedMe);
-                    setProfile(fetchedProfile);
-                    setTerms(fetchedTerms);
-                    setStatus("ready");
-                }
-            } catch {
-                if (!cancelled) {
-                    setStatus("error");
-                    setAccessToken(null);
-                    router.replace("/");
-                }
-            }
-        }
-        bootstrap();
-        return () => {
-            cancelled = true;
-        };
-    }, [router]);
-
-    if (status !== "ready" || !profile) {
-        return (
-            <main className={styles.loading}>
-                <span>{t.common.loading}</span>
-            </main>
-        );
+    async function load() {
+        const next = await mockAppApi.profile();
+        setProfile(next);
+        setDisplayName(next.displayName);
+        setHeadline(next.headline);
+        setBio(next.bio);
+        setLocationLabel(next.locationLabel);
+        setActiveCapability(next.activeCapability);
     }
 
-    const providerTerms = terms?.capabilityTerms.find((document) => document.type === "PROVIDER_TERMS");
-    const businessTerms = terms?.capabilityTerms.find((document) => document.type === "BUSINESS_TERMS");
+    useEffect(() => {
+        load();
+    }, []);
 
-    async function run(action: () => Promise<void>) {
+    async function save() {
         setBusy(true);
         setMessage(null);
         try {
-            await action();
-            setMessage(t.profile.saved);
+            const next = await mockAppApi.patchProfile({
+                displayName,
+                headline,
+                bio,
+                locationLabel,
+                activeCapability,
+            });
+            setProfile(next);
+            await reloadSession();
+            setMessage("Profil güncellendi.");
         } finally {
             setBusy(false);
         }
     }
 
-    return (
-        <>
-            <AppHeader
-                me={meView}
-                profile={profile}
-                onProfileChange={setProfile}
-                onLogout={() => setMeView(null)}
-            />
-            <main className={styles.page}>
-                <Container>
-                    <header className={styles.hero}>
-                        <p className={styles.eyebrow}>{t.profile.activeMode}</p>
-                        <h1>{t.profile.title}</h1>
-                        <p>{t.profile.subtitle}</p>
-                    </header>
-
-                    {message && <p className={styles.message}>{message}</p>}
-
-                    <section className={styles.grid}>
-                        <ProfileBasicsCard
-                            profile={profile}
-                            busy={busy}
-                            onSave={(next) =>
-                                run(async () => {
-                                    setProfile(await updateProfile(next));
-                                })
-                            }
-                        />
-                        <TrustCard profile={profile} />
-                        <ModesCard
-                            profile={profile}
-                            busy={busy}
-                            onSwitch={(mode) =>
-                                run(async () => {
-                                    setProfile(await updateActiveMode(mode));
-                                })
-                            }
-                        />
-                        <ProviderCard
-                            profile={profile}
-                            terms={providerTerms}
-                            busy={busy}
-                            onEnable={(version, serviceBlurb) =>
-                                run(async () => {
-                                    setProfile(await enableIndividualProvider(version, serviceBlurb));
-                                })
-                            }
-                            onSave={(payload) =>
-                                run(async () => {
-                                    await updateIndividualProviderProfile(payload);
-                                    setProfile(await currentProfile());
-                                })
-                            }
-                        />
-                        <BusinessCard
-                            profile={profile}
-                            terms={businessTerms}
-                            busy={busy}
-                            onStart={() =>
-                                run(async () => {
-                                    await startBusinessOnboarding();
-                                    setProfile(await currentProfile());
-                                })
-                            }
-                            onSaveDraft={(draft) =>
-                                run(async () => {
-                                    await updateBusinessDraft(draft);
-                                    setProfile(await currentProfile());
-                                })
-                            }
-                            onSubmit={(version) =>
-                                run(async () => {
-                                    await submitBusinessOnboarding(version);
-                                    setProfile(await currentProfile());
-                                })
-                            }
-                        />
-                    </section>
-                </Container>
-            </main>
-        </>
-    );
-}
-
-function TrustCard({ profile }: { profile: CurrentProfileView }) {
-    const { t } = useTranslation();
-
-    return (
-        <article className={styles.card}>
-            <div className={styles.cardHeader}>
-                <h2>{t.profile.trust}</h2>
-                <span>{t.profile.trustLevels[profile.trust.badge]}</span>
-            </div>
-            <p className={styles.muted}>{t.profile.trustHint}</p>
-            <strong>
-                {t.profile.trustScore}: {profile.trust.score}
-            </strong>
-        </article>
-    );
-}
-
-function ProfileBasicsCard({
-    profile,
-    busy,
-    onSave,
-}: {
-    profile: CurrentProfileView;
-    busy: boolean;
-    onSave: (payload: {
-        displayName: string;
-        firstName: string;
-        lastName: string;
-        headline: string;
-        bio: string;
-        publicVisibility: CurrentProfileView["publicVisibility"];
-    }) => Promise<void>;
-}) {
-    const { t } = useTranslation();
-    const [displayName, setDisplayName] = useState(profile.displayName ?? "");
-    const [firstName, setFirstName] = useState(profile.firstName ?? "");
-    const [lastName, setLastName] = useState(profile.lastName ?? "");
-    const [headline, setHeadline] = useState(profile.headline ?? "");
-    const [bio, setBio] = useState(profile.bio ?? "");
-    const [publicVisibility, setPublicVisibility] = useState(profile.publicVisibility);
-
-    return (
-        <article id="settings" className={styles.card}>
-            <div className={styles.cardHeader}>
-                <h2>{t.profile.basics}</h2>
-                <span>{t.profile.completeness}: {profile.completenessScore}%</span>
-            </div>
-            <div className={styles.formGrid}>
-                <Field label={t.profile.displayName} value={displayName} onChange={setDisplayName} />
-                <Field label={t.profile.firstName} value={firstName} onChange={setFirstName} />
-                <Field label={t.profile.lastName} value={lastName} onChange={setLastName} />
-                <Field label={t.profile.headline} value={headline} onChange={setHeadline} />
-                <Field label={t.profile.bio} value={bio} onChange={setBio} textarea />
-                <label className={styles.field}>
-                    <span>{t.profile.visibility}</span>
-                    <select
-                        value={publicVisibility}
-                        onChange={(event) =>
-                            setPublicVisibility(event.target.value as CurrentProfileView["publicVisibility"])
-                        }
-                    >
-                        {(["PUBLIC", "LIMITED", "PRIVATE"] as const).map((visibility) => (
-                            <option key={visibility} value={visibility}>
-                                {t.profile.publicVisibility[visibility]}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-            </div>
-            <Button
-                disabled={busy}
-                onClick={() =>
-                    onSave({ displayName, firstName, lastName, headline, bio, publicVisibility })
-                }
-            >
-                {t.common.save}
-            </Button>
-        </article>
-    );
-}
-
-function ModesCard({
-    profile,
-    busy,
-    onSwitch,
-}: {
-    profile: CurrentProfileView;
-    busy: boolean;
-    onSwitch: (mode: ActiveMode) => Promise<void>;
-}) {
-    const { t } = useTranslation();
-    const enabledModes = profile.capabilities
-        .filter((capability) => capability.status === "ENABLED")
-        .map((capability) => capability.capability);
-
-    return (
-        <article className={styles.card}>
-            <div className={styles.cardHeader}>
-                <h2>{t.profile.activeMode}</h2>
-            </div>
-            <p className={styles.muted}>{t.profile.switchHint}</p>
-            <div className={styles.modeRow}>
-                {enabledModes.map((mode) => (
-                    <button
-                        key={mode}
-                        type="button"
-                        className={[
-                            styles.modeChip,
-                            profile.activeMode === mode && styles.modeChipActive,
-                        ]
-                            .filter(Boolean)
-                            .join(" ")}
-                        disabled={busy || profile.activeMode === mode}
-                        onClick={() => onSwitch(mode)}
-                    >
-                        {t.home.modeLabels[mode]}
-                    </button>
-                ))}
-            </div>
-        </article>
-    );
-}
-
-function ProviderCard({
-    profile,
-    terms,
-    busy,
-    onEnable,
-    onSave,
-}: {
-    profile: CurrentProfileView;
-    terms?: CapabilityTerms["capabilityTerms"][number];
-    busy: boolean;
-    onEnable: (version: string, serviceBlurb: string) => Promise<void>;
-    onSave: (payload: {
-        serviceBlurb?: string;
-        availabilitySummary?: string;
-        acceptsRemote: boolean;
-        serviceCategories?: ServiceCategory[];
-    }) => Promise<void>;
-}) {
-    const { t } = useTranslation();
-    const provider = profile.capabilities.find((capability) => capability.capability === "INDIVIDUAL_PROVIDER");
-    const [serviceBlurb, setServiceBlurb] = useState(profile.individualProviderProfile?.serviceBlurb ?? "");
-    const [availabilitySummary, setAvailabilitySummary] = useState(
-        profile.individualProviderProfile?.availabilitySummary ?? "",
-    );
-    const [acceptsRemote, setAcceptsRemote] = useState(profile.individualProviderProfile?.acceptsRemote ?? false);
-    const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>(
-        profile.individualProviderProfile?.serviceCategories ?? [],
-    );
-    const [accepted, setAccepted] = useState(false);
-
-    return (
-        <article id="provider" className={styles.card}>
-            <div className={styles.cardHeader}>
-                <h2>{t.profile.provider}</h2>
-                {provider && <span>{provider.status}</span>}
-            </div>
-            {provider?.status === "ENABLED" ? (
-                <>
-                    <p className={styles.muted}>{t.profile.providerEnabled}</p>
-                    <div className={styles.formGrid}>
-                        <Field label={t.profile.serviceBlurb} value={serviceBlurb} onChange={setServiceBlurb} />
-                        <Field
-                            label={t.profile.availabilitySummary}
-                            value={availabilitySummary}
-                            onChange={setAvailabilitySummary}
-                        />
-                        <CategoryPicker
-                            label={t.profile.serviceCategories}
-                            selected={serviceCategories}
-                            onChange={setServiceCategories}
-                        />
-                        <label className={styles.terms}>
-                            <input
-                                type="checkbox"
-                                checked={acceptsRemote}
-                                onChange={(event) => setAcceptsRemote(event.target.checked)}
-                            />
-                            <span>{t.profile.acceptsRemote}</span>
-                        </label>
-                    </div>
-                    <Button
-                        disabled={busy}
-                        onClick={() =>
-                            onSave({
-                                serviceBlurb,
-                                availabilitySummary,
-                                acceptsRemote,
-                                serviceCategories,
-                            })
-                        }
-                    >
-                        {t.common.save}
-                    </Button>
-                </>
-            ) : (
-                <>
-                    <Field
-                        label={t.profile.serviceBlurb}
-                        value={serviceBlurb}
-                        onChange={setServiceBlurb}
-                    />
-                    <TermsCheckbox
-                        label={t.profile.acceptProviderTerms}
-                        checked={accepted}
-                        onChange={setAccepted}
-                        href={terms?.url}
-                        version={terms?.version}
-                    />
-                    <Button
-                        disabled={busy || !accepted || !terms}
-                        onClick={() => terms && onEnable(terms.version, serviceBlurb)}
-                    >
-                        {t.profile.enableProvider}
-                    </Button>
-                </>
-            )}
-        </article>
-    );
-}
-
-function BusinessCard({
-    profile,
-    terms,
-    busy,
-    onStart,
-    onSaveDraft,
-    onSubmit,
-}: {
-    profile: CurrentProfileView;
-    terms?: CapabilityTerms["capabilityTerms"][number];
-    busy: boolean;
-    onStart: () => Promise<void>;
-    onSaveDraft: (payload: UpdateBusinessDraftPayload) => Promise<void>;
-    onSubmit: (version: string) => Promise<void>;
-}) {
-    const { t } = useTranslation();
-    const business = profile.businessProfile;
-    const [accepted, setAccepted] = useState(false);
-    const [draft, setDraft] = useState<UpdateBusinessDraftPayload>(() => ({
-        legalName: business?.legalName ?? "",
-        tradeName: business?.tradeName ?? "",
-        sector: business?.sector ?? "OTHER",
-        taxId: business?.taxId ?? "",
-        addressLine: business?.addressLine ?? "",
-        district: business?.district ?? "",
-        city: business?.city ?? "",
-        country: business?.country ?? "TR",
-        phone: business?.phone ?? "",
-        emailPublic: business?.emailPublic ?? "",
-        openingHoursJson: business?.openingHoursJson ?? "",
-        serviceCategories: business?.serviceCategories ?? [],
-    }));
-    const canEdit = !business || business.verificationStatus === "DRAFT" || business.verificationStatus === "REJECTED";
-    const fields = useMemo(
-        () =>
-            [
-                ["legalName", t.profile.legalName],
-                ["tradeName", t.profile.tradeName],
-                ["taxId", t.profile.taxId],
-                ["addressLine", t.profile.addressLine],
-                ["district", t.profile.district],
-                ["city", t.profile.city],
-                ["country", t.profile.country],
-                ["phone", t.profile.phone],
-                ["emailPublic", t.profile.emailPublic],
-                ["openingHoursJson", t.profile.openingHours],
-            ] as const,
-        [t],
-    );
-
-    return (
-        <article className={styles.card}>
-            <div className={styles.cardHeader}>
-                <h2>{t.profile.business}</h2>
-                {business && <span>{t.profile.status}: {business.verificationStatus}</span>}
-            </div>
-            {!business ? (
-                <Button disabled={busy} onClick={onStart}>
-                    {t.profile.startBusiness}
-                </Button>
-            ) : (
-                <>
-                    <div className={styles.formGrid}>
-                        {fields.map(([key, label]) => (
-                            <Field
-                                key={key}
-                                label={label}
-                                value={(draft[key] as string | undefined) ?? ""}
-                                onChange={(value) => setDraft((current) => ({ ...current, [key]: value }))}
-                                textarea={key === "openingHoursJson"}
-                                disabled={!canEdit}
-                            />
-                        ))}
-                        <label className={styles.field}>
-                            <span>{t.profile.sector}</span>
-                            <select
-                                disabled={!canEdit}
-                                value={draft.sector}
-                                onChange={(event) =>
-                                    setDraft((current) => ({
-                                        ...current,
-                                        sector: event.target.value as BusinessSector,
-                                    }))
-                                }
-                            >
-                                {SECTORS.map((sector) => (
-                                    <option key={sector} value={sector}>
-                                        {sector}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                        <CategoryPicker
-                            label={t.profile.serviceCategories}
-                            selected={draft.serviceCategories ?? []}
-                            onChange={(serviceCategories) =>
-                                setDraft((current) => ({ ...current, serviceCategories }))
-                            }
-                            disabled={!canEdit}
-                        />
-                    </div>
-                    {canEdit && (
-                        <>
-                            <div className={styles.actions}>
-                                <Button variant="outline" disabled={busy} onClick={() => onSaveDraft(draft)}>
-                                    {t.profile.saveDraft}
-                                </Button>
-                            </div>
-                            <TermsCheckbox
-                                label={t.profile.acceptBusinessTerms}
-                                checked={accepted}
-                                onChange={setAccepted}
-                                href={terms?.url}
-                                version={terms?.version}
-                            />
-                            <Button
-                                disabled={busy || !accepted || !terms}
-                                onClick={() => terms && onSubmit(terms.version)}
-                            >
-                                {t.profile.submitBusiness}
-                            </Button>
-                        </>
-                    )}
-                </>
-            )}
-        </article>
-    );
-}
-
-function CategoryPicker({
-    label,
-    selected,
-    onChange,
-    disabled = false,
-}: {
-    label: string;
-    selected: ServiceCategory[];
-    onChange: (next: ServiceCategory[]) => void;
-    disabled?: boolean;
-}) {
-    const { t } = useTranslation();
-
-    function toggle(category: ServiceCategory) {
-        if (selected.includes(category)) {
-            onChange(selected.filter((item) => item !== category));
-            return;
-        }
-        onChange([...selected, category]);
+    if (!profile) {
+        return <div className={styles.empty}>Profil yükleniyor…</div>;
     }
 
-    return (
-        <div className={styles.field}>
-            <span>{label}</span>
-            <div className={styles.modeRow}>
-                {SERVICE_CATEGORIES.map((category) => (
-                    <button
-                        key={category}
-                        type="button"
-                        className={[
-                            styles.modeChip,
-                            selected.includes(category) && styles.modeChipActive,
-                        ]
-                            .filter(Boolean)
-                            .join(" ")}
-                        disabled={disabled}
-                        onClick={() => toggle(category)}
-                    >
-                        {t.marketplace.categoryNames[category]}
-                    </button>
-                ))}
-            </div>
-        </div>
-    );
-}
+    const enabledCapabilities = profile.capabilities.filter((capability) => capability.enabled);
 
-function Field({
-    label,
-    value,
-    onChange,
-    textarea = false,
-    disabled = false,
-}: {
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-    textarea?: boolean;
-    disabled?: boolean;
-}) {
     return (
-        <label className={styles.field}>
-            <span>{label}</span>
-            {textarea ? (
-                <textarea
-                    value={value}
-                    disabled={disabled}
-                    onChange={(event) => onChange(event.target.value)}
-                />
-            ) : (
-                <input
-                    value={value}
-                    disabled={disabled}
-                    onChange={(event) => onChange(event.target.value)}
-                />
-            )}
-        </label>
-    );
-}
+        <>
+            <section className={styles.intro}>
+                <div>
+                    <p className={styles.eyebrow}>Profil</p>
+                    <h2>Tek hesap, farklı yetkinlikler.</h2>
+                    <p>
+                        Hizmet alan, Bireysel hizmet veren ve İşletme yetkinlikleri aynı profil sınırında
+                        gösterilir; bu ekran gelecekte profile/account boşluklarını netleştirir.
+                    </p>
+                </div>
+            </section>
 
-function TermsCheckbox({
-    label,
-    checked,
-    onChange,
-    href,
-    version,
-}: {
-    label: string;
-    checked: boolean;
-    onChange: (value: boolean) => void;
-    href?: string;
-    version?: string;
-}) {
-    return (
-        <label className={styles.terms}>
-            <input
-                type="checkbox"
-                checked={checked}
-                onChange={(event) => onChange(event.target.checked)}
-            />
-            <span>
-                {label}{" "}
-                {href && (
-                    <a href={href} target="_blank" rel="noreferrer">
-                        ({version})
-                    </a>
-                )}
-            </span>
-        </label>
+            {message && <p className={styles.statusBadge} style={{ marginBottom: 14 }}>{message}</p>}
+
+            <section className={styles.layout2}>
+                <article className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <h2>Temel bilgiler</h2>
+                        <UserRound size={20} aria-hidden />
+                    </div>
+                    <div className={styles.form}>
+                        <TextField label="Görünen ad" value={displayName} onChange={setDisplayName} />
+                        <TextField label="Başlık" value={headline} onChange={setHeadline} />
+                        <TextField label="Hakkında" value={bio} onChange={setBio} textarea />
+                        <TextField label="Konum / kapsam" value={locationLabel} onChange={setLocationLabel} />
+                        <SelectField
+                            label="Aktif yetkinlik"
+                            value={activeCapability}
+                            onChange={setActiveCapability}
+                            options={enabledCapabilities.map((capability) => ({
+                                value: capability.key,
+                                label: capability.label,
+                            }))}
+                        />
+                    </div>
+                    <div className={styles.actions}>
+                        <Button disabled={busy || !displayName.trim()} onClick={save}>Kaydet</Button>
+                    </div>
+                </article>
+
+                <div className={styles.stack}>
+                    <article className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <h2>Yetkinlikler</h2>
+                            <ShieldCheck size={20} aria-hidden />
+                        </div>
+                        <div className={styles.stack}>
+                            {profile.capabilities.map((capability) => (
+                                <div key={capability.key} className={styles.feedCard}>
+                                    <div className={styles.cardHeader}>
+                                        <div>
+                                            <h3>{capability.label}</h3>
+                                            <p className={styles.muted}>{capability.summary}</p>
+                                        </div>
+                                        <span className={capability.enabled ? styles.statusBadge : styles.softBadge}>
+                                            {capability.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </article>
+
+                    <article className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <h2>Hizmet durumu</h2>
+                        </div>
+                        {profile.individualProviderProfile ? (
+                            <div className={styles.stack}>
+                                <span className={styles.statusBadge}>{profile.individualProviderProfile.providerType}</span>
+                                <p className={styles.muted}>{profile.individualProviderProfile.serviceBlurb}</p>
+                                <div className={styles.badgeRow}>
+                                    <span className={styles.softBadge}>{profile.individualProviderProfile.availabilitySummary}</span>
+                                    <span className={styles.softBadge}>{profile.individualProviderProfile.locationScope}</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className={styles.muted}>Bireysel hizmet veren profili henüz açık değil.</p>
+                        )}
+                    </article>
+
+                    <article className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <h2>İşletme</h2>
+                        </div>
+                        {profile.businessProfile ? (
+                            <div className={styles.stack}>
+                                <span className={styles.statusBadge}>{profile.businessProfile.providerType}</span>
+                                <h3>{profile.businessProfile.tradeName}</h3>
+                                <p className={styles.muted}>{profile.businessProfile.legalName}</p>
+                                <div className={styles.badgeRow}>
+                                    <span className={styles.softBadge}>{profile.businessProfile.sector}</span>
+                                    <span className={styles.softBadge}>{profile.businessProfile.verificationStatus}</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className={styles.muted}>İşletme profili bu personada başlatılmamış.</p>
+                        )}
+                    </article>
+                </div>
+            </section>
+        </>
     );
 }
