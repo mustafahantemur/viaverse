@@ -35,6 +35,15 @@ build-logic/   Gradle convention plugins
 - Identity service archived notes: `Docs/Architecture/identity-service/`
 - Local observability notes: `Docs/Development/observability.md`
 
+## Codex Context Routing
+
+This repo has many large Markdown files. To keep AI agents (Codex and others) from loading them in full, use
+the lightweight `viaverse-context` skill: it routes through a short domain map, a docs index, and a search
+script so only the relevant section is read.
+
+- Repo-specific agent skills live under `.agents/skills/` (here: `.agents/skills/viaverse-context/`).
+- Full explanation, setup, and maintenance: [`Docs/codex-context-routing.md`](Docs/codex-context-routing.md).
+
 ## Prerequisites
 
 - JDK 25+
