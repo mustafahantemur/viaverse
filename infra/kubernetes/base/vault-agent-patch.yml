@@ -1,0 +1,38 @@
+- op: add
+  path: /spec/template/spec/volumes
+  value:
+    - name: vault-secrets
+      emptyDir: {}
+    - name: vault-agent-config
+      configMap:
+        name: viaverse-vault-agent-config
+    - name: vault-token
+      secret:
+        secretName: viaverse-vault-token
+- op: add
+  path: /spec/template/spec/initContainers
+  value:
+    - name: vault-agent
+      image: hashicorp/vault:1.20
+      imagePullPolicy: IfNotPresent
+      command: ["vault", "agent", "-config=/vault/config/agent.hcl"]
+      volumeMounts:
+        - name: vault-secrets
+          mountPath: /vault/secrets
+        - name: vault-agent-config
+          mountPath: /vault/config/agent.hcl
+          subPath: agent.hcl
+          readOnly: true
+        - name: vault-agent-config
+          mountPath: /vault/templates/runtime-env.ctmpl
+          subPath: runtime-env.ctmpl
+          readOnly: true
+        - name: vault-token
+          mountPath: /vault/token
+          readOnly: true
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts
+  value:
+    - name: vault-secrets
+      mountPath: /vault/secrets
+      readOnly: true

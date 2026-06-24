@@ -1,0 +1,503 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: identity-service
+  template:
+    metadata:
+      labels:
+        app: identity-service
+    spec:
+      containers:
+        - name: identity-service
+          image: viaverse/identity-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8101
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service
+spec:
+  type: ClusterIP
+  selector:
+    app: identity-service
+  ports:
+    - port: 8101
+      targetPort: 8101
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: profile-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: profile-service
+  template:
+    metadata:
+      labels:
+        app: profile-service
+    spec:
+      containers:
+        - name: profile-service
+          image: viaverse/profile-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8111
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: profile-service
+spec:
+  type: ClusterIP
+  selector:
+    app: profile-service
+  ports:
+    - port: 8111
+      targetPort: 8111
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: content-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: content-service
+  template:
+    metadata:
+      labels:
+        app: content-service
+    spec:
+      containers:
+        - name: content-service
+          image: viaverse/content-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8112
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: content-service
+spec:
+  type: ClusterIP
+  selector:
+    app: content-service
+  ports:
+    - port: 8112
+      targetPort: 8112
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marketplace-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: marketplace-service
+  template:
+    metadata:
+      labels:
+        app: marketplace-service
+    spec:
+      containers:
+        - name: marketplace-service
+          image: viaverse/marketplace-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8102
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: marketplace-service
+spec:
+  type: ClusterIP
+  selector:
+    app: marketplace-service
+  ports:
+    - port: 8102
+      targetPort: 8102
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: viaverse/payment-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8103
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+spec:
+  type: ClusterIP
+  selector:
+    app: payment-service
+  ports:
+    - port: 8103
+      targetPort: 8103
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: messaging-service
+  template:
+    metadata:
+      labels:
+        app: messaging-service
+    spec:
+      containers:
+        - name: messaging-service
+          image: viaverse/messaging-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8104
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: messaging-service
+spec:
+  type: ClusterIP
+  selector:
+    app: messaging-service
+  ports:
+    - port: 8104
+      targetPort: 8104
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: media-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: media-service
+  template:
+    metadata:
+      labels:
+        app: media-service
+    spec:
+      containers:
+        - name: media-service
+          image: viaverse/media-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8105
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: media-service
+spec:
+  type: ClusterIP
+  selector:
+    app: media-service
+  ports:
+    - port: 8105
+      targetPort: 8105
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: viaverse/notification-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8106
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+spec:
+  type: ClusterIP
+  selector:
+    app: notification-service
+  ports:
+    - port: 8106
+      targetPort: 8106
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: search-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: search-service
+  template:
+    metadata:
+      labels:
+        app: search-service
+    spec:
+      containers:
+        - name: search-service
+          image: viaverse/search-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8107
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: search-service
+spec:
+  type: ClusterIP
+  selector:
+    app: search-service
+  ports:
+    - port: 8107
+      targetPort: 8107
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trust-gamification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trust-gamification-service
+  template:
+    metadata:
+      labels:
+        app: trust-gamification-service
+    spec:
+      containers:
+        - name: trust-gamification-service
+          image: viaverse/trust-gamification-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8108
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trust-gamification-service
+spec:
+  type: ClusterIP
+  selector:
+    app: trust-gamification-service
+  ports:
+    - port: 8108
+      targetPort: 8108
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ads-monetization-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ads-monetization-service
+  template:
+    metadata:
+      labels:
+        app: ads-monetization-service
+    spec:
+      containers:
+        - name: ads-monetization-service
+          image: viaverse/ads-monetization-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8109
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ads-monetization-service
+spec:
+  type: ClusterIP
+  selector:
+    app: ads-monetization-service
+  ports:
+    - port: 8109
+      targetPort: 8109
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-bff
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-bff
+  template:
+    metadata:
+      labels:
+        app: web-bff
+    spec:
+      containers:
+        - name: web-bff
+          image: viaverse/web-bff:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-bff
+spec:
+  type: ClusterIP
+  selector:
+    app: web-bff
+  ports:
+    - port: 8001
+      targetPort: 8001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-bff
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: admin-bff
+  template:
+    metadata:
+      labels:
+        app: admin-bff
+    spec:
+      containers:
+        - name: admin-bff
+          image: viaverse/admin-bff:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8110
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-bff
+spec:
+  type: ClusterIP
+  selector:
+    app: admin-bff
+  ports:
+    - port: 8110
+      targetPort: 8110
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mock-web-bff
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mock-web-bff
+  template:
+    metadata:
+      labels:
+        app: mock-web-bff
+    spec:
+      containers:
+        - name: mock-web-bff
+          image: viaverse/mock-web-bff:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 8120
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mock-web-bff
+spec:
+  type: ClusterIP
+  selector:
+    app: mock-web-bff
+  ports:
+    - port: 8120
+      targetPort: 8120

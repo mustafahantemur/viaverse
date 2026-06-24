@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-next
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-next
+  template:
+    metadata:
+      labels:
+        app: web-next
+    spec:
+      containers:
+        - name: web-next
+          image: viaverse/web-next:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-next
+spec:
+  type: LoadBalancer
+  selector:
+    app: web-next
+  ports:
+    - port: 80
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-next
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: admin-next
+  template:
+    metadata:
+      labels:
+        app: admin-next
+    spec:
+      containers:
+        - name: admin-next
+          image: viaverse/admin-next:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: viaverse-local-config
+          ports:
+            - containerPort: 3001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-next
+spec:
+  type: LoadBalancer
+  selector:
+    app: admin-next
+  ports:
+    - port: 81
+      targetPort: 3001

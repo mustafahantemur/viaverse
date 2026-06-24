@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Viaverse — Web UI Kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<style>
+  html, body { margin: 0; padding: 0; background: var(--vv-bg); font-family: var(--vv-font-sans); color: var(--vv-fg); }
+  /* No 2D icon rotation on web — the V mark stays static. For richer 3D presentation,
+     drop a .glb / .gltf into assets/3d/ and use <model-viewer> (loaded below). */
+  @keyframes vv-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(1.4); } }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.15); border-radius: 8px; }
+  a { color: inherit; }
+  model-viewer { width: 100%; height: 100%; --poster-color: transparent; background: transparent; }
+  /* Sections sit on the ivory canvas */
+  body > #root > * { position: relative; }
+  /* Gentle fade-up on scroll for sections */
+  @keyframes vv-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  section, footer { animation: vv-rise 0.6s ease-out both; animation-timeline: view(); animation-range: entry 0% cover 28%; }
+  /* Universal hover ease */
+  a, button { transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease, color 200ms ease, opacity 200ms ease; }
+  button:not(:disabled):hover { transform: translateY(-1px); }
+</style>
+<script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="WebNav.jsx"></script>
+  <script type="text/babel" src="WebHero.jsx"></script>
+  <script type="text/babel" src="WebCategoryGrid.jsx"></script>
+  <script type="text/babel" src="WebFeedTeaser.jsx"></script>
+  <script type="text/babel" src="WebWhy.jsx"></script>
+  <script type="text/babel" src="WebHowItWorks.jsx"></script>
+  <script type="text/babel" src="WebProviderCTA.jsx"></script>
+  <script type="text/babel" src="WebSubscribe.jsx"></script>
+  <script type="text/babel" src="WebFooter.jsx"></script>
+  <script type="text/babel" src="WebApp.jsx"></script>
+
+  <script type="text/babel">
+    const Marketing = ({ onApp }) => (
+      <>
+        <window.WebNav onApp={onApp}/>
+        <window.WebHero onApp={onApp}/>
+        <window.WebCategoryGrid/>
+        <window.WebFeedTeaser/>
+        <window.WebWhy/>
+        <window.WebHowItWorks/>
+        <window.WebProviderCTA/>
+        <window.WebSubscribe/>
+        <window.WebFooter/>
+      </>
+    );
+
+    const App = () => {
+      const [view, setView] = React.useState("marketing");
+      return view === "marketing"
+        ? <Marketing onApp={() => setView("app")}/>
+        : <window.WebApp onExit={() => setView("marketing")}/>;
+    };
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App/>);
+  </script>
+</body>
+</html>

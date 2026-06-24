@@ -1,0 +1,31 @@
+{
+  "index_patterns": ["viaverse-logs-*"],
+  "priority": 200,
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    },
+    "mappings": {
+      "dynamic": true,
+      "properties": {
+        "@timestamp": { "type": "date" },
+        "service.name": { "type": "keyword" },
+        "service.namespace": { "type": "keyword" },
+        "deployment.environment": { "type": "keyword" },
+        "log.level": { "type": "keyword" },
+        "event.action": { "type": "keyword" },
+        "event.outcome": { "type": "keyword" },
+        "error.code": { "type": "keyword" },
+        "correlation.id": { "type": "keyword" },
+        "request.id": { "type": "keyword" },
+        "trace.id": { "type": "keyword" },
+        "span.id": { "type": "keyword" }
+      }
+    }
+  },
+  "_meta": {
+    "owner": "viaverse-platform",
+    "purpose": "ecs-json-application-logs"
+  }
+}

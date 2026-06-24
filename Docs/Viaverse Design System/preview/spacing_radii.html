@@ -1,0 +1,19 @@
+<!doctype html>
+<html><head><meta charset="utf-8"/><title>Spacing — Radii</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--vv-bg);font-family:var(--vv-font-sans);color:var(--vv-fg);}
+  .card{padding:20px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+  .item{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .box{width:64px;height:64px;background:var(--vv-surface);box-shadow:inset 0 0 0 1px var(--vv-border-muted), 0 1px 3px rgba(15,23,42,0.06);}
+  .lbl{font-size:10px;font-weight:700;color:var(--vv-fg);}
+  .hex{font-size:9px;color:var(--vv-fg-muted);font-family:var(--vv-font-mono);}
+</style></head>
+<body><div class="card">
+  <div class="item"><div class="box" style="border-radius:6px"></div><div class="lbl">xs · 6</div><div class="hex">--radius-xs</div></div>
+  <div class="item"><div class="box" style="border-radius:10px"></div><div class="lbl">sm · 10</div><div class="hex">--radius-sm</div></div>
+  <div class="item"><div class="box" style="border-radius:14px"></div><div class="lbl">md · 14</div><div class="hex">--radius-md</div></div>
+  <div class="item"><div class="box" style="border-radius:20px"></div><div class="lbl">lg · 20</div><div class="hex">--radius-lg</div></div>
+  <div class="item"><div class="box" style="border-radius:24px"></div><div class="lbl">xl · 24</div><div class="hex">--radius-xl</div></div>
+  <div class="item"><div class="box" style="border-radius:999px"></div><div class="lbl">pill</div><div class="hex">--radius-pill</div></div>
+</div></body></html>

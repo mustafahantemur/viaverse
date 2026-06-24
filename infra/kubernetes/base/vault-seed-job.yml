@@ -1,0 +1,118 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-seed-runtime-secrets
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        app: vault-seed-runtime-secrets
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: vault-seed-runtime-secrets
+          image: hashicorp/vault:1.20
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: VAULT_ADDR
+              value: http://vault:8200
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: viaverse-vault-token
+                  key: token
+          envFrom:
+            - secretRef:
+                name: viaverse-bootstrap-secrets
+          command: ["sh", "-ec"]
+          args:
+            - |
+              until vault status >/dev/null 2>&1; do
+                sleep 2
+              done
+
+              vault secrets enable -path=viaverse kv-v2 >/dev/null 2>&1 || true
+
+              vault kv put viaverse/runtime \
+                IDENTITY_SERVICE_BASE_URL="${IDENTITY_SERVICE_BASE_URL:?}" \
+                PROFILE_SERVICE_BASE_URL="${PROFILE_SERVICE_BASE_URL:?}" \
+                CONTENT_SERVICE_BASE_URL="${CONTENT_SERVICE_BASE_URL:?}" \
+                MARKETPLACE_SERVICE_BASE_URL="${MARKETPLACE_SERVICE_BASE_URL:?}" \
+                MEDIA_SERVICE_BASE_URL="${MEDIA_SERVICE_BASE_URL:?}" \
+                NEXT_PUBLIC_BFF_BASE_URL="${NEXT_PUBLIC_BFF_BASE_URL:?}" \
+                NEXT_PUBLIC_ADMIN_BFF_BASE_URL="${NEXT_PUBLIC_ADMIN_BFF_BASE_URL:?}" \
+                NEXT_PUBLIC_MOCK_APP_BFF_BASE_URL="${NEXT_PUBLIC_MOCK_APP_BFF_BASE_URL:?}" \
+                VIAVERSE_INTERNAL_API_TOKEN="${VIAVERSE_INTERNAL_API_TOKEN:?}" \
+                IDENTITY_JWT_SECRET="${IDENTITY_JWT_SECRET:?}" \
+                IDENTITY_JWT_PREVIOUS_SECRETS="${IDENTITY_JWT_PREVIOUS_SECRETS:-}" \
+                IDENTITY_SERVICE_DB_URL="${IDENTITY_SERVICE_DB_URL:?}" \
+                IDENTITY_SERVICE_DB_USERNAME="${IDENTITY_SERVICE_DB_USERNAME:?}" \
+                IDENTITY_SERVICE_DB_PASSWORD="${IDENTITY_SERVICE_DB_PASSWORD:?}" \
+                PROFILE_SERVICE_DB_URL="${PROFILE_SERVICE_DB_URL:?}" \
+                PROFILE_SERVICE_DB_USERNAME="${PROFILE_SERVICE_DB_USERNAME:?}" \
+                PROFILE_SERVICE_DB_PASSWORD="${PROFILE_SERVICE_DB_PASSWORD:?}" \
+                CONTENT_SERVICE_DB_URL="${CONTENT_SERVICE_DB_URL:?}" \
+                CONTENT_SERVICE_DB_USERNAME="${CONTENT_SERVICE_DB_USERNAME:?}" \
+                CONTENT_SERVICE_DB_PASSWORD="${CONTENT_SERVICE_DB_PASSWORD:?}" \
+                MARKETPLACE_SERVICE_DB_URL="${MARKETPLACE_SERVICE_DB_URL:?}" \
+                MARKETPLACE_SERVICE_DB_USERNAME="${MARKETPLACE_SERVICE_DB_USERNAME:?}" \
+                MARKETPLACE_SERVICE_DB_PASSWORD="${MARKETPLACE_SERVICE_DB_PASSWORD:?}" \
+                PAYMENT_SERVICE_DB_URL="${PAYMENT_SERVICE_DB_URL:?}" \
+                PAYMENT_SERVICE_DB_USERNAME="${PAYMENT_SERVICE_DB_USERNAME:?}" \
+                PAYMENT_SERVICE_DB_PASSWORD="${PAYMENT_SERVICE_DB_PASSWORD:?}" \
+                MESSAGING_SERVICE_DB_URL="${MESSAGING_SERVICE_DB_URL:?}" \
+                MESSAGING_SERVICE_DB_USERNAME="${MESSAGING_SERVICE_DB_USERNAME:?}" \
+                MESSAGING_SERVICE_DB_PASSWORD="${MESSAGING_SERVICE_DB_PASSWORD:?}" \
+                MEDIA_SERVICE_DB_URL="${MEDIA_SERVICE_DB_URL:?}" \
+                MEDIA_SERVICE_DB_USERNAME="${MEDIA_SERVICE_DB_USERNAME:?}" \
+                MEDIA_SERVICE_DB_PASSWORD="${MEDIA_SERVICE_DB_PASSWORD:?}" \
+                NOTIFICATION_SERVICE_DB_URL="${NOTIFICATION_SERVICE_DB_URL:?}" \
+                NOTIFICATION_SERVICE_DB_USERNAME="${NOTIFICATION_SERVICE_DB_USERNAME:?}" \
+                NOTIFICATION_SERVICE_DB_PASSWORD="${NOTIFICATION_SERVICE_DB_PASSWORD:?}" \
+                SEARCH_SERVICE_DB_URL="${SEARCH_SERVICE_DB_URL:?}" \
+                SEARCH_SERVICE_DB_USERNAME="${SEARCH_SERVICE_DB_USERNAME:?}" \
+                SEARCH_SERVICE_DB_PASSWORD="${SEARCH_SERVICE_DB_PASSWORD:?}" \
+                TRUST_GAMIFICATION_SERVICE_DB_URL="${TRUST_GAMIFICATION_SERVICE_DB_URL:?}" \
+                TRUST_GAMIFICATION_SERVICE_DB_USERNAME="${TRUST_GAMIFICATION_SERVICE_DB_USERNAME:?}" \
+                TRUST_GAMIFICATION_SERVICE_DB_PASSWORD="${TRUST_GAMIFICATION_SERVICE_DB_PASSWORD:?}" \
+                ADS_MONETIZATION_SERVICE_DB_URL="${ADS_MONETIZATION_SERVICE_DB_URL:?}" \
+                ADS_MONETIZATION_SERVICE_DB_USERNAME="${ADS_MONETIZATION_SERVICE_DB_USERNAME:?}" \
+                ADS_MONETIZATION_SERVICE_DB_PASSWORD="${ADS_MONETIZATION_SERVICE_DB_PASSWORD:?}" \
+                MOCK_WEB_BFF_DB_URL="${MOCK_WEB_BFF_DB_URL:?}" \
+                MOCK_WEB_BFF_DB_USERNAME="${MOCK_WEB_BFF_DB_USERNAME:?}" \
+                MOCK_WEB_BFF_DB_PASSWORD="${MOCK_WEB_BFF_DB_PASSWORD:-}" \
+                IDENTITY_KAFKA_BOOTSTRAP_SERVERS="${IDENTITY_KAFKA_BOOTSTRAP_SERVERS:?}" \
+                PROFILE_KAFKA_BOOTSTRAP_SERVERS="${PROFILE_KAFKA_BOOTSTRAP_SERVERS:?}" \
+                CONTENT_KAFKA_BOOTSTRAP_SERVERS="${CONTENT_KAFKA_BOOTSTRAP_SERVERS:?}" \
+                MARKETPLACE_KAFKA_BOOTSTRAP_SERVERS="${MARKETPLACE_KAFKA_BOOTSTRAP_SERVERS:?}" \
+                MEDIA_KAFKA_BOOTSTRAP_SERVERS="${MEDIA_KAFKA_BOOTSTRAP_SERVERS:?}" \
+                TRUST_GAMIFICATION_KAFKA_BOOTSTRAP_SERVERS="${TRUST_GAMIFICATION_KAFKA_BOOTSTRAP_SERVERS:?}" \
+                IDENTITY_VALKEY_HOST="${IDENTITY_VALKEY_HOST:?}" \
+                IDENTITY_VALKEY_PORT="${IDENTITY_VALKEY_PORT:?}" \
+                IDENTITY_VALKEY_DB="${IDENTITY_VALKEY_DB:?}" \
+                IDENTITY_VALKEY_COMMAND_TIMEOUT="${IDENTITY_VALKEY_COMMAND_TIMEOUT:?}" \
+                IDENTITY_VALKEY_CONNECT_TIMEOUT="${IDENTITY_VALKEY_CONNECT_TIMEOUT:?}" \
+                OBJECT_STORAGE_PROVIDER="${OBJECT_STORAGE_PROVIDER:?}" \
+                OBJECT_STORAGE_ENDPOINT="${OBJECT_STORAGE_ENDPOINT:?}" \
+                OBJECT_STORAGE_REGION="${OBJECT_STORAGE_REGION:?}" \
+                OBJECT_STORAGE_ACCESS_KEY="${OBJECT_STORAGE_ACCESS_KEY:?}" \
+                OBJECT_STORAGE_SECRET_KEY="${OBJECT_STORAGE_SECRET_KEY:?}" \
+                OBJECT_STORAGE_PATH_STYLE_ACCESS="${OBJECT_STORAGE_PATH_STYLE_ACCESS:?}" \
+                OBJECT_STORAGE_BUCKET_MEDIA="${OBJECT_STORAGE_BUCKET_MEDIA:?}" \
+                SMTP_HOST="${SMTP_HOST:?}" \
+                SMTP_PORT="${SMTP_PORT:?}" \
+                SMTP_USERNAME="${SMTP_USERNAME:-}" \
+                SMTP_PASSWORD="${SMTP_PASSWORD:-}" \
+                SMTP_FROM_ADDRESS="${SMTP_FROM_ADDRESS:?}" \
+                SMTP_AUTH_ENABLED="${SMTP_AUTH_ENABLED:?}" \
+                SMTP_STARTTLS_ENABLED="${SMTP_STARTTLS_ENABLED:?}" \
+                NETGSM_ENDPOINT="${NETGSM_ENDPOINT:?}" \
+                NETGSM_USERNAME="${NETGSM_USERNAME:-}" \
+                NETGSM_PASSWORD="${NETGSM_PASSWORD:-}" \
+                NETGSM_HEADER="${NETGSM_HEADER:-}" \
+                GOOGLE_OAUTH_CLIENT_ID="${GOOGLE_OAUTH_CLIENT_ID:-}" \
+                APPLE_CLIENT_ID="${APPLE_CLIENT_ID:-}" \
+                OTEL_EXPORTER_OTLP_ENDPOINT="${OTEL_EXPORTER_OTLP_ENDPOINT:?}" \
+                OTEL_EXPORTER_OTLP_ENDPOINT_METRICS="${OTEL_EXPORTER_OTLP_ENDPOINT_METRICS:?}" \
+                OTEL_EXPORTER_OTLP_LOGS_ENDPOINT="${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:?}"

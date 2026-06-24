@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: viaverse-vault-agent-config
+data:
+  agent.hcl: |
+    exit_after_auth = true
+    pid_file = "/tmp/vault-agent.pid"
+
+    vault {
+      address = "http://vault:8200"
+    }
+
+    auto_auth {
+      method "token_file" {
+        config = {
+          token_file_path = "/vault/token/token"
+        }
+      }
+
+      sink "file" {
+        config = {
+          path = "/tmp/.vault-token"
+        }
+      }
+    }
+
+    template {
+      source = "/vault/templates/runtime-env.ctmpl"
+      destination = "/vault/secrets/runtime-env"
+      perms = "0640"
+    }
+
+  runtime-env.ctmpl: |
+    {{ with secret "viaverse/data/runtime" -}}
+    export IDENTITY_SERVICE_BASE_URL={{ .Data.data.IDENTITY_SERVICE_BASE_URL | printf "%q" }}
+    export PROFILE_SERVICE_BASE_URL={{ .Data.data.PROFILE_SERVICE_BASE_URL | printf "%q" }}
+    export CONTENT_SERVICE_BASE_URL={{ .Data.data.CONTENT_SERVICE_BASE_URL | printf "%q" }}
+    export MARKETPLACE_SERVICE_BASE_URL={{ .Data.data.MARKETPLACE_SERVICE_BASE_URL | printf "%q" }}
+    export MEDIA_SERVICE_BASE_URL={{ .Data.data.MEDIA_SERVICE_BASE_URL | printf "%q" }}
+    export NEXT_PUBLIC_BFF_BASE_URL={{ .Data.data.NEXT_PUBLIC_BFF_BASE_URL | printf "%q" }}
+    export NEXT_PUBLIC_ADMIN_BFF_BASE_URL={{ .Data.data.NEXT_PUBLIC_ADMIN_BFF_BASE_URL | printf "%q" }}
+    export NEXT_PUBLIC_MOCK_APP_BFF_BASE_URL={{ .Data.data.NEXT_PUBLIC_MOCK_APP_BFF_BASE_URL | printf "%q" }}
+    export VIAVERSE_INTERNAL_API_TOKEN={{ .Data.data.VIAVERSE_INTERNAL_API_TOKEN | printf "%q" }}
+    export IDENTITY_JWT_SECRET={{ .Data.data.IDENTITY_JWT_SECRET | printf "%q" }}
+    export IDENTITY_JWT_PREVIOUS_SECRETS={{ .Data.data.IDENTITY_JWT_PREVIOUS_SECRETS | printf "%q" }}
+    export IDENTITY_SERVICE_DB_URL={{ .Data.data.IDENTITY_SERVICE_DB_URL | printf "%q" }}
+    export IDENTITY_SERVICE_DB_USERNAME={{ .Data.data.IDENTITY_SERVICE_DB_USERNAME | printf "%q" }}
+    export IDENTITY_SERVICE_DB_PASSWORD={{ .Data.data.IDENTITY_SERVICE_DB_PASSWORD | printf "%q" }}
+    export PROFILE_SERVICE_DB_URL={{ .Data.data.PROFILE_SERVICE_DB_URL | printf "%q" }}
+    export PROFILE_SERVICE_DB_USERNAME={{ .Data.data.PROFILE_SERVICE_DB_USERNAME | printf "%q" }}
+    export PROFILE_SERVICE_DB_PASSWORD={{ .Data.data.PROFILE_SERVICE_DB_PASSWORD | printf "%q" }}
+    export CONTENT_SERVICE_DB_URL={{ .Data.data.CONTENT_SERVICE_DB_URL | printf "%q" }}
+    export CONTENT_SERVICE_DB_USERNAME={{ .Data.data.CONTENT_SERVICE_DB_USERNAME | printf "%q" }}
+    export CONTENT_SERVICE_DB_PASSWORD={{ .Data.data.CONTENT_SERVICE_DB_PASSWORD | printf "%q" }}
+    export MARKETPLACE_SERVICE_DB_URL={{ .Data.data.MARKETPLACE_SERVICE_DB_URL | printf "%q" }}
+    export MARKETPLACE_SERVICE_DB_USERNAME={{ .Data.data.MARKETPLACE_SERVICE_DB_USERNAME | printf "%q" }}
+    export MARKETPLACE_SERVICE_DB_PASSWORD={{ .Data.data.MARKETPLACE_SERVICE_DB_PASSWORD | printf "%q" }}
+    export PAYMENT_SERVICE_DB_URL={{ .Data.data.PAYMENT_SERVICE_DB_URL | printf "%q" }}
+    export PAYMENT_SERVICE_DB_USERNAME={{ .Data.data.PAYMENT_SERVICE_DB_USERNAME | printf "%q" }}
+    export PAYMENT_SERVICE_DB_PASSWORD={{ .Data.data.PAYMENT_SERVICE_DB_PASSWORD | printf "%q" }}
+    export MESSAGING_SERVICE_DB_URL={{ .Data.data.MESSAGING_SERVICE_DB_URL | printf "%q" }}
+    export MESSAGING_SERVICE_DB_USERNAME={{ .Data.data.MESSAGING_SERVICE_DB_USERNAME | printf "%q" }}
+    export MESSAGING_SERVICE_DB_PASSWORD={{ .Data.data.MESSAGING_SERVICE_DB_PASSWORD | printf "%q" }}
+    export MEDIA_SERVICE_DB_URL={{ .Data.data.MEDIA_SERVICE_DB_URL | printf "%q" }}
+    export MEDIA_SERVICE_DB_USERNAME={{ .Data.data.MEDIA_SERVICE_DB_USERNAME | printf "%q" }}
+    export MEDIA_SERVICE_DB_PASSWORD={{ .Data.data.MEDIA_SERVICE_DB_PASSWORD | printf "%q" }}
+    export NOTIFICATION_SERVICE_DB_URL={{ .Data.data.NOTIFICATION_SERVICE_DB_URL | printf "%q" }}
+    export NOTIFICATION_SERVICE_DB_USERNAME={{ .Data.data.NOTIFICATION_SERVICE_DB_USERNAME | printf "%q" }}
+    export NOTIFICATION_SERVICE_DB_PASSWORD={{ .Data.data.NOTIFICATION_SERVICE_DB_PASSWORD | printf "%q" }}
+    export SEARCH_SERVICE_DB_URL={{ .Data.data.SEARCH_SERVICE_DB_URL | printf "%q" }}
+    export SEARCH_SERVICE_DB_USERNAME={{ .Data.data.SEARCH_SERVICE_DB_USERNAME | printf "%q" }}
+    export SEARCH_SERVICE_DB_PASSWORD={{ .Data.data.SEARCH_SERVICE_DB_PASSWORD | printf "%q" }}
+    export TRUST_GAMIFICATION_SERVICE_DB_URL={{ .Data.data.TRUST_GAMIFICATION_SERVICE_DB_URL | printf "%q" }}
+    export TRUST_GAMIFICATION_SERVICE_DB_USERNAME={{ .Data.data.TRUST_GAMIFICATION_SERVICE_DB_USERNAME | printf "%q" }}
+    export TRUST_GAMIFICATION_SERVICE_DB_PASSWORD={{ .Data.data.TRUST_GAMIFICATION_SERVICE_DB_PASSWORD | printf "%q" }}
+    export ADS_MONETIZATION_SERVICE_DB_URL={{ .Data.data.ADS_MONETIZATION_SERVICE_DB_URL | printf "%q" }}
+    export ADS_MONETIZATION_SERVICE_DB_USERNAME={{ .Data.data.ADS_MONETIZATION_SERVICE_DB_USERNAME | printf "%q" }}
+    export ADS_MONETIZATION_SERVICE_DB_PASSWORD={{ .Data.data.ADS_MONETIZATION_SERVICE_DB_PASSWORD | printf "%q" }}
+    export MOCK_WEB_BFF_DB_URL={{ .Data.data.MOCK_WEB_BFF_DB_URL | printf "%q" }}
+    export MOCK_WEB_BFF_DB_USERNAME={{ .Data.data.MOCK_WEB_BFF_DB_USERNAME | printf "%q" }}
+    export MOCK_WEB_BFF_DB_PASSWORD={{ .Data.data.MOCK_WEB_BFF_DB_PASSWORD | printf "%q" }}
+    export IDENTITY_KAFKA_BOOTSTRAP_SERVERS={{ .Data.data.IDENTITY_KAFKA_BOOTSTRAP_SERVERS | printf "%q" }}
+    export PROFILE_KAFKA_BOOTSTRAP_SERVERS={{ .Data.data.PROFILE_KAFKA_BOOTSTRAP_SERVERS | printf "%q" }}
+    export CONTENT_KAFKA_BOOTSTRAP_SERVERS={{ .Data.data.CONTENT_KAFKA_BOOTSTRAP_SERVERS | printf "%q" }}
+    export MARKETPLACE_KAFKA_BOOTSTRAP_SERVERS={{ .Data.data.MARKETPLACE_KAFKA_BOOTSTRAP_SERVERS | printf "%q" }}
+    export MEDIA_KAFKA_BOOTSTRAP_SERVERS={{ .Data.data.MEDIA_KAFKA_BOOTSTRAP_SERVERS | printf "%q" }}
+    export TRUST_GAMIFICATION_KAFKA_BOOTSTRAP_SERVERS={{ .Data.data.TRUST_GAMIFICATION_KAFKA_BOOTSTRAP_SERVERS | printf "%q" }}
+    export IDENTITY_VALKEY_HOST={{ .Data.data.IDENTITY_VALKEY_HOST | printf "%q" }}
+    export IDENTITY_VALKEY_PORT={{ .Data.data.IDENTITY_VALKEY_PORT | printf "%q" }}
+    export IDENTITY_VALKEY_DB={{ .Data.data.IDENTITY_VALKEY_DB | printf "%q" }}
+    export IDENTITY_VALKEY_COMMAND_TIMEOUT={{ .Data.data.IDENTITY_VALKEY_COMMAND_TIMEOUT | printf "%q" }}
+    export IDENTITY_VALKEY_CONNECT_TIMEOUT={{ .Data.data.IDENTITY_VALKEY_CONNECT_TIMEOUT | printf "%q" }}
+    export OBJECT_STORAGE_PROVIDER={{ .Data.data.OBJECT_STORAGE_PROVIDER | printf "%q" }}
+    export OBJECT_STORAGE_ENDPOINT={{ .Data.data.OBJECT_STORAGE_ENDPOINT | printf "%q" }}
+    export OBJECT_STORAGE_REGION={{ .Data.data.OBJECT_STORAGE_REGION | printf "%q" }}
+    export OBJECT_STORAGE_ACCESS_KEY={{ .Data.data.OBJECT_STORAGE_ACCESS_KEY | printf "%q" }}
+    export OBJECT_STORAGE_SECRET_KEY={{ .Data.data.OBJECT_STORAGE_SECRET_KEY | printf "%q" }}
+    export OBJECT_STORAGE_PATH_STYLE_ACCESS={{ .Data.data.OBJECT_STORAGE_PATH_STYLE_ACCESS | printf "%q" }}
+    export OBJECT_STORAGE_BUCKET_MEDIA={{ .Data.data.OBJECT_STORAGE_BUCKET_MEDIA | printf "%q" }}
+    export SMTP_HOST={{ .Data.data.SMTP_HOST | printf "%q" }}
+    export SMTP_PORT={{ .Data.data.SMTP_PORT | printf "%q" }}
+    export SMTP_USERNAME={{ .Data.data.SMTP_USERNAME | printf "%q" }}
+    export SMTP_PASSWORD={{ .Data.data.SMTP_PASSWORD | printf "%q" }}
+    export SMTP_FROM_ADDRESS={{ .Data.data.SMTP_FROM_ADDRESS | printf "%q" }}
+    export SMTP_AUTH_ENABLED={{ .Data.data.SMTP_AUTH_ENABLED | printf "%q" }}
+    export SMTP_STARTTLS_ENABLED={{ .Data.data.SMTP_STARTTLS_ENABLED | printf "%q" }}
+    export NETGSM_ENDPOINT={{ .Data.data.NETGSM_ENDPOINT | printf "%q" }}
+    export NETGSM_USERNAME={{ .Data.data.NETGSM_USERNAME | printf "%q" }}
+    export NETGSM_PASSWORD={{ .Data.data.NETGSM_PASSWORD | printf "%q" }}
+    export NETGSM_HEADER={{ .Data.data.NETGSM_HEADER | printf "%q" }}
+    export GOOGLE_OAUTH_CLIENT_ID={{ .Data.data.GOOGLE_OAUTH_CLIENT_ID | printf "%q" }}
+    export APPLE_CLIENT_ID={{ .Data.data.APPLE_CLIENT_ID | printf "%q" }}
+    export OTEL_EXPORTER_OTLP_ENDPOINT={{ .Data.data.OTEL_EXPORTER_OTLP_ENDPOINT | printf "%q" }}
+    export OTEL_EXPORTER_OTLP_ENDPOINT_METRICS={{ .Data.data.OTEL_EXPORTER_OTLP_ENDPOINT_METRICS | printf "%q" }}
+    export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT={{ .Data.data.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT | printf "%q" }}
+    {{- end }}

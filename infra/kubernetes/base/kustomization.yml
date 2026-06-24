@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: viaverse
+resources:
+  - namespace.yml
+  - configmap.yml
+  - vault.yml
+  - vault-agent-config.yml
+  - vault-seed-job.yml
+  - spring-workloads.yml
+  - frontend-workloads.yml
+  - mobile-build-jobs.yml
+patches:
+  - path: vault-agent-patch.yml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: identity-service|profile-service|content-service|marketplace-service|payment-service|messaging-service|media-service|notification-service|search-service|trust-gamification-service|ads-monetization-service|web-bff|admin-bff|mock-web-bff|web-next|admin-next
+  - path: spring-vault-command-patch.yml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: identity-service|profile-service|content-service|marketplace-service|payment-service|messaging-service|media-service|notification-service|search-service|trust-gamification-service|ads-monetization-service|web-bff|admin-bff|mock-web-bff
+  - path: next-vault-command-patch.yml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: web-next|admin-next

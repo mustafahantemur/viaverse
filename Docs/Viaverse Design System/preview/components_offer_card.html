@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8"/><title>Components — Offer Card</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--vv-bg);font-family:var(--vv-font-sans);color:var(--vv-fg);}
+  .wrap{padding:20px 24px;}
+  .card{background:var(--vv-surface);border:1px solid var(--vv-border-subtle);border-radius:14px;padding:14px;box-shadow:var(--vv-shadow-sm);}
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .who{display:flex;align-items:center;gap:8px;}
+  .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(45deg,#FED7AA,#FB923C);}
+  .nm{font-size:13px;font-weight:800;color:var(--vv-fg);}
+  .star{color:#F59E0B;font-size:10px;font-weight:700;display:inline-flex;align-items:center;gap:2px;}
+  .price{padding:5px 12px;border-radius:999px;background:rgba(16,185,129,.12);color:#064E3B;font-weight:800;font-size:13px;}
+  .desc{font-size:11px;color:var(--vv-fg);line-height:1.5;margin-bottom:10px;}
+  .accept{width:100%;background:#047857;color:#fff;font-size:12px;font-weight:800;padding:11px 0;border-radius:12px;border:none;letter-spacing:-0.01em;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 12px rgba(4,120,87,.25);}
+  .accept svg{width:14px;height:14px;}
+</style></head>
+<body><div class="wrap">
+  <div class="card">
+    <div class="top">
+      <div class="who">
+        <div class="av"></div>
+        <div>
+          <div class="nm">Ahmet Usta</div>
+          <div class="star">★ 4.9 <span style="color:var(--vv-fg-muted);font-weight:500;">(124)</span></div>
+        </div>
+      </div>
+      <div class="price">1.200 ₺</div>
+    </div>
+    <div class="desc">Merhaba, işleminiz için gerekli tüm ekipmanlar tarafımca sağlanacaktır. Belirtilen saatte başlayıp en kısa sürede bitirmeyi planlıyorum.</div>
+    <button class="accept">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Teklifi Kabul Et & Mesajlaş
+    </button>
+  </div>
+</div></body></html>

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: viaverse-local-config
+data:
+  VIAVERSE_ENV: local
+  SPRING_PROFILES_ACTIVE: local

@@ -1,0 +1,217 @@
+name: viaverse-local
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: viaverse-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-viaverse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-viaverse}
+      POSTGRES_DB: ${POSTGRES_DB:-viaverse}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  valkey:
+    image: valkey/valkey:9-alpine
+    container_name: viaverse-valkey
+    command: ["valkey-server", "--appendonly", "yes"]
+    ports:
+      - "${VALKEY_PORT:-6379}:6379"
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:4.1.1
+    container_name: viaverse-kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: HOST://:9092,DOCKER://:29092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: HOST://localhost:${KAFKA_PORT:-9092},DOCKER://kafka:29092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,HOST:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: viaverse-mailpit
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:3.85
+    container_name: viaverse-seaweedfs
+    command:
+      - server
+      - -dir=/data
+      - -master.port=9333
+      - -volume.port=8080
+      - -filer
+      - -filer.port=8888
+      - -s3
+      - -s3.port=8333
+    ports:
+      - "${SEAWEEDFS_MASTER_PORT:-9333}:9333"
+      - "${SEAWEEDFS_VOLUME_PORT:-8080}:8080"
+      - "${SEAWEEDFS_FILER_PORT:-8888}:8888"
+      - "${SEAWEEDFS_S3_PORT:-8333}:8333"
+    volumes:
+      - seaweedfs-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z $(hostname -i) 8333"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  seaweedfs-bucket-init:
+    image: amazon/aws-cli:2.32.3
+    container_name: viaverse-seaweedfs-bucket-init
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${OBJECT_STORAGE_ACCESS_KEY:-viaverse}
+      AWS_SECRET_ACCESS_KEY: ${OBJECT_STORAGE_SECRET_KEY:-viaverse-local-secret}
+      AWS_DEFAULT_REGION: ${OBJECT_STORAGE_REGION:-local}
+      OBJECT_STORAGE_BUCKET_MEDIA: ${OBJECT_STORAGE_BUCKET_MEDIA:-viaverse-media-local}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        if aws --endpoint-url http://seaweedfs:8333 s3api head-bucket --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA" >/dev/null 2>&1; then
+          echo "Bucket $$OBJECT_STORAGE_BUCKET_MEDIA already exists."
+        else
+          aws --endpoint-url http://seaweedfs:8333 s3api create-bucket --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA"
+        fi
+        if aws --endpoint-url http://seaweedfs:8333 s3api put-bucket-cors \
+          --bucket "$$OBJECT_STORAGE_BUCKET_MEDIA" \
+          --cors-configuration '{"CORSRules":[{"AllowedHeaders":["*"],"AllowedMethods":["PUT","GET","HEAD"],"AllowedOrigins":["http://localhost:3000","http://localhost:5173","http://localhost:4000"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3600}]}' 2>/tmp/seaweedfs-cors-error.log; then
+          echo "Bucket CORS configured for $$OBJECT_STORAGE_BUCKET_MEDIA."
+        else
+          cat /tmp/seaweedfs-cors-error.log
+          echo "Bucket CORS is not supported by this local SeaweedFS S3 adapter; continuing."
+        fi
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.141.0
+    container_name: viaverse-otel-collector
+    user: "0:0"
+    command: ["--config=/etc/otelcol/config.yaml"]
+    depends_on:
+      - jaeger
+    environment:
+      VIAVERSE_ENV: ${VIAVERSE_ENV:-local}
+    ports:
+      - "${OTEL_GRPC_PORT:-4317}:4317"
+      - "${OTEL_HTTP_PORT:-4318}:4318"
+    volumes:
+      - ./otel-collector.yml:/etc/otelcol/config.yaml:ro
+    profiles: ["observability"]
+
+  fluent-bit:
+    image: fluent/fluent-bit:4.1.0
+    container_name: viaverse-fluent-bit
+    depends_on:
+      - opensearch
+    environment:
+      VIAVERSE_ENV: ${VIAVERSE_ENV:-local}
+    volumes:
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - fluent-bit-state:/fluent-bit/state
+    profiles: ["observability"]
+
+  prometheus:
+    image: prom/prometheus:v3.8.0
+    container_name: viaverse-prometheus
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    profiles: ["observability"]
+
+  jaeger:
+    image: jaegertracing/jaeger:2.10.0
+    container_name: viaverse-jaeger
+    ports:
+      - "${JAEGER_UI_PORT:-16686}:16686"
+      - "${JAEGER_GRPC_PORT:-14250}:14250"
+    profiles: ["observability"]
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: viaverse-kafka-ui
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: viaverse-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    ports:
+      - "${KAFKA_UI_PORT:-8081}:8080"
+    profiles: ["observability"]
+
+  opensearch:
+    image: opensearchproject/opensearch:3.3.2
+    container_name: viaverse-opensearch
+    environment:
+      discovery.type: single-node
+      DISABLE_SECURITY_PLUGIN: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "${OPENSEARCH_PORT:-9200}:9200"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    profiles: ["observability", "search"]
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:3.3.0
+    container_name: viaverse-opensearch-dashboards
+    depends_on:
+      - opensearch
+    environment:
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+    ports:
+      - "${OPENSEARCH_DASHBOARDS_PORT:-5601}:5601"
+    profiles: ["observability", "search"]
+
+volumes:
+  postgres-data:
+  valkey-data:
+  kafka-data:
+  seaweedfs-data:
+  prometheus-data:
+  opensearch-data:
+  fluent-bit-state:

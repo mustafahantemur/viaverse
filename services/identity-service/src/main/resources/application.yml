@@ -1,0 +1,267 @@
+server:
+  port: ${IDENTITY_SERVICE_PORT:8101}
+
+spring:
+  application:
+    name: identity-service
+  cloud:
+    function:
+      definition: profileEventsConsumer
+    stream:
+      bindings:
+        profileEventsConsumer-in-0:
+          destination: viaverse.profile.events.v1
+          group: identity-service
+        identityAccountEvents-out-0:
+          destination: viaverse.identity.account-events
+          producer:
+            useNativeEncoding: true
+        identitySessionEvents-out-0:
+          destination: viaverse.identity.session-events
+          producer:
+            useNativeEncoding: true
+      kafka:
+        binder:
+          brokers: ${IDENTITY_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+          # At-least-once delivery: wait for all in-sync replicas. The outbox
+          # guarantees the event row exists; this guarantees the broker accepted
+          # it before we mark the row SENT.
+          required-acks: all
+          producer-properties:
+            enable.idempotence: true
+            compression.type: lz4
+            linger.ms: 5
+            max.in.flight.requests.per.connection: 5
+            key.serializer: org.apache.kafka.common.serialization.StringSerializer
+            value.serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  datasource:
+    url: ${IDENTITY_SERVICE_DB_URL:jdbc:postgresql://localhost:5432/viaverse_identity}
+    username: ${IDENTITY_SERVICE_DB_USERNAME:viaverse}
+    password: ${IDENTITY_SERVICE_DB_PASSWORD:viaverse}
+  data:
+    redis:
+      host: ${IDENTITY_VALKEY_HOST:localhost}
+      port: ${IDENTITY_VALKEY_PORT:6379}
+      database: ${IDENTITY_VALKEY_DB:0}
+      # Fail fast under contention; the rate-limit adapter fails closed if
+      # commands time out, so we'd rather error than hang requests.
+      timeout: ${IDENTITY_VALKEY_COMMAND_TIMEOUT:1s}
+      connect-timeout: ${IDENTITY_VALKEY_CONNECT_TIMEOUT:2s}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db,redis
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  otlp:
+    metrics:
+      export:
+        url: ${OTEL_EXPORTER_OTLP_ENDPOINT_METRICS:http://localhost:4318/v1/metrics}
+  tracing:
+    sampling:
+      probability: ${OTEL_TRACES_SAMPLER_ARG:1.0}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+    logging:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:http://localhost:4318/v1/logs}
+
+logging:
+  structured:
+    format:
+      console: ecs
+    ecs:
+      service:
+        name: ${spring.application.name}
+        environment: ${VIAVERSE_ENV:local}
+  level:
+    app.viaverse: INFO
+
+viaverse:
+  http:
+    trusted-proxies: ${VIAVERSE_HTTP_TRUSTED_PROXIES:}
+    cors:
+      allowed-origins: ${VIAVERSE_HTTP_CORS_ALLOWED_ORIGINS:}
+  outbox:
+    poll-interval-ms: ${VIAVERSE_IDENTITY_OUTBOX_POLL_INTERVAL_MS:2000}
+    batch-size: ${VIAVERSE_IDENTITY_OUTBOX_BATCH_SIZE:100}
+    max-attempts: ${VIAVERSE_IDENTITY_OUTBOX_MAX_ATTEMPTS:8}
+  auth:
+    jwt:
+      secret: ${IDENTITY_JWT_SECRET:}
+      previous-secrets: ${IDENTITY_JWT_PREVIOUS_SECRETS:}
+      access-token-ttl: ${IDENTITY_JWT_ACCESS_TOKEN_TTL:PT15M}
+    refresh-token-ttl: ${IDENTITY_REFRESH_TOKEN_TTL:P30D}
+    otp:
+      ttl: ${IDENTITY_OTP_TTL:PT5M}
+      max-attempts: ${IDENTITY_OTP_MAX_ATTEMPTS:5}
+    registration-token:
+      ttl: ${IDENTITY_REGISTRATION_TOKEN_TTL:PT30M}
+    admin-invitation:
+      ttl: ${IDENTITY_ADMIN_INVITATION_TTL:P7D}
+    sms:
+      provider: ${VIAVERSE_SMS_PROVIDER:none}
+      netgsm:
+        endpoint: ${NETGSM_ENDPOINT:https://api.netgsm.com.tr/sms/send/get}
+        username: ${NETGSM_USERNAME:}
+        password: ${NETGSM_PASSWORD:}
+        header: ${NETGSM_HEADER:}
+        message-template: "${NETGSM_MESSAGE_TEMPLATE:Viaverse verification code: %s}"
+    email:
+      provider: ${VIAVERSE_EMAIL_PROVIDER:none}
+      smtp:
+        host: ${SMTP_HOST:localhost}
+        port: ${SMTP_PORT:1025}
+        username: ${SMTP_USERNAME:}
+        password: ${SMTP_PASSWORD:}
+        from-address: ${SMTP_FROM_ADDRESS:noreply@viaverse.app}
+        from-name: ${SMTP_FROM_NAME:Viaverse}
+        subject-template: "${SMTP_SUBJECT_TEMPLATE:Viaverse verification code: %s}"
+        body-template: "${SMTP_BODY_TEMPLATE:Your Viaverse verification code is %s. It expires in 5 minutes.}"
+        auth-enabled: ${SMTP_AUTH_ENABLED:false}
+        start-tls-enabled: ${SMTP_STARTTLS_ENABLED:false}
+        start-tls-required: ${SMTP_STARTTLS_REQUIRED:false}
+        connection-timeout: ${SMTP_CONNECTION_TIMEOUT:PT5S}
+        write-timeout: ${SMTP_WRITE_TIMEOUT:PT5S}
+    social:
+      google:
+        enabled: ${VIAVERSE_SOCIAL_GOOGLE_ENABLED:false}
+        client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
+      apple:
+        enabled: ${VIAVERSE_SOCIAL_APPLE_ENABLED:false}
+        client-id: ${APPLE_CLIENT_ID:}
+    debug:
+      enabled: ${VIAVERSE_AUTH_DEBUG_ENABLED:false}
+      seed-test-users: ${VIAVERSE_AUTH_DEBUG_SEED_USERS:false}
+    rate-limit:
+      enabled: ${VIAVERSE_AUTH_RATE_LIMIT_ENABLED:true}
+      auth-start:
+        identifier-window-seconds: ${VIAVERSE_AUTH_START_IDENTIFIER_WINDOW_SECONDS:300}
+        identifier-max-attempts: ${VIAVERSE_AUTH_START_IDENTIFIER_MAX_ATTEMPTS:3}
+        ip-window-seconds: ${VIAVERSE_AUTH_START_IP_WINDOW_SECONDS:60}
+        ip-max-attempts: ${VIAVERSE_AUTH_START_IP_MAX_ATTEMPTS:20}
+        device-window-seconds: ${VIAVERSE_AUTH_START_DEVICE_WINDOW_SECONDS:60}
+        device-max-attempts: ${VIAVERSE_AUTH_START_DEVICE_MAX_ATTEMPTS:20}
+      otp-verify:
+        flow-window-seconds: ${VIAVERSE_AUTH_OTP_FLOW_WINDOW_SECONDS:300}
+        flow-max-attempts: ${VIAVERSE_AUTH_OTP_FLOW_MAX_ATTEMPTS:5}
+        ip-window-seconds: ${VIAVERSE_AUTH_OTP_IP_WINDOW_SECONDS:60}
+        ip-max-attempts: ${VIAVERSE_AUTH_OTP_IP_MAX_ATTEMPTS:30}
+      resend:
+        cooldown-seconds: ${VIAVERSE_AUTH_OTP_RESEND_COOLDOWN_SECONDS:60}
+      lockout:
+        duration-seconds: ${VIAVERSE_AUTH_LOCKOUT_DURATION_SECONDS:900}
+    consent:
+      terms-of-service-version: ${VIAVERSE_AUTH_CONSENT_TOS_VERSION:v1}
+      personal-data-protection-law-version: ${VIAVERSE_AUTH_CONSENT_PDP_VERSION:v1}
+      marketing-version: ${VIAVERSE_AUTH_CONSENT_MARKETING_VERSION:v1}
+      provider-terms-version: ${VIAVERSE_AUTH_CONSENT_PROVIDER_TERMS_VERSION:v1}
+      business-terms-version: ${VIAVERSE_AUTH_CONSENT_BUSINESS_TERMS_VERSION:v1}
+      terms-of-service-url: ${VIAVERSE_AUTH_CONSENT_TOS_URL:https://viaverse.app/legal/terms}
+      personal-data-protection-law-url: ${VIAVERSE_AUTH_CONSENT_PDP_URL:https://viaverse.app/legal/kvkk}
+      marketing-url: ${VIAVERSE_AUTH_CONSENT_MARKETING_URL:https://viaverse.app/legal/marketing}
+      provider-terms-url: ${VIAVERSE_AUTH_CONSENT_PROVIDER_TERMS_URL:https://viaverse.app/legal/provider-terms}
+      business-terms-url: ${VIAVERSE_AUTH_CONSENT_BUSINESS_TERMS_URL:https://viaverse.app/legal/business-terms}
+    internal:
+      api-token: ${VIAVERSE_INTERNAL_API_TOKEN:local-dev-internal-token-change-me}
+
+springdoc:
+  api-docs:
+    enabled: false
+scalar:
+  enabled: false
+  telemetry: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+logging:
+  level:
+    app.viaverse: DEBUG
+viaverse:
+  http:
+    trusted-proxies: ${VIAVERSE_HTTP_TRUSTED_PROXIES:127.0.0.1,::1}
+  auth:
+    jwt:
+      secret: ${IDENTITY_JWT_SECRET:local-dev-identity-jwt-secret-change-me}
+    email:
+      # Local profile routes email OTP to Mailpit (http://localhost:8025 UI).
+      # Debug adapter also runs (logs OTP to console) for any non-EMAIL flow.
+      provider: ${VIAVERSE_EMAIL_PROVIDER:smtp}
+      smtp:
+        host: ${SMTP_HOST:localhost}
+        port: ${SMTP_PORT:1025}
+        from-address: ${SMTP_FROM_ADDRESS:noreply@viaverse.local}
+        auth-enabled: false
+        start-tls-enabled: false
+    debug:
+      enabled: ${VIAVERSE_AUTH_DEBUG_ENABLED:true}
+      seed-test-users: ${VIAVERSE_AUTH_DEBUG_SEED_USERS:true}
+springdoc:
+  api-docs:
+    enabled: true
+scalar:
+  enabled: true
+  telemetry: false
+
+---
+server:
+  port: 0
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: ${IDENTITY_SERVICE_TEST_DB_URL:jdbc:postgresql://localhost:5432/viaverse_identity_test}
+viaverse:
+  http:
+    trusted-proxies: 127.0.0.1,::1
+  auth:
+    jwt:
+      secret: ${IDENTITY_JWT_SECRET:test-identity-jwt-secret-change-me}
+    debug:
+      enabled: true
+      seed-test-users: true
+    rate-limit:
+      auth-start:
+        identifier-window-seconds: 300
+        identifier-max-attempts: 3
+        ip-window-seconds: 60
+        ip-max-attempts: 20
+        device-window-seconds: 60
+        device-max-attempts: 20
+      otp-verify:
+        flow-window-seconds: 300
+        flow-max-attempts: 5
+        ip-window-seconds: 60
+        ip-max-attempts: 30
+      resend:
+        cooldown-seconds: 60
+      lockout:
+        duration-seconds: 900

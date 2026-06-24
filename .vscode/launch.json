@@ -1,0 +1,341 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node-terminal",
+      "name": "k8s: init local",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-kubernetes-local.ps1\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "00 genel",
+        "order": 10
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "k8s: stop local",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\stop-kubernetes-local.ps1\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "00 genel",
+        "order": 11
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "infra: docker local",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-core-infra.ps1\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "00 genel",
+        "order": 20
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "infra: docker stop",
+      "request": "launch",
+      "command": "docker compose -f \"${workspaceFolder}\\infra\\docker-compose\\docker-compose.yml\" down",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "00 genel",
+        "order": 21
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "infra: migrate",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\migrate-local.ps1\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "00 genel",
+        "order": 22
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "mobile: android",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-mobile-android.ps1\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "10 apps",
+        "order": 30
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "app: web-next",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-next-app.ps1\" -App web-next",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "10 apps",
+        "order": 31
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "app: admin-next",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-next-app.ps1\" -App admin-next",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "10 apps",
+        "order": 32
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: identity-service",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:identity-service\" -Ports \"8101\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 101
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: profile-service",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:profile-service\" -Ports \"8111\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 102
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: content-service",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:content-service\" -Ports \"8112\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 103
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: marketplace-service",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:marketplace-service\" -Ports \"8102\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 104
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: payment-service",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:payment-service\" -Ports \"8103\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 105
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: messaging-service",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:messaging-service\" -Ports \"8104\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 106
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: media-service",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:media-service\" -Ports \"8105\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 107
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: notification-service",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:notification-service\" -Ports \"8106\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 108
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: search-service",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:search-service\" -Ports \"8107\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 109
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: trust-gamification-service",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:trust-gamification-service\" -Ports \"8108\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 110
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: ads-monetization-service",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:ads-monetization-service\" -Ports \"8109\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 111
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: admin-bff",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:admin-bff\" -Ports \"8110\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 112
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: web-bff",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:web-bff\" -Ports \"8001\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 113
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "svc: mock-web-bff",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:mock-web-bff\" -Ports \"8120\" -SkipInfra -SkipMigrations",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "20 microservices",
+        "order": 114
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "helper: mock bff debug",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-service.ps1\" -GradlePath \":services:mock-web-bff\" -Ports \"8120\" -SkipInfra -SkipMigrations",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "hidden": true,
+        "group": "99 helpers"
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "helper: mock web dev",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-next-app.ps1\" -App web-next -MockApi",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "hidden": true,
+        "group": "99 helpers"
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "helper: real backend all",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-backend-services.ps1\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "hidden": true,
+        "group": "99 helpers"
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "helper: real web dev",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-next-app.ps1\" -App web-next",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "hidden": true,
+        "group": "99 helpers"
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "helper: real admin dev",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\scripts\\dev\\start-next-app.ps1\" -App admin-next",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "hidden": true,
+        "group": "99 helpers"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "dev: mock web app",
+      "configurations": [
+        "helper: mock bff debug",
+        "helper: mock web dev"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "group": "00 genel",
+        "order": 1
+      }
+    },
+    {
+      "name": "dev: real local stack",
+      "configurations": [
+        "helper: real backend all",
+        "helper: real web dev",
+        "helper: real admin dev"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "group": "00 genel",
+        "order": 2
+      }
+    },
+    {
+      "name": "dev: web apps only",
+      "configurations": [
+        "helper: real web dev",
+        "helper: real admin dev"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "group": "00 genel",
+        "order": 3
+      }
+    }
+  ]
+}

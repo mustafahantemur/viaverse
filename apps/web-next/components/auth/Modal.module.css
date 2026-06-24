@@ -1,0 +1,81 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 44, 34, 0.45);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 100;
+  animation: overlay-in 180ms ease-out;
+  overflow-y: auto;
+}
+
+[data-theme="dark"] .overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.surface {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: var(--vv-surface);
+  border-radius: var(--vv-radius-xl);
+  box-shadow: var(--vv-shadow-lg);
+  padding: 44px 32px 32px;
+  animation: surface-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--vv-fg-muted);
+  cursor: pointer;
+  line-height: 1;
+  z-index: 1;
+}
+
+.close:hover {
+  background: var(--vv-surface-muted);
+  color: var(--vv-fg);
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes surface-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .surface {
+    animation: none;
+  }
+}

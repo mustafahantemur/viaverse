@@ -1,0 +1,136 @@
+/* =====================================================================
+ * Viaverse design tokens — port of Docs/Viaverse Design System/colors_and_type.css
+ * with paths rewritten to /brand/* so Next.js serves them from public/.
+ * Keep tokens in sync with that file when the design system bumps.
+ * ===================================================================== */
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('/brand/fonts/PlusJakartaSans-VariableFont_wght.ttf') format('truetype-variations'),
+       url('/brand/fonts/PlusJakartaSans-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('/brand/fonts/PlusJakartaSans-Italic-VariableFont_wght.ttf') format('truetype-variations'),
+       url('/brand/fonts/PlusJakartaSans-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sans';
+  src: url('/brand/fonts/OpenSans-VariableFont_wdth_wght.ttf') format('truetype-variations'),
+       url('/brand/fonts/OpenSans-VariableFont_wdth_wght.ttf') format('truetype');
+  font-weight: 300 800;
+  font-stretch: 75% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sans';
+  src: url('/brand/fonts/OpenSans-Italic-VariableFont_wdth_wght.ttf') format('truetype-variations'),
+       url('/brand/fonts/OpenSans-Italic-VariableFont_wdth_wght.ttf') format('truetype');
+  font-weight: 300 800;
+  font-stretch: 75% 100%;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  --vv-orange-500: #F97316;
+  --vv-orange-600: #EA580C;
+  --vv-orange-700: #C2410C;
+  --vv-green-500: #10B981;
+  --vv-green-700: #047857;
+  --vv-green-900: #064E3B;
+  --vv-green-950: #022C22;
+  --vv-ink-500: #6B7280;
+  --vv-ink-900: #0F172A;
+  --vv-ivory-100: #FFF7ED;
+  --vv-success: #10B981;
+  --vv-danger:  #EF4444;
+
+  --vv-bg:            #F4ECE0;
+  --vv-surface:       #FFFBF5;
+  --vv-surface-muted: #F5EFE5;
+  --vv-surface-hover: #FCEFD9;
+
+  --vv-fg:            #0F172A;
+  --vv-fg-strong:     #022C22;
+  --vv-fg-muted:      #6B7280;
+  --vv-fg-faint:      #9CA3AF;
+  --vv-fg-inverse:    #FFFBF5;
+
+  --vv-border-subtle: rgba(15, 23, 42, 0.06);
+  --vv-border-muted:  rgba(15, 23, 42, 0.10);
+  --vv-border-faint:  rgba(15, 23, 42, 0.04);
+
+  --vv-primary:           #F97316;
+  --vv-primary-hover:     #EA580C;
+  --vv-primary-press:     #C2410C;
+  --vv-primary-soft:      rgba(249, 115, 22, 0.10);
+  --vv-primary-foreground:#FEEFD4;
+
+  --vv-trust:             #10B981;
+  --vv-trust-deep:        #064E3B;
+  --vv-trust-soft:        rgba(16, 185, 129, 0.10);
+
+  --vv-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --vv-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --vv-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --vv-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10);
+  --vv-shadow-cta: 0 10px 24px rgba(194, 65, 12, 0.32), 0 4px 8px rgba(194, 65, 12, 0.22);
+
+  --vv-radius-xs:  6px;
+  --vv-radius-sm:  10px;
+  --vv-radius-md:  14px;
+  --vv-radius-lg:  20px;
+  --vv-radius-xl:  24px;
+  --vv-radius-pill: 999px;
+
+  --vv-space-1:  4px;
+  --vv-space-2:  8px;
+  --vv-space-3:  12px;
+  --vv-space-4:  16px;
+  --vv-space-5:  20px;
+  --vv-space-6:  24px;
+  --vv-space-8:  32px;
+  --vv-space-10: 40px;
+  --vv-space-12: 48px;
+  --vv-space-16: 64px;
+
+  --vv-font-sans:    'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --vv-font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --vv-font-body:    'Open Sans', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+
+  --vv-tracking-tight:   -0.02em;
+  --vv-tracking-wider:   0.2em;
+
+  --vv-shell-max: 1240px;
+  --vv-shell-pad-x: clamp(20px, 5vw, 56px);
+}
+
+/* Dark mode — applied either via .dark class or [data-theme="dark"] on <html>. */
+.dark,
+[data-theme="dark"] {
+  --vv-bg:            #022C22;
+  --vv-surface:       #052E2B;
+  --vv-surface-muted: #0A3A33;
+  --vv-surface-hover: #0F4A40;
+
+  --vv-fg:            #E5E7EB;
+  --vv-fg-strong:     #FFFBF5;
+  --vv-fg-muted:      #9CA3AF;
+  --vv-fg-faint:      #6B7280;
+  --vv-fg-inverse:    #022C22;
+
+  --vv-border-subtle: rgba(255, 251, 245, 0.06);
+  --vv-border-muted:  rgba(255, 251, 245, 0.10);
+  --vv-border-faint:  rgba(255, 251, 245, 0.04);
+
+  --vv-primary-soft:  rgba(249, 115, 22, 0.18);
+  --vv-trust-soft:    rgba(16, 185, 129, 0.18);
+}

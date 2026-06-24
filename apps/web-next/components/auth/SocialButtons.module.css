@@ -1,0 +1,90 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--vv-fg-muted);
+  font-size: 12px;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--vv-border-muted);
+}
+
+.dividerText {
+  text-transform: uppercase;
+  letter-spacing: var(--vv-tracking-wider);
+  font-weight: 700;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--vv-border-muted);
+  border-radius: var(--vv-radius-md);
+  background: var(--vv-surface);
+  color: var(--vv-fg);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--vv-surface-hover);
+  border-color: var(--vv-border-subtle);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.google {
+  /* Google uses neutral surface — color comes from the glyph. */
+}
+
+.apple {
+  background: var(--vv-fg-strong);
+  color: var(--vv-fg-inverse);
+  border-color: var(--vv-fg-strong);
+}
+
+.apple:hover:not(:disabled) {
+  background: var(--vv-fg);
+  border-color: var(--vv-fg);
+}
+
+.glyph {
+  width: 18px;
+  height: 18px;
+}

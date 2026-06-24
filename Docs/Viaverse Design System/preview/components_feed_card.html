@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8"/><title>Components — Feed Card</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--vv-bg);font-family:var(--vv-font-sans);color:var(--vv-fg);}
+  .wrap{padding:20px 24px;}
+  .card{background:var(--vv-surface);border-radius:14px;padding:14px;box-shadow:var(--vv-shadow-sm);border:1px solid var(--vv-border-subtle);}
+  .head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(45deg,#FED7AA,#FB923C);border:1px solid var(--vv-border-muted);}
+  .name{font-size:12px;font-weight:800;color:var(--vv-fg);display:flex;align-items:center;gap:6px;}
+  .meta{font-size:10px;color:var(--vv-fg-muted);}
+  .body{font-size:12px;color:var(--vv-fg);line-height:1.45;}
+  .title{font-weight:800;color:#1C1C1C;display:inline-flex;align-items:center;gap:8px;margin-bottom:2px;}
+  .typebadge{padding:2px 8px;border-radius:4px;font-size:9px;font-weight:800;text-transform:uppercase;background:rgba(249,115,22,.1);color:#F97316;display:inline-flex;align-items:center;gap:4px;}
+  .typebadge img{width:14px;height:14px;}
+  .actions{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+  .acts{display:flex;gap:14px;}
+  .act{display:inline-flex;align-items:center;gap:4px;color:var(--vv-fg-muted);font-size:11px;font-weight:500;}
+  .act svg{width:16px;height:16px;}
+  .cta{background:var(--vv-primary);color:var(--vv-primary-foreground);font-size:10px;font-weight:800;padding:6px 14px;border-radius:999px;border:none;letter-spacing:-0.01em;box-shadow:0 4px 10px rgba(249,115,22,.25);}
+  .verified{width:11px;height:11px;}
+</style></head>
+<body><div class="wrap">
+  <div class="card">
+    <div class="head">
+      <div class="av"></div>
+      <div>
+        <div class="name">Ayşe T.
+          <svg class="verified" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <div class="meta">5m · 150m</div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="title">Yıldız Tornavida <span class="typebadge"><img src="../assets/categories/local_help.png" alt=""/>YARDIM</span></div>
+      Ufak bir montaj işim var, 1 saatliğine yıldız tornavida ödünç verebilecek komşu var mı?
+    </div>
+    <div class="actions">
+      <div class="acts">
+        <div class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>2</div>
+        <div class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>0</div>
+      </div>
+      <button class="cta">teklif ver</button>
+    </div>
+  </div>
+</div></body></html>

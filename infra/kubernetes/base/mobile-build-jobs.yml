@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mobile-android-build
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: mobile-android-build
+          image: viaverse/mobile-android-build:local
+          imagePullPolicy: IfNotPresent
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mobile-kmp-check
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: mobile-kmp-check
+          image: viaverse/mobile-kmp-build:local
+          imagePullPolicy: IfNotPresent

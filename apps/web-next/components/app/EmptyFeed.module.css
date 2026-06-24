@@ -1,0 +1,23 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 24px;
+  border-radius: var(--vv-radius-xl);
+  background: var(--vv-surface-muted);
+  text-align: center;
+}
+
+.illustration {
+  width: 120px;
+  height: 120px;
+}
+
+.copy {
+  margin: 0;
+  color: var(--vv-fg-muted);
+  font-size: 15px;
+  max-width: 36ch;
+  line-height: 1.5;
+}

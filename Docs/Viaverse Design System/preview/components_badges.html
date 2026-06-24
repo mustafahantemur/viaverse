@@ -1,0 +1,39 @@
+<!doctype html>
+<html><head><meta charset="utf-8"/><title>Components — Badges & Pills</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--vv-bg);font-family:var(--vv-font-sans);color:var(--vv-fg);}
+  .card{padding:22px 24px;display:flex;flex-direction:column;gap:14px;}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .lbl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--vv-fg-muted);font-weight:700;width:92px;}
+  .mode-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#10B981;}
+  .pulse{width:6px;height:6px;border-radius:50%;background:#10B981;}
+  .typebadge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:-0.01em;}
+  .t-yardim{background:rgba(249,115,22,.1);color:#F97316;}
+  .t-duyuru{background:rgba(245,158,11,.1);color:#F59E0B;}
+  .t-is{background:rgba(16,185,129,.1);color:#10B981;}
+  .t-danisma{background:rgba(168,85,247,.1);color:#A855F7;}
+  .price-tag{padding:4px 12px;border-radius:999px;background:rgba(16,185,129,.12);color:#064E3B;font-weight:800;font-size:12px;}
+  .num-badge{width:18px;height:18px;border-radius:50%;background:var(--vv-primary);color:var(--vv-primary-foreground);font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--vv-surface);box-sizing:content-box;}
+  .verified{width:14px;height:14px;}
+</style></head>
+<body><div class="card">
+  <div class="row"><div class="lbl">Mode pill</div>
+    <div class="mode-pill"><div class="pulse"></div>Hizmet Veren Modu</div>
+  </div>
+  <div class="row"><div class="lbl">Post type</div>
+    <span class="typebadge t-yardim">YARDIM</span>
+    <span class="typebadge t-duyuru">DUYURU</span>
+    <span class="typebadge t-is">İŞ</span>
+    <span class="typebadge t-danisma">DANIŞMA</span>
+  </div>
+  <div class="row"><div class="lbl">Price + count</div>
+    <span class="price-tag">1.200 ₺</span>
+    <span class="num-badge">1</span>
+    <span class="num-badge">2</span>
+  </div>
+  <div class="row"><div class="lbl">Verified</div>
+    <svg class="verified" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="background:rgba(249,115,22,.05);border-radius:50%;padding:1px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    <span style="font-size:11px;font-weight:600;color:var(--vv-fg);">Doğrulanmış üye</span>
+  </div>
+</div></body></html>

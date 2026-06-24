@@ -1,0 +1,531 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "gradle: clean",
+      "type": "shell",
+      "command": "${workspaceFolder}/gradlew.bat",
+      "args": [
+        "clean"
+      ],
+      "group": "build",
+      "problemMatcher": [
+        "$javac"
+      ]
+    },
+    {
+      "label": "gradle: projects",
+      "type": "shell",
+      "command": "${workspaceFolder}/gradlew.bat",
+      "args": [
+        "projects"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "gradle: check all",
+      "type": "shell",
+      "command": "${workspaceFolder}/gradlew.bat",
+      "args": [
+        "check"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        "$javac"
+      ]
+    },
+    {
+      "label": "docker: local infra",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/start-core-infra.ps1"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "docker: local infra",
+        "db: migrate local"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready identity-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free identity-service"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready profile-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free profile-service"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready content-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free content-service"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready marketplace-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free marketplace-service"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready payment-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free payment-service"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready messaging-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free messaging-service"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready media-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free media-service"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready notification-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free notification-service"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready search-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free search-service"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready trust-gamification-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free trust-gamification-service"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready ads-monetization-service",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free ads-monetization-service"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready admin-bff",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free admin-bff"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: ready web-bff",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "backend: ready",
+        "ports: free web-bff"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "db: migrate local",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/migrate-local.ps1"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free app ports",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free identity-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8101,5005"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free profile-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8111,5007"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free content-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8112"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free marketplace-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8102"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free payment-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8103"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free messaging-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8104"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free media-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8105"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free notification-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8106"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free search-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8107"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free trust-gamification-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8108"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free ads-monetization-service",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8109"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free admin-bff",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8110"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free web-bff",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8001,5006"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ports: free mock-web-bff",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/stop-local-app-ports.ps1",
+        "-Ports",
+        "8120"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "gradle: compile mock-web-bff",
+      "type": "shell",
+      "command": "${workspaceFolder}/gradlew.bat",
+      "args": [":services:mock-web-bff:classes", "--console=plain"],
+      "group": "build",
+      "problemMatcher": ["$javac"]
+    },
+    {
+      "label": "backend: ready mock-web-bff",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": ["gradle: compile mock-web-bff", "ports: free mock-web-bff"],
+      "problemMatcher": []
+    },
+    {
+      "label": "infra: stop",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "compose",
+        "down"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/infra/docker-compose"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "mobile-kmp: check",
+      "type": "shell",
+      "command": "${workspaceFolder}/gradlew.bat",
+      "args": [
+        ":apps:mobile-kmp:check"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "mobile: android",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/start-mobile-android.ps1"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "web-next: dev",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/start-next-app.ps1",
+        "-App",
+        "web-next"
+      ],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "web-next: mock dev",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/start-next-app.ps1",
+        "-App",
+        "web-next",
+        "-MockApi"
+      ],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "admin-next: dev",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/dev/start-next-app.ps1",
+        "-App",
+        "admin-next"
+      ],
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

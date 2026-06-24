@@ -1,0 +1,11 @@
+.git
+.gradle
+**/build
+**/node_modules
+**/.next
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+tmp-*
+Docs/ViaverseUIPrototype/node_modules

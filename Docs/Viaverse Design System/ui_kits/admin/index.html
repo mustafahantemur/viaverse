@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Viaverse — Admin Console</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<style>
+  html, body { margin: 0; padding: 0; background: var(--vv-bg); font-family: var(--vv-font-sans); color: var(--vv-fg); overflow: hidden; }
+  @keyframes vv-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(1.4); } }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.15); border-radius: 8px; }
+  input { font-family: var(--vv-font-sans); }
+  table th { font-family: var(--vv-font-sans); }
+  code { font-family: var(--vv-font-mono); }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="AdminShell.jsx"></script>
+  <script type="text/babel" src="VerificationView.jsx"></script>
+  <script type="text/babel" src="ModerationView.jsx"></script>
+  <script type="text/babel" src="DisputeView.jsx"></script>
+  <script type="text/babel" src="AnalyticsView.jsx"></script>
+
+  <script type="text/babel">
+    const App = () => {
+      const [active, setActive] = React.useState("verification");
+      const view = {
+        verification: <window.VerificationView/>,
+        moderation:   <window.ModerationView/>,
+        disputes:     <window.DisputeView/>,
+        analytics:    <window.AnalyticsView/>,
+      }[active] || (
+        <div style={{ padding: 60, textAlign: "center", color: "var(--vv-fg-muted)" }}>
+          <p style={{ fontSize: 13 }}>"{active}" görünümü mock'lanmadı.</p>
+        </div>
+      );
+      return <window.AdminShell active={active} onChange={setActive}>{view}</window.AdminShell>;
+    };
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App/>);
+  </script>
+</body>
+</html>

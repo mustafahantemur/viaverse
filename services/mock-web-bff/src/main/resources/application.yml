@@ -1,0 +1,77 @@
+server:
+  port: ${MOCK_WEB_BFF_PORT:8120}
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: mock-web-bff
+  datasource:
+    url: ${MOCK_WEB_BFF_DB_URL:jdbc:postgresql://localhost:5432/viaverse_mock_web_bff}
+    driver-class-name: org.postgresql.Driver
+    username: ${MOCK_WEB_BFF_DB_USERNAME:viaverse}
+    password: ${MOCK_WEB_BFF_DB_PASSWORD:viaverse}
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  structured:
+    format:
+      console: ecs
+    ecs:
+      service:
+        name: ${spring.application.name}
+        environment: ${VIAVERSE_ENV:local}
+  level:
+    app.viaverse: INFO
+
+viaverse:
+  mock-web-bff:
+    cors:
+      allowed-origins: ${MOCK_WEB_BFF_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:5173}
+
+springdoc:
+  api-docs:
+    enabled: false
+scalar:
+  enabled: false
+  telemetry: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+logging:
+  level:
+    app.viaverse: DEBUG
+springdoc:
+  api-docs:
+    enabled: true
+scalar:
+  enabled: true
+  telemetry: false
+
+---
+server:
+  port: 0
+spring:
+  config:
+    activate:
+      on-profile: test
