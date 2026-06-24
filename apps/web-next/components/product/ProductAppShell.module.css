@@ -13,7 +13,8 @@
   grid-column: 1 / -1;
   height: 54px;
   display: grid;
-  grid-template-columns: minmax(180px, 0.7fr) minmax(360px, 1.6fr) minmax(280px, 0.9fr);
+  grid-template-columns: minmax(160px, 0.7fr) minmax(280px, 1.6fr) minmax(220px, 0.9fr);
+  overflow: hidden;
   align-items: center;
   gap: 14px;
   padding: 0 12px;
@@ -374,6 +375,16 @@
 
 .mobileNav {
   display: none;
+}
+
+@media (max-width: 1280px) {
+  .personaPicker span {
+    display: none;
+  }
+
+  .userPill strong {
+    max-width: 100px;
+  }
 }
 
 @media (max-width: 980px) {

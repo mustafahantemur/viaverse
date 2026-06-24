@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Car, Droplets, Flame, Image, MapPinned, ShieldAlert, TriangleAlert, Upload, Video, Volume2, Wrench, X, Zap, type LucideIcon } from "lucide-react";
+import { Car, Droplets, Flame, Image, MapPin, MapPinned, ShieldAlert, TriangleAlert, Upload, Video, Volume2, Wrench, X, Zap, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { TextField } from "@/components/product/ProductControls";
 import styles from "@/components/product/ProductPages.module.css";
 import { mockAppApi, type FeedItemView, type HashtagSuggestionView } from "@/lib/mockAppClient";
-import { LocationAutocomplete } from "./LocationAutocomplete";
 import { TagAutocomplete } from "./TagAutocomplete";
 import {
     announcementKindFor,
@@ -16,6 +15,10 @@ import {
     isVideoMedia,
     type AnnouncementKind,
 } from "./feedModel";
+
+type LeafletRuntime = typeof import("leaflet");
+type LeafletMap = import("leaflet").Map;
+type LeafletMarker = import("leaflet").Marker;
 
 type ComposerType = "POST" | "ANNOUNCEMENT" | "EVENT";
 
@@ -37,12 +40,73 @@ const announcementIcons = {
     LOST: MapPinned,
 } satisfies Record<AnnouncementKind, LucideIcon>;
 
-const mapPoints = [
-    { id: "point-center", label: "Merkez sokak", left: 52, top: 45 },
-    { id: "point-park", label: "Park çevresi", left: 28, top: 58 },
-    { id: "point-main", label: "Ana cadde", left: 70, top: 31 },
-    { id: "point-shore", label: "Sahil hattı", left: 37, top: 24 },
+const ISTANBUL_AREAS = [
+    { label: "Kadıköy", lat: 40.982, lng: 29.027 },
+    { label: "Beşiktaş", lat: 41.042, lng: 29.008 },
+    { label: "Fatih", lat: 41.019, lng: 28.952 },
+    { label: "Üsküdar", lat: 41.024, lng: 29.015 },
+    { label: "Şişli", lat: 41.060, lng: 28.987 },
+    { label: "Beyoğlu", lat: 41.036, lng: 28.977 },
+    { label: "Ataşehir", lat: 40.998, lng: 29.127 },
+    { label: "Maltepe", lat: 40.934, lng: 29.130 },
+    { label: "Bağcılar", lat: 41.036, lng: 28.856 },
+    { label: "Kartal", lat: 40.912, lng: 29.189 },
+    { label: "Pendik", lat: 40.876, lng: 29.253 },
+    { label: "Sarıyer", lat: 41.164, lng: 29.006 },
+    { label: "Bakırköy", lat: 40.979, lng: 28.876 },
+    { label: "Tuzla", lat: 40.816, lng: 29.295 },
+    { label: "Sultanbeyli", lat: 40.963, lng: 29.261 },
 ];
+
+function nearestAreaName(lat: number, lng: number): string {
+    let closest = ISTANBUL_AREAS[0]!;
+    let minD = Infinity;
+    for (const area of ISTANBUL_AREAS) {
+        const d = (area.lat - lat) ** 2 + (area.lng - lng) ** 2;
+        if (d < minD) { minD = d; closest = area; }
+    }
+    return closest.label;
+}
+
+function ModalMapPicker({ onLocationChange }: { onLocationChange: (label: string, lat: number, lng: number) => void }) {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const mapRef = useRef<LeafletMap | null>(null);
+    const markerRef = useRef<LeafletMarker | null>(null);
+    const leafletRef = useRef<LeafletRuntime | null>(null);
+    const onLocationChangeRef = useRef(onLocationChange);
+    onLocationChangeRef.current = onLocationChange;
+
+    useEffect(() => {
+        let cancelled = false;
+        async function setup() {
+            if (!containerRef.current || mapRef.current) return;
+            const L = await import("leaflet");
+            if (cancelled || !containerRef.current) return;
+            leafletRef.current = L;
+            const map = L.map(containerRef.current, {
+                center: [41.01, 28.97],
+                zoom: 11,
+                zoomControl: false,
+                attributionControl: false,
+            });
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+            map.on("click", (e) => {
+                const { lat, lng } = e.latlng;
+                markerRef.current?.remove();
+                markerRef.current = L.marker([lat, lng]).addTo(map);
+                onLocationChangeRef.current(nearestAreaName(lat, lng), lat, lng);
+            });
+            mapRef.current = map;
+        }
+        setup();
+        return () => {
+            cancelled = true;
+            if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
+        };
+    }, []);
+
+    return <div ref={containerRef} className={styles.modalMapPicker} aria-label="Haritadan konum seç" />;
+}
 
 export function CreatePostModal({
     open,
@@ -68,8 +132,7 @@ export function CreatePostModal({
     const [title, setTitle] = useState("");
     const [body, setBody] = useState("");
     const [location, setLocation] = useState("");
-    const [scopeMode, setScopeMode] = useState<"EXACT" | "APPROXIMATE">("APPROXIMATE");
-    const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
+    const [locationPin, setLocationPin] = useState<{ lat: number; lng: number } | null>(null);
     const [tagDraft, setTagDraft] = useState("");
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [suggestions, setSuggestions] = useState<HashtagSuggestionView[]>([]);
@@ -78,7 +141,6 @@ export function CreatePostModal({
     const [busy, setBusy] = useState(false);
     const mediaInputRef = useRef<HTMLInputElement | null>(null);
 
-    const selectedPoint = mapPoints.find((point) => point.id === selectedPointId) ?? null;
     const announcement = useMemo(() => announcementMeta(announcementKind), [announcementKind]);
 
     useEffect(() => {
@@ -97,8 +159,7 @@ export function CreatePostModal({
                 name: "Mevcut medya",
             } : null);
             setMediaNotice(null);
-            setSelectedPointId(null);
-            setScopeMode("APPROXIMATE");
+            setLocationPin(null);
             setTagDraft("");
             return;
         }
@@ -107,11 +168,10 @@ export function CreatePostModal({
         setTitle("");
         setBody("");
         setLocation(defaultLocation);
+        setLocationPin(null);
         setSelectedTags([]);
         setSelectedMedia(null);
         setMediaNotice(null);
-        setSelectedPointId(null);
-        setScopeMode("APPROXIMATE");
         setTagDraft("");
     }, [defaultLocation, editingPost, initialType, open]);
 
@@ -137,13 +197,6 @@ export function CreatePostModal({
 
     function removeTag(tag: string) {
         setSelectedTags((current) => current.filter((item) => item !== tag));
-    }
-
-    function selectPoint(pointId: string) {
-        const point = mapPoints.find((item) => item.id === pointId);
-        if (!point) return;
-        setSelectedPointId(point.id);
-        setLocation(`${point.label}, ${defaultLocation || "yakın çevre"}`);
     }
 
     function postTypeForSubmit(): FeedItemView["type"] {
@@ -247,54 +300,24 @@ export function CreatePostModal({
                 </div>
 
                 {composerType === "ANNOUNCEMENT" && (
-                    <section className={styles.announcementComposer}>
-                        <div className={styles.announcementTypeGrid}>
-                            {announcementTypes.map((item) => {
-                                const Icon = announcementIcons[item.kind];
-                                const active = announcementKind === item.kind;
-                                return (
-                                    <button
-                                        key={item.kind}
-                                        type="button"
-                                        className={[styles.announcementTypeChip, active && styles.announcementTypeChipActive].filter(Boolean).join(" ")}
-                                        data-tone={item.tone}
-                                        onClick={() => setAnnouncementKind(item.kind)}
-                                    >
-                                        <Icon size={16} aria-hidden />
-                                        <span>{item.shortLabel}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        <div className={styles.mapPicker}>
-                            <div className={styles.mockMap} aria-label="Duyuru konumu seç">
-                                <span className={styles.mapRoad} />
-                                <span className={styles.mapRoadAlt} />
-                                {mapPoints.map((point) => (
-                                    <button
-                                        key={point.id}
-                                        type="button"
-                                        className={selectedPointId === point.id ? styles.mapPickerPointActive : styles.mapPickerPoint}
-                                        style={{ left: `${point.left}%`, top: `${point.top}%` }}
-                                        onClick={() => selectPoint(point.id)}
-                                        aria-label={`${point.label} noktasını seç`}
-                                    />
-                                ))}
-                            </div>
-                            <div className={styles.mapPickerDetails}>
-                                <strong>{selectedPoint ? selectedPoint.label : "Haritadan nokta seç"}</strong>
-                                <span>{selectedPoint ? `${location} otomatik dolduruldu gibi gösteriliyor.` : "Gerçek harita servisi bağlandığında burası koordinat ve adres çözümlemesi alacak."}</span>
-                                <div className={styles.segmented}>
-                                    <button type="button" className={scopeMode === "EXACT" ? styles.segmentActive : ""} onClick={() => setScopeMode("EXACT")}>
-                                        Tam burada
-                                    </button>
-                                    <button type="button" className={scopeMode === "APPROXIMATE" ? styles.segmentActive : ""} onClick={() => setScopeMode("APPROXIMATE")}>
-                                        Yaklaşık bölgede
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+                    <div className={styles.announcementTypeGrid}>
+                        {announcementTypes.map((item) => {
+                            const Icon = announcementIcons[item.kind];
+                            const active = announcementKind === item.kind;
+                            return (
+                                <button
+                                    key={item.kind}
+                                    type="button"
+                                    className={[styles.announcementTypeChip, active && styles.announcementTypeChipActive].filter(Boolean).join(" ")}
+                                    data-tone={item.tone}
+                                    onClick={() => setAnnouncementKind(item.kind)}
+                                >
+                                    <Icon size={16} aria-hidden />
+                                    <span>{item.shortLabel}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
                 )}
 
                 <div className={styles.modalFormGrid}>
@@ -345,11 +368,29 @@ export function CreatePostModal({
                         )}
                         {mediaNotice && <small className={styles.fieldHint}>{mediaNotice}</small>}
                     </div>
-                    <LocationAutocomplete
-                        label="Konum"
-                        value={location}
-                        onValueChange={setLocation}
-                        placeholder="Konum seç veya yaz"
+                </div>
+
+                <div className={styles.modalMapSection}>
+                    <div className={styles.modalMapHeader}>
+                        <MapPin size={15} aria-hidden />
+                        <span>Konum</span>
+                        {locationPin && (
+                            <button
+                                type="button"
+                                className={styles.modalMapLocationLabel}
+                                onClick={() => { setLocationPin(null); setLocation(defaultLocation); }}
+                            >
+                                {location}
+                                <X size={13} aria-hidden />
+                            </button>
+                        )}
+                        {!locationPin && <span className={styles.modalMapHint}>Haritaya tıkla, konum seç</span>}
+                    </div>
+                    <ModalMapPicker
+                        onLocationChange={(label, lat, lng) => {
+                            setLocation(label);
+                            setLocationPin({ lat, lng });
+                        }}
                     />
                 </div>
 

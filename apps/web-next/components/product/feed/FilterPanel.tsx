@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, Droplets, Flame, MapPin, ShieldAlert, SlidersHorizontal, TriangleAlert, Volume2, Wrench, X, Zap, type LucideIcon } from "lucide-react";
+import { Car, Droplets, Flame, MapPin, ShieldAlert, TriangleAlert, Volume2, Wrench, X, Zap, type LucideIcon } from "lucide-react";
 import styles from "@/components/product/ProductPages.module.css";
 import type { HashtagSuggestionView } from "@/lib/mockAppClient";
 import { DistanceSlider } from "./DistanceSlider";
@@ -60,15 +60,6 @@ export function FilterPanel({
     return (
         <section className={[styles.filterPanel, open && styles.filterPanelOpen].filter(Boolean).join(" ")} aria-hidden={!open}>
             <div className={styles.filterPanelInner}>
-                <header className={styles.filterPanelHeader}>
-                    <div>
-                        <span><SlidersHorizontal size={15} aria-hidden /> Akışı daralt</span>
-                        <strong>Arama, etiket, konum ve mesafe tek yerden yönetilir.</strong>
-                    </div>
-                    <button type="button" onClick={onClose} aria-label="Filtreleri kapat">
-                        <X size={17} aria-hidden />
-                    </button>
-                </header>
                 <div className={styles.filterPanelGrid}>
                     <TagAutocomplete
                         label="Etiket"
