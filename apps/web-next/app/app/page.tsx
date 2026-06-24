@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Bell, CalendarDays, LayoutGrid, MoreHorizontal, Newspaper, Search, Send, SlidersHorizontal } from "lucide-react";
+import { Map as MapIcon, MoreHorizontal, PenLine, Search, Send, SlidersHorizontal } from "lucide-react";
 import { AnnouncementMap } from "@/components/product/feed/AnnouncementMap";
 import { CompactPostActions } from "@/components/product/feed/CompactPostActions";
 import { CreatePostModal } from "@/components/product/feed/CreatePostModal";
@@ -55,7 +55,7 @@ export default function AppHomePage() {
     const [filter, setFilter] = useState<FeedFilter>("ALL");
     const [query, setQuery] = useState("");
     const [filtersOpen, setFiltersOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<"feed" | "map">("feed");
+    const [mapVisible, setMapVisible] = useState(false);
     const [tagDraft, setTagDraft] = useState("");
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [locationQuery, setLocationQuery] = useState("");
@@ -175,18 +175,12 @@ export default function AppHomePage() {
     ].filter(Boolean).length;
 
     useEffect(() => {
-        if (filter !== "ANNOUNCEMENT" && viewMode === "map") {
-            setViewMode("feed");
-        }
-    }, [filter, viewMode]);
-
-    useEffect(() => {
         setVisibleCount(visibleFeed.length === 0 ? 0 : FEED_BATCH_SIZE);
     }, [visibleFeed]);
 
     useEffect(() => {
         const node = loadMoreRef.current;
-        if (!node || visibleFeed.length === 0 || viewMode !== "feed") return;
+        if (!node || visibleFeed.length === 0) return;
 
         const observer = new IntersectionObserver(
             (entries) => {
@@ -199,7 +193,7 @@ export default function AppHomePage() {
 
         observer.observe(node);
         return () => observer.disconnect();
-    }, [viewMode, visibleFeed.length]);
+    }, [visibleFeed.length]);
 
     useEffect(() => {
         function handleTouchStart(event: TouchEvent) {
@@ -288,7 +282,7 @@ export default function AppHomePage() {
 
     function openPostFromMap(item: FeedItemView) {
         setFilter(isAnnouncementItem(item) ? "ANNOUNCEMENT" : item.type === "EVENT" ? "EVENT" : "ALL");
-        setViewMode("feed");
+        setMapVisible(false);
         setFocusedPostId(item.id);
         window.setTimeout(() => {
             document.getElementById(`post-${item.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -297,14 +291,6 @@ export default function AppHomePage() {
 
     return (
         <section className={styles.socialHome}>
-            <FeedModeRail
-                selected={filter}
-                feed={feed}
-                onSelect={(next) => {
-                    setFilter(next);
-                    setViewMode("feed");
-                }}
-            />
             <main className={styles.homeFeedColumn}>
                 <div
                     className={styles.pullRefresh}
@@ -312,13 +298,6 @@ export default function AppHomePage() {
                 >
                     <span>{refreshing ? "Akış yenileniyor..." : pullDistance >= 76 ? "Bırak ve yenile" : "Yenilemek için aşağı çek"}</span>
                 </div>
-
-                <section className={styles.feedHeroSurface}>
-                    <button type="button" className={styles.shareTrigger} onClick={() => openComposer("POST")}>
-                        <span>{session.currentUser.initials}</span>
-                        <strong>Bir şey paylaş...</strong>
-                    </button>
-                </section>
 
                 <section className={styles.feedCommandSurface}>
                     <div className={styles.feedSearchRow}>
@@ -339,17 +318,20 @@ export default function AppHomePage() {
                             Filtrele
                             {activeFilterCount > 0 && <span>{activeFilterCount}</span>}
                         </button>
+                        <button
+                            type="button"
+                            className={[styles.mapToggleButton, mapVisible && styles.mapToggleButtonActive].filter(Boolean).join(" ")}
+                            onClick={() => setMapVisible((current) => !current)}
+                            aria-label="Haritayı göster/gizle"
+                            title="Haritayı göster/gizle"
+                        >
+                            <MapIcon size={17} aria-hidden />
+                        </button>
+                        <button type="button" className={styles.shareButton} onClick={() => openComposer("POST")}>
+                            <PenLine size={16} aria-hidden />
+                            Paylaş
+                        </button>
                     </div>
-                    {filter === "ANNOUNCEMENT" && (
-                        <div className={styles.feedViewSwitch}>
-                            <button type="button" className={viewMode === "feed" ? styles.segmentActive : ""} onClick={() => setViewMode("feed")}>
-                                Duyuru akışı
-                            </button>
-                            <button type="button" className={viewMode === "map" ? styles.segmentActive : ""} onClick={() => setViewMode("map")}>
-                                Harita
-                            </button>
-                        </div>
-                    )}
                     <FilterPanel
                         open={filtersOpen}
                         selectedFilter={filter}
@@ -373,15 +355,17 @@ export default function AppHomePage() {
                 {notice && <p className={styles.statusBadge}>{notice}</p>}
                 {status === "loading" && <div className={styles.empty}>Akış yükleniyor...</div>}
                 {status === "error" && <div className={styles.empty}>Akış alınamadı.</div>}
-                {status === "ready" && filter === "ANNOUNCEMENT" && viewMode === "map" && (
+                {status === "ready" && mapVisible && (
                     <AnnouncementMap
                         incidents={visibleIncidents}
                         postsById={postsById}
+                        feedItems={visibleFeed}
+                        activeFilter={filter}
                         selectedKinds={selectedAnnouncementKinds}
                         onOpenPost={openPostFromMap}
                     />
                 )}
-                {status === "ready" && viewMode === "feed" && (
+                {status === "ready" && (
                     <div className={styles.feedGrid}>
                         {renderedFeed.map(({ item, renderKey }) => (
                             <SocialPostCard
@@ -396,7 +380,7 @@ export default function AppHomePage() {
                         {visibleFeed.length === 0 && <div className={styles.empty}>Bu aramaya uygun paylaşım yok.</div>}
                     </div>
                 )}
-                {status === "ready" && viewMode === "feed" && visibleFeed.length > 0 && (
+                {status === "ready" && visibleFeed.length > 0 && (
                     <div ref={loadMoreRef} className={styles.feedLoader}>
                         <span>Daha fazla paylaşım yükleniyor...</span>
                     </div>
@@ -420,48 +404,6 @@ export default function AppHomePage() {
     );
 }
 
-function FeedModeRail({
-    selected,
-    feed,
-    onSelect,
-}: {
-    selected: FeedFilter;
-    feed: FeedItemView[];
-    onSelect: (value: FeedFilter) => void;
-}) {
-    const icons = {
-        ALL: LayoutGrid,
-        POST: Newspaper,
-        ANNOUNCEMENT: Bell,
-        EVENT: CalendarDays,
-    } satisfies Record<FeedFilter, typeof LayoutGrid>;
-    const counts = useMemo(() => {
-        return Object.fromEntries(feedFilters.map((mode) => [
-            mode.value,
-            feed.filter((item) => mode.value === "ALL" || mode.types.includes(item.type)).length,
-        ])) as Record<FeedFilter, number>;
-    }, [feed]);
-
-    return (
-        <aside className={styles.feedModeRail} aria-label="Akış modu">
-            {feedFilters.map((mode) => {
-                const Icon = icons[mode.value];
-                return (
-                    <button
-                        key={mode.value}
-                        type="button"
-                        className={selected === mode.value ? styles.feedModeActive : ""}
-                        onClick={() => onSelect(mode.value)}
-                    >
-                        <Icon size={17} aria-hidden />
-                        <span>{mode.label}</span>
-                        <small>{counts[mode.value]}</small>
-                    </button>
-                );
-            })}
-        </aside>
-    );
-}
 
 function FeedAdsRail({ ads }: { ads: SponsoredAdView[] }) {
     return (
@@ -541,68 +483,76 @@ function SocialPostCard({
     }
 
     return (
-        <article id={`post-${item.id}`} className={[styles.socialPost, focused && styles.socialPostFocused].filter(Boolean).join(" ")}>
-            <header className={styles.postHeader}>
-                <span className={styles.postAvatar}>{initials(item.authorName)}</span>
-                <div>
-                    <strong>{item.authorName}</strong>
-                    <small>{item.authorType} · {item.locationLabel} · {formatRelative(item.createdAt)}</small>
-                </div>
-                <div className={styles.postHeaderActions}>
-                    {announcementKind ? (
-                        <span className={styles.announcementBadge} data-tone={announcement.tone}>{announcement.shortLabel}</span>
-                    ) : (
-                        <span className={styles.softBadge}>{displayTypeLabel(item)}</span>
-                    )}
-                    {ownPost && (
-                        <div className={styles.postMenu}>
-                            <button type="button" className={styles.postMenuButton} onClick={() => setMenuOpen((current) => !current)} aria-label="Paylaşım seçenekleri">
-                                <MoreHorizontal size={18} aria-hidden />
-                            </button>
-                            {menuOpen && (
-                                <div className={styles.postMenuDropdown}>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setMenuOpen(false);
-                                            onEdit(item);
-                                        }}
-                                    >
-                                        Düzenle
-                                    </button>
-                                </div>
-                            )}
+        <div id={`post-${item.id}`} className={styles.feedPostWrapper}>
+            <article
+                className={[
+                    styles.socialPost,
+                    focused && styles.socialPostFocused,
+                    commentsOpen && styles.socialPostCommentOpen,
+                ].filter(Boolean).join(" ")}
+            >
+                <header className={styles.postHeader}>
+                    <span className={styles.postAvatar}>{initials(item.authorName)}</span>
+                    <div className={styles.postAuthorInfo}>
+                        <strong>{item.authorName}</strong>
+                        <small>{item.locationLabel} · {formatRelative(item.createdAt)}</small>
+                    </div>
+                    <div className={styles.postHeaderActions}>
+                        {announcementKind ? (
+                            <span className={styles.announcementBadge} data-tone={announcement.tone}>{announcement.shortLabel}</span>
+                        ) : (
+                            <span className={styles.softBadge}>{displayTypeLabel(item)}</span>
+                        )}
+                        {ownPost && (
+                            <div className={styles.postMenu}>
+                                <button type="button" className={styles.postMenuButton} onClick={() => setMenuOpen((current) => !current)} aria-label="Paylaşım seçenekleri">
+                                    <MoreHorizontal size={18} aria-hidden />
+                                </button>
+                                {menuOpen && (
+                                    <div className={styles.postMenuDropdown}>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setMenuOpen(false);
+                                                onEdit(item);
+                                            }}
+                                        >
+                                            Düzenle
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </header>
+                <div className={styles.postBody}>
+                    <h3>{item.title}</h3>
+                    <p>{item.body}</p>
+                    {item.hashtags?.length > 0 && (
+                        <div className={styles.hashtagRow}>
+                            {item.hashtags.map((tag) => <span key={tag}>#{tag}</span>)}
                         </div>
                     )}
                 </div>
-            </header>
-            <div className={styles.postBody}>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-                {item.hashtags?.length > 0 && (
-                    <div className={styles.hashtagRow}>
-                        {item.hashtags.map((tag) => <span key={tag}>#{tag}</span>)}
-                    </div>
-                )}
-            </div>
-            <div className={item.mediaUrl ? styles.postMedia : styles.postMediaPlaceholder}>
-                {item.mediaUrl ? (
-                    <MediaPreview mediaUrl={item.mediaUrl} mediaType={item.mediaType} />
-                ) : (
-                    <span>{announcementKind ? announcement.label : displayTypeLabel(item)}</span>
-                )}
-            </div>
-            <CompactPostActions
-                liked={item.liked}
-                saved={item.saved}
-                likeCount={item.likeCount}
-                commentCount={item.commentCount}
-                shareCount={item.shareCount}
-                onLike={like}
-                onComment={openComments}
-                onShare={share}
-                onSave={save}
-            />
+                <div className={item.mediaUrl ? styles.postMedia : styles.postMediaPlaceholder}>
+                    {item.mediaUrl ? (
+                        <MediaPreview mediaUrl={item.mediaUrl} mediaType={item.mediaType} />
+                    ) : (
+                        <span>{announcementKind ? announcement.label : displayTypeLabel(item)}</span>
+                    )}
+                </div>
+                <CompactPostActions
+                    liked={item.liked}
+                    saved={item.saved}
+                    likeCount={item.likeCount}
+                    commentCount={item.commentCount}
+                    shareCount={item.shareCount}
+                    onLike={like}
+                    onComment={openComments}
+                    onShare={share}
+                    onSave={save}
+                />
+            </article>
             {commentsOpen && (
                 <div className={styles.commentPanel}>
                     {comments.map((commentItem) => (
@@ -620,7 +570,7 @@ function SocialPostCard({
                     </div>
                 </div>
             )}
-        </article>
+        </div>
     );
 }
 

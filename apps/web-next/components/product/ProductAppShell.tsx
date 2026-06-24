@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
     Activity,
@@ -12,6 +12,7 @@ import {
     Home,
     Inbox,
     Megaphone,
+    Newspaper,
     Search,
     Settings,
     SlidersHorizontal,
@@ -54,6 +55,7 @@ const navItems = [
 export function ProductAppShell({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [session, setSession] = useState<SessionView | null>(null);
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
@@ -114,6 +116,7 @@ export function ProductAppShell({ children }: { children: ReactNode }) {
     const currentUser = session.currentUser;
     const unread = currentUser.activeCapability === "STANDARD" ? 2 : 1;
     const sidebar = sidebarContext(pathname, currentUser.activeCapability);
+    const activeTypeParam = searchParams.get("type")?.toUpperCase() ?? null;
 
     return (
         <AppSessionContext.Provider value={contextValue}>
@@ -177,11 +180,15 @@ export function ProductAppShell({ children }: { children: ReactNode }) {
                         <nav className={styles.nav}>
                             {sidebar.items.map((item) => {
                                 const Icon = item.icon;
+                                const itemType = item.type ?? null;
+                                const isActive = pathname === "/app"
+                                    ? itemType === activeTypeParam
+                                    : item.href === "/app" ? pathname === "/app" : pathname.startsWith(item.href);
                             return (
                                 <Link
                                     key={`${sidebar.title}-${item.label}`}
                                     href={item.href}
-                                    className={styles.navItem}
+                                    className={[styles.navItem, isActive && styles.navItemActive].filter(Boolean).join(" ")}
                                 >
                                     <Icon size={18} aria-hidden />
                                     <span>{item.label}</span>
@@ -253,6 +260,7 @@ type SidebarItem = {
     label: string;
     href: string;
     icon: typeof Home;
+    type?: string | null;
 };
 
 type SidebarAd = {
@@ -313,9 +321,10 @@ function sidebarContext(pathname: string, capability: string): {
         title: "Ana akış",
         searchPlaceholder: "Paylaşım, etiket veya konum ara",
         items: [
-            { label: "Tüm paylaşımlar", href: "/app", icon: Home },
-            { label: "Duyurular", href: "/app?type=ANNOUNCEMENT", icon: Megaphone },
-            { label: "Etkinlikler", href: "/app?type=EVENT", icon: CalendarDays },
+            { label: "Tüm paylaşımlar", href: "/app", icon: Home, type: null },
+            { label: "Paylaşımlar", href: "/app?type=POST", icon: Newspaper, type: "POST" },
+            { label: "Duyurular", href: "/app?type=ANNOUNCEMENT", icon: Megaphone, type: "ANNOUNCEMENT" },
+            { label: "Etkinlikler", href: "/app?type=EVENT", icon: CalendarDays, type: "EVENT" },
         ],
         featured: ["#kadikoy", "#trafik", "#elektrikkesintisi", "#etkinlik"],
         ads: [],

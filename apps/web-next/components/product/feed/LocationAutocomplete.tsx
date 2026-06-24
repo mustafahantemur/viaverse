@@ -77,12 +77,6 @@ export function LocationAutocomplete({
                     </button>
                 )}
             </label>
-            {value.trim() && (
-                <div className={styles.locationSelection}>
-                    <MapPin size={14} aria-hidden />
-                    <span>{value}</span>
-                </div>
-            )}
             {dropdownOpen && (
                 <div className={styles.autocompleteMenu}>
                     {matches.map((item) => (
