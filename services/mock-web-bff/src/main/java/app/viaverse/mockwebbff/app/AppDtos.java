@@ -269,7 +269,10 @@ public final class AppDtos {
         String responseTime,
         @JsonAlias("servesDynamicEnvironment")
         boolean servesNearby,
-        List<String> tags
+        List<String> tags,
+        String photoUrl,
+        String priceRange,
+        double distanceKm
     ) {
     }
 
@@ -284,7 +287,10 @@ public final class AppDtos {
         double rating,
         int completedJobs,
         String responseTime,
-        String verificationStatus
+        String verificationStatus,
+        String photoUrl,
+        String priceRange,
+        double distanceKm
     ) {
     }
 

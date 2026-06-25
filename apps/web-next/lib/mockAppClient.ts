@@ -145,6 +145,9 @@ export type ProviderView = {
     responseTime: string;
     servesNearby: boolean;
     tags: string[];
+    photoUrl: string;
+    priceRange: string;
+    distanceKm: number;
 };
 
 export type BusinessView = {
@@ -159,6 +162,9 @@ export type BusinessView = {
     completedJobs: number;
     responseTime: string;
     verificationStatus: string;
+    photoUrl: string;
+    priceRange: string;
+    distanceKm: number;
 };
 
 export type ServiceRequestView = {
