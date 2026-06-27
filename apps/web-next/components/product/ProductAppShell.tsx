@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
     Activity,
@@ -11,14 +11,16 @@ import {
     CalendarDays,
     Home,
     Inbox,
+    LayoutDashboard,
     Megaphone,
+    Newspaper,
+    PlusCircle,
     Search,
     Settings,
     SlidersHorizontal,
     Store,
     User,
     WalletCards,
-    Grid3X3,
 } from "lucide-react";
 import { BrandMark } from "@/components/primitives/BrandMark";
 import { Button } from "@/components/primitives/Button";
@@ -41,21 +43,44 @@ export function useAppSession(): AppSessionContextValue {
     return value;
 }
 
-const navItems = [
-    { href: "/app", label: "Ana akış", icon: Home },
-    { href: "/app/services", label: "Hizmetler", icon: Search },
-    { href: "/app/requests", label: "Taleplerim", icon: BriefcaseBusiness },
-    { href: "/app/provider", label: "Hizmet veren", icon: Megaphone },
-    { href: "/app/messages", label: "Mesajlar", icon: Inbox },
-    { href: "/app/payments", label: "Ödemeler", icon: WalletCards },
-    { href: "/app/activity", label: "Bildirimler", icon: Bell },
-];
+type NavItem = { href: string; label: string; icon: typeof Home };
+
+function buildNavItems(capability: string): NavItem[] {
+    const feed: NavItem = { href: "/app", label: "Ana akış", icon: Home };
+    const services: NavItem = { href: "/app/explore", label: "Hizmetler", icon: BriefcaseBusiness };
+    const requests: NavItem = { href: "/app/requests", label: "Taleplerim", icon: PlusCircle };
+    const messages: NavItem = { href: "/app/messages", label: "Mesajlar", icon: Inbox };
+    if (capability === "INDIVIDUAL_PROVIDER") {
+        return [feed, services, { href: "/app/provider", label: "Panel", icon: LayoutDashboard }, messages];
+    }
+    if (capability === "BUSINESS") {
+        return [feed, services, { href: "/app/business", label: "İşletme", icon: Store }, messages];
+    }
+    return [feed, services, requests, messages];
+}
+
+// ── Sidebar slot: lets a page render its own content inside the shared shell
+// sidebar (e.g. the marketplace filters) so both feed and explore use one shell.
+type SidebarSlotContextValue = { setSidebarSlot: (node: ReactNode | null) => void };
+const SidebarSlotContext = createContext<SidebarSlotContextValue | null>(null);
+
+/** Render `node` inside the shared shell sidebar for as long as the caller is mounted. */
+export function useSidebarSlot(node: ReactNode) {
+    const ctx = useContext(SidebarSlotContext);
+    useEffect(() => {
+        ctx?.setSidebarSlot(node);
+        return () => ctx?.setSidebarSlot(null);
+    }, [ctx, node]);
+}
 
 export function ProductAppShell({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [session, setSession] = useState<SessionView | null>(null);
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+    const [sidebarSlot, setSidebarSlot] = useState<ReactNode | null>(null);
+    const sidebarSlotValue = useMemo<SidebarSlotContextValue>(() => ({ setSidebarSlot }), []);
 
     async function reloadSession() {
         const next = await mockAppApi.session();
@@ -114,9 +139,12 @@ export function ProductAppShell({ children }: { children: ReactNode }) {
     const currentUser = session.currentUser;
     const unread = currentUser.activeCapability === "STANDARD" ? 2 : 1;
     const sidebar = sidebarContext(pathname, currentUser.activeCapability);
+    const activeTypeParam = searchParams.get("type")?.toUpperCase() ?? null;
+    const navItems = buildNavItems(currentUser.activeCapability);
 
     return (
         <AppSessionContext.Provider value={contextValue}>
+          <SidebarSlotContext.Provider value={sidebarSlotValue}>
             <div className={styles.shell}>
                 <header className={styles.globalTopbar}>
                     <div className={styles.globalLeft}>
@@ -142,32 +170,20 @@ export function ProductAppShell({ children }: { children: ReactNode }) {
                         })}
                     </nav>
                     <div className={styles.globalActions}>
-                        <button type="button" className={styles.iconButton} aria-label="Uygulamalar">
-                            <Grid3X3 size={18} aria-hidden />
-                        </button>
                         <Link href="/app/activity" className={styles.iconButton} aria-label="Bildirimler">
                             <Bell size={18} aria-hidden />
                             <span>{unread}</span>
                         </Link>
-                        <label className={styles.personaPicker}>
-                            <span>Mod</span>
-                            <select
-                                value={currentUser.id}
-                                onChange={(event) => switchPersona(event.target.value)}
-                            >
-                                {session.personas.map((persona) => (
-                                    <option key={persona.id} value={persona.id}>
-                                        {persona.activeCapabilityLabel} · {persona.displayName}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                        <Link href="/app/profile" className={styles.userPill}>
+                        <Link href="/app/profile" className={styles.userPill} title={currentUser.displayName}>
                             <span>{currentUser.initials}</span>
+                            <strong>{currentUser.activeCapabilityLabel}</strong>
                         </Link>
                     </div>
                 </header>
+
                 <aside className={styles.sidebar} aria-label="Sayfa menüsü">
+                  {sidebarSlot ?? (
+                    <>
                     <label className={styles.sidebarSearch}>
                         <Search size={16} aria-hidden />
                         <input placeholder={sidebar.searchPlaceholder} />
@@ -177,17 +193,21 @@ export function ProductAppShell({ children }: { children: ReactNode }) {
                         <nav className={styles.nav}>
                             {sidebar.items.map((item) => {
                                 const Icon = item.icon;
-                            return (
-                                <Link
-                                    key={`${sidebar.title}-${item.label}`}
-                                    href={item.href}
-                                    className={styles.navItem}
-                                >
-                                    <Icon size={18} aria-hidden />
-                                    <span>{item.label}</span>
-                                </Link>
-                            );
-                        })}
+                                const itemType = item.type ?? null;
+                                const isActive = pathname === "/app"
+                                    ? itemType === activeTypeParam
+                                    : item.href === "/app" ? pathname === "/app" : pathname.startsWith(item.href.split("?")[0]);
+                                return (
+                                    <Link
+                                        key={`${sidebar.title}-${item.label}`}
+                                        href={item.href}
+                                        className={[styles.navItem, isActive && styles.navItemActive].filter(Boolean).join(" ")}
+                                    >
+                                        <Icon size={18} aria-hidden />
+                                        <span>{item.label}</span>
+                                    </Link>
+                                );
+                            })}
                         </nav>
                     </section>
                     {sidebar.featured.length > 0 && (
@@ -195,7 +215,13 @@ export function ProductAppShell({ children }: { children: ReactNode }) {
                             <h2>Öne çıkanlar</h2>
                             <div className={styles.sidebarFeatured}>
                                 {sidebar.featured.map((item) => (
-                                    <span key={item}>{item}</span>
+                                    <Link
+                                        key={item.label}
+                                        href={item.href}
+                                        className={styles.sidebarFeaturedChip}
+                                    >
+                                        {item.label}
+                                    </Link>
                                 ))}
                             </div>
                         </section>
@@ -222,6 +248,8 @@ export function ProductAppShell({ children }: { children: ReactNode }) {
                             <span>Ayarlar</span>
                         </Link>
                     </div>
+                    </>
+                  )}
                 </aside>
 
                 <div className={styles.mainColumn}>
@@ -229,7 +257,7 @@ export function ProductAppShell({ children }: { children: ReactNode }) {
                 </div>
 
                 <nav className={styles.mobileNav} aria-label="Viaverse mobil menü">
-                    {navItems.slice(0, 6).map((item) => {
+                    {navItems.map((item) => {
                         const Icon = item.icon;
                         const active = item.href === "/app" ? pathname === "/app" : pathname.startsWith(item.href);
                         return (
@@ -245,6 +273,7 @@ export function ProductAppShell({ children }: { children: ReactNode }) {
                     })}
                 </nav>
             </div>
+          </SidebarSlotContext.Provider>
         </AppSessionContext.Provider>
     );
 }
@@ -253,6 +282,7 @@ type SidebarItem = {
     label: string;
     href: string;
     icon: typeof Home;
+    type?: string | null;
 };
 
 type SidebarAd = {
@@ -260,26 +290,32 @@ type SidebarAd = {
     body: string;
 };
 
+type FeaturedItem = { label: string; href: string };
+
 function sidebarContext(pathname: string, capability: string): {
     title: string;
     searchPlaceholder: string;
     items: SidebarItem[];
-    featured: string[];
+    featured: FeaturedItem[];
     ads: SidebarAd[];
 } {
-    if (pathname.startsWith("/app/services")) {
+    if (pathname.startsWith("/app/explore") || pathname.startsWith("/app/services")) {
         return {
-            title: "Hizmet keşfi",
+            title: "Hizmetler",
             searchPlaceholder: "Hizmet, kategori veya profil ara",
             items: [
-                { label: "Tüm hizmetler", href: "/app/services", icon: Search },
-                { label: "Bireysel hizmet veren", href: "/app/services?type=individual", icon: User },
-                { label: "İşletme", href: "/app/services?type=business", icon: Store },
-                { label: "Kayıtlı aramalar", href: "/app/services?saved=1", icon: Bookmark },
+                { label: "Tüm profiller", href: "/app/explore", icon: Search },
+                { label: "Serbest", href: "/app/explore?type=individual", icon: User },
+                { label: "İşletme", href: "/app/explore?type=business", icon: Store },
+                { label: "Kayıtlı aramalar", href: "/app/explore?saved=1", icon: Bookmark },
             ],
-            featured: ["Temizlik 4.7+", "Aynı gün dönüş", "5 km yakınlık filtresi"],
+            featured: [
+                { label: "Temizlik 4.7+", href: "/app/explore?cat=cleaning&minRating=4.7" },
+                { label: "Aynı gün dönüş", href: "/app/explore?response=TODAY" },
+                { label: "Yakın mesafe", href: "/app/explore?radius=3" },
+            ],
             ads: [
-                { title: "Ev düzeni kampanyası", body: "Yakındaki temizlik ve düzen hizmetlerinde sponsor alanı." },
+                { title: "Profilinizi öne çıkarın", body: "Keşfet alanında sponsorlu vitrin alanı edinin." },
             ],
         };
     }
@@ -292,7 +328,10 @@ function sidebarContext(pathname: string, capability: string): {
                 { label: "Tekliflerim", href: "/app/provider#offers", icon: Megaphone },
                 { label: "Profil durumu", href: "/app/profile", icon: User },
             ],
-            featured: ["Yanıt bekleyen 2 talep", "Kabul edilen teklif mesajlara düşer"],
+            featured: [
+                { label: "Yanıt bekleyen 2 talep", href: "/app/provider" },
+                { label: "Teklifler mesaja düşer", href: "/app/messages" },
+            ],
             ads: [],
         };
     }
@@ -305,7 +344,10 @@ function sidebarContext(pathname: string, capability: string): {
                 { label: "Teklif bekleyenler", href: "/app/requests#offers", icon: Activity },
                 { label: "Konum ve bütçe", href: "/app/requests#filters", icon: SlidersHorizontal },
             ],
-            featured: ["Talep buradan oluşturulur", "Hizmet verenler fırsat olarak görür"],
+            featured: [
+                { label: "Talep oluştur", href: "/app/requests?new=1" },
+                { label: "Aktif teklifler", href: "/app/requests#offers" },
+            ],
             ads: [],
         };
     }
@@ -313,11 +355,16 @@ function sidebarContext(pathname: string, capability: string): {
         title: "Ana akış",
         searchPlaceholder: "Paylaşım, etiket veya konum ara",
         items: [
-            { label: "Tüm paylaşımlar", href: "/app", icon: Home },
-            { label: "Duyurular", href: "/app?type=ANNOUNCEMENT", icon: Megaphone },
-            { label: "Etkinlikler", href: "/app?type=EVENT", icon: CalendarDays },
+            { label: "Tüm paylaşımlar", href: "/app", icon: Home, type: null },
+            { label: "Paylaşımlar", href: "/app?type=POST", icon: Newspaper, type: "POST" },
+            { label: "Duyurular", href: "/app?type=ANNOUNCEMENT", icon: Megaphone, type: "ANNOUNCEMENT" },
+            { label: "Etkinlikler", href: "/app?type=EVENT", icon: CalendarDays, type: "EVENT" },
         ],
-        featured: ["#kadikoy", "#trafik", "#elektrikkesintisi", "#etkinlik"],
+        featured: [
+            { label: "#kadikoy", href: "/app?q=kadikoy" },
+            { label: "#trafik", href: "/app?q=trafik" },
+            { label: "#elektrikkesintisi", href: "/app?q=elektrik" },
+        ],
         ads: [],
     };
 }
