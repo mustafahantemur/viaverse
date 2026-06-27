@@ -62,6 +62,7 @@ export type ServiceCategoryView = {
     lane: string;
     icon: string;
     preferredProviderType: string;
+    subCategories: string[];
 };
 
 export type FeedItemView = {
@@ -135,7 +136,7 @@ export type AnnouncementIncidentView = {
 export type ProviderView = {
     id: string;
     displayName: string;
-    providerType: "Bireysel hizmet veren" | "İşletme";
+    providerType: "Serbest Uzman" | "İşletme";
     headline: string;
     summary: string;
     categoryIds: string[];
@@ -145,6 +146,9 @@ export type ProviderView = {
     responseTime: string;
     servesNearby: boolean;
     tags: string[];
+    photoUrl: string;
+    priceRange: string;
+    distanceKm: number;
 };
 
 export type BusinessView = {
@@ -159,6 +163,9 @@ export type BusinessView = {
     completedJobs: number;
     responseTime: string;
     verificationStatus: string;
+    photoUrl: string;
+    priceRange: string;
+    distanceKm: number;
 };
 
 export type ServiceRequestView = {
