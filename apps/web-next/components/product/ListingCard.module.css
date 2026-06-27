@@ -1,0 +1,269 @@
+/* Shared listing/content card — one design used by the Hizmetler grid and the feed. */
+
+.wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.card {
+  flex: 1 1 auto;
+  border-radius: var(--vv-radius-md);
+  border: 1px solid var(--vv-border-subtle);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--vv-surface);
+  text-align: left;
+  transition: border-color 0.14s, box-shadow 0.14s, transform 0.12s;
+}
+
+.interactive {
+  cursor: pointer;
+}
+
+.hoverable:hover {
+  border-color: color-mix(in oklab, var(--vv-primary) 45%, var(--vv-border-subtle));
+  box-shadow: 0 4px 18px -4px rgba(15, 23, 42, 0.12);
+  transform: translateY(-2px);
+}
+
+.selected {
+  border-color: var(--vv-primary);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--vv-primary) 18%, transparent),
+    0 4px 18px -4px rgba(15, 23, 42, 0.14);
+}
+
+.focused {
+  border-color: var(--vv-primary);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--vv-primary) 16%, transparent);
+}
+
+/* ── Media (top) ─────────────────────────────────────────────────────────── */
+.media {
+  aspect-ratio: 16 / 9;
+  position: relative;
+  overflow: hidden;
+  background: var(--vv-surface-raised);
+  flex-shrink: 0;
+}
+
+.media img,
+.media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s;
+}
+
+.hoverable:hover .media img {
+  transform: scale(1.03);
+}
+
+.badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.badgeRight {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  left: auto;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--vv-trust-deep);
+  text-transform: none;
+}
+
+/* ── Body ────────────────────────────────────────────────────────────────── */
+.body {
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+  flex: 1;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vv-primary-soft, color-mix(in oklab, var(--vv-primary) 14%, transparent));
+  color: var(--vv-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.headerMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--vv-text);
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.titleAside {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--vv-text);
+  white-space: nowrap;
+}
+
+.rating svg {
+  color: #f59e0b;
+}
+
+.subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--vv-text-muted);
+  line-height: 1.4;
+}
+
+.description {
+  display: grid;
+  gap: 4px;
+}
+
+.description h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--vv-text);
+  line-height: 1.3;
+}
+
+.description p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--vv-text-secondary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.clampSubtitle {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--vv-text-secondary);
+}
+
+.meta > span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.price {
+  font-weight: 700;
+  color: var(--vv-primary);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.chip {
+  background: color-mix(in oklab, var(--vv-primary) 7%, transparent);
+  color: var(--vv-primary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklab, var(--vv-primary) 22%, transparent);
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px 12px;
+  font-size: 11px;
+  color: var(--vv-text-muted);
+  gap: 8px;
+  border-top: 1px solid var(--vv-border-subtle);
+}
+
+/* Full-bleed footer: the child (e.g. post actions) supplies its own border/padding. */
+.footerFlush {
+  display: block;
+  padding: 0;
+  border-top: none;
+}
+
+.ctaBtn {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 13px;
+  border-radius: var(--vv-radius-sm);
+  background: var(--vv-primary);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.12s;
+  line-height: 1.4;
+}
+
+.ctaBtn:hover {
+  opacity: 0.88;
+}

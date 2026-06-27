@@ -62,6 +62,7 @@ export type ServiceCategoryView = {
     lane: string;
     icon: string;
     preferredProviderType: string;
+    subCategories: string[];
 };
 
 export type FeedItemView = {
@@ -135,7 +136,7 @@ export type AnnouncementIncidentView = {
 export type ProviderView = {
     id: string;
     displayName: string;
-    providerType: "Bireysel hizmet veren" | "İşletme";
+    providerType: "Serbest Uzman" | "İşletme";
     headline: string;
     summary: string;
     categoryIds: string[];

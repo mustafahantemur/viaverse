@@ -19,11 +19,11 @@ public final class PersonaSeed {
                 "Arslan",
                 "DA",
                 "STANDARD",
-                "Hizmet alan",
+                "Bireysel",
                 "Kadıköy, İstanbul",
                 List.of(
-                    new CapabilityView("STANDARD", "Hizmet alan", true, "ENABLED", "Yakındaki akışı takip eder, paylaşım ve talep oluşturur."),
-                    new CapabilityView("INDIVIDUAL_PROVIDER", "Bireysel hizmet veren", false, "AVAILABLE", "İsterse hizmet veren görünümünü açabilir."),
+                    new CapabilityView("STANDARD", "Bireysel", true, "ENABLED", "Yakındaki akışı takip eder, paylaşım ve talep oluşturur."),
+                    new CapabilityView("INDIVIDUAL_PROVIDER", "Serbest Uzman", false, "AVAILABLE", "İsterse serbest uzman görünümünü açabilir."),
                     new CapabilityView("BUSINESS", "İşletme", false, "AVAILABLE", "İşletme profili başlatabilir.")
                 )
             ),
@@ -34,11 +34,11 @@ public final class PersonaSeed {
                 "Kaya",
                 "EK",
                 "INDIVIDUAL_PROVIDER",
-                "Bireysel hizmet veren",
+                "Serbest Uzman",
                 "Moda, İstanbul",
                 List.of(
-                    new CapabilityView("STANDARD", "Hizmet alan", true, "ENABLED", "Kendi ihtiyaçları için de talep açabilir."),
-                    new CapabilityView("INDIVIDUAL_PROVIDER", "Bireysel hizmet veren", true, "ENABLED", "Küçük işler, evcil hayvan desteği ve teslimat işleri alır."),
+                    new CapabilityView("STANDARD", "Bireysel", true, "ENABLED", "Kendi ihtiyaçları için de talep açabilir."),
+                    new CapabilityView("INDIVIDUAL_PROVIDER", "Serbest Uzman", true, "ENABLED", "Küçük işler, evcil hayvan ve teslimat işleri alır."),
                     new CapabilityView("BUSINESS", "İşletme", false, "AVAILABLE", "Gerekirse işletme profili başlatabilir.")
                 )
             ),
@@ -52,8 +52,8 @@ public final class PersonaSeed {
                 "İşletme",
                 "Yeldeğirmeni, İstanbul",
                 List.of(
-                    new CapabilityView("STANDARD", "Hizmet alan", true, "ENABLED", "Gündelik kullanıcı akışına dönebilir."),
-                    new CapabilityView("INDIVIDUAL_PROVIDER", "Bireysel hizmet veren", true, "ENABLED", "İşletme dışı kişisel hizmetlerini ayrıca yönetebilir."),
+                    new CapabilityView("STANDARD", "Bireysel", true, "ENABLED", "Gündelik kullanıcı akışına dönebilir."),
+                    new CapabilityView("INDIVIDUAL_PROVIDER", "Serbest Uzman", true, "ENABLED", "İşletme dışı kişisel hizmetlerini ayrıca yönetebilir."),
                     new CapabilityView("BUSINESS", "İşletme", true, "APPROVED", "Onaylı işletme profiliyle hizmet ve duyuru yayınlar.")
                 )
             )

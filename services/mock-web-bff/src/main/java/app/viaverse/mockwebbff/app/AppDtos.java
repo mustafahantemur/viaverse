@@ -119,7 +119,8 @@ public final class AppDtos {
         String description,
         String lane,
         String icon,
-        String preferredProviderType
+        String preferredProviderType,
+        List<String> subCategories
     ) {
     }
 

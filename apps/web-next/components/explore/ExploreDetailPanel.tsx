@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, ChevronRight, Clock3, MapPin, Sparkles, Star } from "lucide-react";
+import { BadgeCheck, Building2, ChevronRight, Clock3, MapPin, Sparkles, Star, UserRound } from "lucide-react";
 import { Button } from "@/components/primitives/Button";
 import { categoryIconPath } from "@/components/product/ProductControls";
 import type { BusinessView, ProviderView, ServiceCategoryView } from "@/lib/mockAppClient";
@@ -49,7 +49,7 @@ export function ExploreDetailPanel({ selection, categoryById }: Props) {
                     <img src={item.photoUrl} alt={name} />
                 ) : (
                     <div className={styles.exploreDetailPhotoFallback}>
-                        {selection.kind === "provider" ? "👤" : "🏢"}
+                        {selection.kind === "provider" ? <UserRound size={34} aria-hidden /> : <Building2 size={34} aria-hidden />}
                     </div>
                 )}
             </div>
